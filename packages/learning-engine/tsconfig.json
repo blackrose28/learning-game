@@ -5,8 +5,7 @@
     "rootDir": "./src",
     "declaration": true,
     "declarationMap": true,
-    "sourceMap": true,
-    "moduleResolution": "node"
+    "sourceMap": true
   },
   "include": ["src/**/*"],
   "exclude": ["src/**/*.test.ts"]
