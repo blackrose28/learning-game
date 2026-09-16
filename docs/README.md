@@ -44,4 +44,5 @@ pnpm lint
 
 ## Architecture & Roadmap
 
-For the comprehensive game specifications, curriculum levels, and multi-phase roadmap, refer to [math-archer-plan.md](../math-archer-plan.md).
+- **[math-archer-plan.md](../math-archer-plan.md)**: Comprehensive game specifications, curriculum levels, and multi-phase roadmap.
+- **[MVP Boundary & Scope](mvp-boundary.md)**: Frozen MVP definition, in-scope requirements, and explicitly deferred features.

@@ -1,0 +1,97 @@
+import { DatabaseSync } from 'node:sqlite';
+import fs from 'node:fs';
+import path from 'node:path';
+
+const mockMeta: D1Meta = {
+  duration: 0,
+  size_after: 0,
+  rows_read: 0,
+  rows_written: 0,
+  last_row_id: 0,
+  changed_db: false,
+  changes: 0,
+};
+
+export function createTestD1Database(applyMigration = true): D1Database {
+  const sqlite = new DatabaseSync(':memory:');
+
+  if (applyMigration) {
+    const migrationPath = path.resolve(__dirname, '../migrations/0001_initial_schema.sql');
+    const migrationSql = fs.readFileSync(migrationPath, 'utf8');
+    sqlite.exec(migrationSql);
+  }
+
+  const createPreparedStatement = (query: string, boundValues: unknown[] = []): D1PreparedStatement => {
+    return {
+      bind(...values: unknown[]) {
+        return createPreparedStatement(query, values);
+      },
+      async first<T = unknown>(colName?: string): Promise<T | null> {
+        const stmt = sqlite.prepare(query);
+        const row = stmt.get(...(boundValues as (string | number | bigint | boolean | null)[])) as Record<string, unknown> | undefined;
+        if (!row) return null;
+        if (colName) return (row[colName] ?? null) as T;
+        return row as T;
+      },
+      async all<T = unknown>(): Promise<D1Result<T>> {
+        const stmt = sqlite.prepare(query);
+        const results = stmt.all(...(boundValues as (string | number | bigint | boolean | null)[])) as T[];
+        return {
+          results,
+          success: true,
+          meta: mockMeta,
+        };
+      },
+      async run<T = Record<string, unknown>>(): Promise<D1Result<T>> {
+        const stmt = sqlite.prepare(query);
+        stmt.run(...(boundValues as (string | number | bigint | boolean | null)[]));
+        return {
+          results: [],
+          success: true,
+          meta: mockMeta,
+        };
+      },
+      async raw<T = unknown[]>(_options?: unknown): Promise<T[]> {
+        const stmt = sqlite.prepare(query);
+        const rows = stmt.all(...(boundValues as (string | number | bigint | boolean | null)[]));
+        return rows.map((r) => Object.values(r as Record<string, unknown>)) as T[];
+      },
+    };
+  };
+
+  const d1: D1Database = {
+    prepare(query: string): D1PreparedStatement {
+      return createPreparedStatement(query);
+    },
+    async dump(): Promise<ArrayBuffer> {
+      throw new Error('dump() is not supported in in-memory test database');
+    },
+    async batch<T = unknown>(statements: D1PreparedStatement[]): Promise<D1Result<T>[]> {
+      const results: D1Result<T>[] = [];
+      sqlite.exec('BEGIN TRANSACTION');
+      try {
+        for (const stmt of statements) {
+          const res = await stmt.all<T>();
+          results.push(res);
+        }
+        sqlite.exec('COMMIT');
+        return results;
+      } catch (e) {
+        sqlite.exec('ROLLBACK');
+        throw e;
+      }
+    },
+    async exec(query: string): Promise<D1ExecResult> {
+      sqlite.exec(query);
+      return {
+        count: 0,
+        duration: 0,
+      };
+    },
+    withSession() {
+      return d1;
+    },
+  };
+
+  return d1;
+}

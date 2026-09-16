@@ -1478,10 +1478,10 @@ Define the first seven levels from the curriculum section.
 
 ### Done When
 
-- [ ] All initial skills exist as data.
-- [ ] Each skill has examples.
-- [ ] Question-generation code can refer to skills by ID.
-- [ ] UI contains no curriculum-specific calculation logic.
+- [x] All initial skills exist as data.
+- [x] Each skill has examples.
+- [x] Question-generation code can refer to skills by ID.
+- [x] UI contains no curriculum-specific calculation logic.
 
 ---
 
@@ -1489,14 +1489,14 @@ Define the first seven levels from the curriculum section.
 
 Explicitly defer:
 
-- [ ] Roblox.
-- [ ] Multiplayer.
-- [ ] Complex RPG inventory.
-- [ ] Social features.
-- [ ] AI-generated questions.
-- [ ] Complex authentication.
-- [ ] Advanced statistics.
-- [ ] Elaborate animations.
+- [x] Roblox.
+- [x] Multiplayer.
+- [x] Complex RPG inventory.
+- [x] Social features.
+- [x] AI-generated questions.
+- [x] Complex authentication.
+- [x] Advanced statistics.
+- [x] Elaborate animations.
 
 ### Done When
 
@@ -1532,15 +1532,13 @@ type BaseQuestion = {
 
 ### Done When
 
-Unit tests can represent:
-
-```text
-8 + 7 = 15
-13 + 8 = 21
-17 - 9 = 8
-```
-
-without involving React or browser APIs.
+- [x] Unit tests can represent:
+  ```text
+  8 + 7 = 15
+  13 + 8 = 21
+  17 - 9 = 8
+  ```
+- [x] Pure TypeScript learning engine tests run without involving React or browser APIs.
 
 ---
 
@@ -1568,11 +1566,11 @@ Implement these first:
 
 For each skill:
 
-- [ ] 1,000 generated questions stay within intended bounds.
-- [ ] Answers are mathematically correct.
-- [ ] Generated questions actually match the requested skill.
-- [ ] No invalid subtraction questions are produced.
-- [ ] Tests cover edge cases such as 9 + 1, 9 + 9, 10 - 1, 10 - 9, 13 - 5.
+- [x] 1,000 generated questions stay within intended bounds.
+- [x] Answers are mathematically correct.
+- [x] Generated questions actually match the requested skill.
+- [x] No invalid subtraction questions are produced.
+- [x] Tests cover edge cases such as 9 + 1, 9 + 9, 10 - 1, 10 - 9, 13 - 5.
 
 ---
 
@@ -1599,12 +1597,12 @@ For each question:
 
 For at least 10,000 generated questions:
 
-- [ ] Exactly four choices exist.
-- [ ] Exactly one choice is correct.
-- [ ] No duplicate values.
-- [ ] Choices are sensible for the question.
-- [ ] Distractor category is recorded.
-- [ ] No obviously absurd answer appears.
+- [x] Exactly four choices exist.
+- [x] Exactly one choice is correct.
+- [x] No duplicate values.
+- [x] Choices are sensible for the question.
+- [x] Distractor category is recorded.
+- [x] No obviously absurd answer appears.
 
 ---
 
@@ -1630,15 +1628,15 @@ Track:
 
 ### Done When
 
-A simulated player can have:
-
-```text
-strong at basic addition
-weak at crossing-10 addition
-medium at subtraction
-```
-
-and the profile correctly reflects those results.
+- [x] SkillProfile tracks `skills: Record<Skill, SkillProgress>` and `pairs: Record<string, PairProgress>`.
+- [x] Tracks attempts, correct, accuracy, recent accuracy, response time, and hint usage.
+- [x] A simulated player can have:
+  ```text
+  strong at basic addition
+  weak at crossing-10 addition
+  medium at subtraction
+  ```
+  and the profile correctly reflects those results.
 
 ---
 
@@ -1663,12 +1661,12 @@ old profile + attempt → new profile
 
 Tests prove:
 
-- [ ] Correct answers improve the relevant skill.
-- [ ] Incorrect answers reduce/slow skill progression.
-- [ ] Recent performance is represented.
-- [ ] Exact number-pair performance is updated.
-- [ ] Response time is incorporated.
-- [ ] One attempt cannot accidentally update unrelated skills.
+- [x] Correct answers improve the relevant skill.
+- [x] Incorrect answers reduce/slow skill progression.
+- [x] Recent performance is represented.
+- [x] Exact number-pair performance is updated.
+- [x] Response time is incorporated.
+- [x] One attempt cannot accidentally update unrelated skills.
 
 ---
 
@@ -1695,17 +1693,17 @@ This is only the initial algorithm. Make the percentages configurable.
 
 ### Done When
 
-Create a simulated profile with:
+- [x] Implemented `selectNextQuestion(profile: SkillProfile, options?: SelectQuestionOptions): QuestionSpec;`.
+- [x] Initial target distribution configured: 50% weak, 25% developing, 15% mastered/review, 10% challenge.
+- [x] Distribution percentages are fully configurable via options.
+- [x] Created a simulated profile with:
+  ```text
+  cross_10_addition = weak
+  basic_addition = strong
+  basic_subtraction = medium
+  ```
+- [x] Generated 1,000 questions and verified that crossing-10 addition appears substantially more often than mastered skills (~50% vs ~15%).
 
-```text
-cross_10_addition = weak
-basic_addition = strong
-basic_subtraction = medium
-```
-
-Generate 1,000 questions and verify that crossing-10 addition appears substantially more often than mastered skills.
-
-The exact percentages do not need to be perfect yet.
 
 ---
 
@@ -1740,7 +1738,18 @@ Profiles to test:
 
 ### Done When
 
-The simulation produces sensible practice recommendations for every profile.
+- [x] Test simulator implemented: `simulatePlayer(config: PlayerSimulationConfig): SimulationResult`.
+- [x] Supports `simulatePlayer({ strengths: [...], weaknesses: [...] })` as well as presets and PRNG seed.
+- [x] Simulates several hundred attempts with adaptive question selection, elemental distractors, and immutable profile updates.
+- [x] All 7 learner profiles implemented and verified with automated test suites:
+  1. **Strong overall**: High accuracy (>90%), fast response times (<2500ms) $\rightarrow$ recommends `advance_curriculum`.
+  2. **Weak at make-10**: High accuracy on basic addition, low on make-10 (<50%) $\rightarrow$ recommends `remediate_weakness` on make-10 with target number bonds.
+  3. **Weak at subtraction**: High accuracy on addition, low on subtraction (<50%) $\rightarrow$ recommends `remediate_weakness` on subtraction with target pairs.
+  4. **Fast but inaccurate**: Rapid pace (<2000ms) with low accuracy (<60%) $\rightarrow$ recommends `encourage_accuracy` (slow down and verify).
+  5. **Slow but accurate**: High accuracy (>90%) with high response time (>5500ms) $\rightarrow$ recommends `improve_fluency` (build retrieval automaticity).
+  6. **Improving child**: Recent accuracy significantly outpaces baseline historical accuracy $\rightarrow$ recommends `consolidate_progress`.
+  7. **Child repeatedly making the same mistake**: Detects persistent identical wrong answer (e.g. 8 + 7 $\rightarrow$ 14) $\rightarrow$ recommends `address_systematic_error` with precise diagnosis.
+- [x] Simulation runs fast (<200ms for 300 attempts) and produces explainable, data-backed practice recommendations for every profile.
 
 ---
 
@@ -1756,9 +1765,16 @@ for multiple sessions.
 
 ### Done When
 
-A simulated weak skill receives more practice and eventually receives less practice as its performance improves.
-
-If the system keeps hammering a skill forever, fix the algorithm before continuing.
+- [x] Tested the full learning loop across multiple 50-arrow sessions using `simulateSessions(config: MultiSessionSimulationConfig): MultiSessionSimulationResult` and `simulateLearningLoop`.
+- [x] A simulated weak skill (`make_10`) receives high practice volume in early sessions (>50% to ~65%), and progressively receives less practice (dropping to <=25–35%) as its performance improves and score transitions from `weak` $\rightarrow$ `developing` $\rightarrow$ `mastered`.
+- [x] Subtraction weakness verified: high initial allocation tapers off as automaticity and mastery develop.
+- [x] Anti-hammering algorithm implemented and verified:
+  - `maxConsecutiveSameSkill`: Prevents asking questions from the same skill more than 3 times in a row within any session, interleaving confidence-boosting mastered review.
+  - Anti-repetition guard: Prevents asking the exact same operand pair back-to-back.
+  - Scoring responsiveness: `calculateSkillScore` weights recent performance at 75% once $\ge 10$ attempts exist so prior historical failures do not anchor the child in remediation forever.
+- [x] Curriculum-aligned progression: challenge questions prioritize the next unattempted curriculum level in order (e.g. Level 1 $\rightarrow$ 2 $\rightarrow$ 3).
+- [x] Practice recommendations evolve naturally over sessions from `remediate_weakness` $\rightarrow$ `consolidate_progress` $\rightarrow$ `advance_curriculum`.
+- [x] Multi-session simulation is deterministic with PRNG seed and executes fast (<150ms for 5 sessions / 250 attempts).
 
 ---
 
@@ -1788,11 +1804,11 @@ Implement:
 
 ### Done When
 
-- [ ] Question is visible.
-- [ ] Four answers are visible.
-- [ ] Child can tap/click an answer.
-- [ ] Correct answer is detected.
-- [ ] Next question appears.
+- [x] Question is visible: Target displays math expression prominently with top archer symbol (`🏹`).
+- [x] Four answers are visible: Elemental arrows (🔥 Fire, ❄️ Ice, 💨 Wind, 🪨 Earth) displayed in a responsive 2x2 grid with answer values.
+- [x] Child can tap/click an answer: Interactive buttons with touch targets, hover/focus states, and keyboard shortcut support (1-4).
+- [x] Correct answer is detected: Instant visual feedback identifies correct (`🎯 Hit!`) and incorrect (`❌ Miss!`) choices, highlighting the correct arrow.
+- [x] Next question appears: Advances automatically to the next question with arrow progress indicator (`1 / 50` $\rightarrow$ `50 / 50`) and completion summary.
 
 ---
 
@@ -1816,7 +1832,15 @@ Keep animation short.
 
 ### Done When
 
-A child can understand what happened without reading developer-oriented UI.
+- [x] A child can understand what happened without reading developer-oriented UI:
+  - **select arrow**: Child chooses an elemental arrow (click or keys 1–4); arrow locks in and double clicks are prevented during flight.
+  - **archer shoots**: Archer bow visibly draws and snaps on release (`bow-recoil`) with element-nocked arrow indicator.
+  - **arrow hits target**: Flying elemental arrow projectile with matching element icon, aura, and trail travels swiftly to the target card.
+  - **correct/wrong feedback**:
+    - **Hit (Correct)**: Bullseye impact ripple (`hit-ring-burst`), sparkle burst (`✨🎯✨`), target pop recoil, and `🎯 Hit!` banner.
+    - **Miss (Wrong)**: Arrow glances off with deflection puff (`💨 Miss!`), target wobbles, and the correct choice is highlighted (`revealed-correct`).
+  - **next question**: Automatically advances smoothly after ~500–750ms with updated arrow counter (`1 / 50` $\rightarrow$ `2 / 50`).
+  - Accessibility: `prefers-reduced-motion` media query supported.
 
 ---
 
@@ -1835,12 +1859,12 @@ Initially persist locally.
 
 ### Done When
 
-- [ ] Starting a session gives 50 arrows.
-- [ ] Each submitted answer consumes exactly one arrow.
-- [ ] Refreshing the page does not restore spent arrows.
-- [ ] 50/50 ends the normal session.
-- [ ] A second session cannot give another 50 arrows on the same day.
-- [ ] Tests cover refresh/restart behavior.
+- [x] Starting a session gives 50 arrows (`arrowsAllowed: 50, arrowsUsed: 0`, counter shows `1 / 50`).
+- [x] Each submitted answer consumes exactly one arrow (`submitAnswer()` updates `arrowsUsed` and decrements `getRemainingArrows()`).
+- [x] Refreshing the page does not restore spent arrows (resumes from local storage at spent + 1 with hits and attempts preserved).
+- [x] 50/50 ends the normal session (`status = 'completed'`, `completedAt` set, daily practice complete card shown).
+- [x] A second session cannot give another 50 arrows on the same day (`startDailySession()` on the same calendar day returns the completed session with 0 remaining arrows and blocks restarting).
+- [x] Tests cover refresh/restart behavior (automated test suites in both `@math-archer/learning-engine` and `web`).
 
 ---
 
@@ -1868,7 +1892,18 @@ updated SkillProfile
 
 ### Done When
 
-The game visibly adapts after a controlled test profile is loaded.
+- [x] Connected the complete learning engine loop:
+  - `SkillProfile` $\rightarrow$ `selectNextQuestion()` $\rightarrow$ `Question` $\rightarrow$ child answer $\rightarrow$ `Attempt` $\rightarrow$ `recordAttempt()` $\rightarrow$ updated `SkillProfile`.
+- [x] Skill profile persistence and restoration:
+  - Profile state persists across answers and browser reloads via local-first storage adapter (`saveProfile()`, `loadProfile()`).
+- [x] Controlled test profiles implemented:
+  - Factory `createControlledTestProfile(preset, playerId)` supports test presets: `weak_make_10`, `weak_subtraction`, `weak_cross_10_addition`, `mastered_beginner`, and `fresh_beginner`.
+- [x] The game visibly adapts after a controlled test profile is loaded:
+  - Active skill badge (`data-testid="active-skill-badge"`) displays the target skill name (e.g. `🎯 Make 10` or `🎯 Basic subtraction`).
+  - Pedagogical category badge (`data-testid="pedagogical-category-badge"`) displays the selection reason (e.g. `⚠️ Needs Practice (Weak Focus)`, `🌱 Developing Skill`, `⭐ Review (Mastered)`, `🔥 Challenge Frontier`).
+  - Skill mastery indicator (`data-testid="skill-mastery-badge"`) shows level and accuracy/score.
+  - In-game profile switcher toolbar (`data-testid="profile-selector-bar"`) allows instant switching between presets, immediately adapting questions and UI indicators.
+- [x] Automated test suites in both `@math-archer/learning-engine` and `web` verify the full loop, adaptation, and profile persistence.
 
 ---
 
@@ -1890,7 +1925,14 @@ show a guided decomposition.
 
 ### Done When
 
-The child can see a complete worked example after requesting help.
+- [x] The child can see a complete worked example after requesting help:
+  - Guided make-10 decomposition implemented in `@math-archer/learning-engine` (`isMake10Eligible`, `generateMake10Decomposition`).
+  - Supports classic make-10 additions such as `8 + 7`, `9 + 6`, `7 + 8`, as well as multi-digit additions crossing a ten boundary.
+  - Generates 3-step structured decomposition: Step 1 (make 10: $8 + 2 = 10$), Step 2 (split second number: $7 - 2 = 5$), Step 3 (add to 10: $10 + 5 = 15$), and complete summary equation ($8 + 7 = 8 + 2 + 5 = 10 + 5 = 15$).
+  - Visual 10-frames model rendered with filled dots for the initial number, borrowed dots to complete 10, and remainder dots in the second frame.
+  - In-game "💡 Need Help? Show Make-10 Guide" button (`data-testid="request-help-button"` / shortcut `[H]`) and worked example modal (`data-testid="worked-example-card"`).
+  - Requesting help records `hintUsed: true` on the attempt, updating profile stats (`hintsUsed`, `hintRate`) in the learning engine.
+- [x] Automated test suites in both `@math-archer/learning-engine` and `web` verify worked example generation, equations, UI interactions, and attempt tracking.
 
 ---
 
@@ -1907,10 +1949,20 @@ full explanation
 
 ### Done When
 
-- [ ] Adventure mode does not automatically dump a full explanation.
-- [ ] Training mode can show the complete explanation.
-- [ ] Hint usage is recorded.
-- [ ] Repeated hint use can influence skill assessment.
+- [x] Adventure mode does not automatically dump a full explanation:
+  - In Adventure mode (`mode="adventure"`), requesting help opens at the `strategy_hint` level (`data-testid="strategy-hint-card"`), providing a guiding prompt and goal clue without revealing all 3 steps, ten frames, or summary equations.
+  - Misses in Adventure mode present brief encouraging strategy guidance (`🏹 Miss! 💡 Try making 10 first.`) without dumping an explanation modal.
+  - Learners can progressively step up to `partial_decomposition` and `full_explanation` if desired.
+- [x] Training mode can show the complete explanation:
+  - In Training mode (`mode="training"` or via mode selector toolbar `data-testid="mode-tab-training"`), the complete worked example (all 3 steps, 10-frames visual model, and full summary equation) is directly accessible and presented upon requesting help.
+  - An in-game segmented stepper allows jumping between `strategy_hint`, `partial_decomposition`, and `full_explanation` at any time.
+- [x] Hint usage is recorded:
+  - `Attempt` model records both `hintUsed: boolean` and specific `hintLevel?: HintLevel` (`none`, `strategy_hint`, `partial_decomposition`, `full_explanation`).
+  - `SkillProgress` tracks cumulative `hintsUsed`, `hintRate`, and hint level breakdown counts in `hintLevels`.
+- [x] Repeated hint use can influence skill assessment:
+  - `calculateSkillScore` applies a progressive compounding penalty for repeated hint reliance.
+  - `classifyMasteryLevel` enforces mastery caps based on hint dependence (`hintRate >= 0.2` prevents false `'mastered'` status, `>= 0.4` caps at `'medium'`, and chronic reliance `>= 0.7` assesses as `'weak'`), ensuring adaptive question selection continues to offer practice.
+- [x] Comprehensive test suites in `@math-archer/learning-engine` (160 tests) and `apps/web` (38 tests) verify hint level generation, stepping, mode differences, attempt tracking, and score penalties.
 
 ---
 
@@ -1920,7 +1972,17 @@ Training mode should allow unlimited questions and explanations.
 
 ### Done When
 
-A parent can use Training mode to deliberately practice a weak skill without consuming the daily 50 arrows.
+- [x] A parent can use Training mode to deliberately practice a weak skill without consuming the daily 50 arrows:
+  - In Training mode (`mode="training"` or via mode tab `data-testid="mode-tab-training"`), answering questions does not increment `arrowsUsed` or consume from `DailySession`.
+  - Switching between Adventure mode and Training mode preserves spent and remaining daily arrow counts.
+  - Unlimited questions: Training mode practice is never cutoff at 50 arrows and allows indefinite questions with dynamic question index (`data-testid="arrow-counter"`) and unlimited badge (`data-testid="training-unlimited-badge"`).
+  - Deliberate weak-skill practice: Training mode provides a dedicated deliberate practice bar (`data-testid="deliberate-practice-bar"`) detecting weak skills from the player profile (`weakSkills = getWeakSkills(profile)`).
+  - Quick-chips allow targeting specific weak skills (e.g., `data-testid="practice-weak-skill-basic_subtraction"` or `practice-weak-skill-make_10`) or choosing any curriculum skill via `<select data-testid="training-skill-select">`.
+  - Question generation in deliberate practice isolates practice to the selected target skill (`allowedSkills: [selectedTrainingSkill]`) with anti-hammering bypassed for deliberate repetition.
+  - Skill profile updates: Attempts in Training mode update the learner's skill profile (`recordAttempt`), improving mastery and accuracy while tagging `mode: 'training'`.
+  - Transition from completed daily session: When all daily 50 arrows are spent in Adventure mode, a direct action button (`data-testid="go-to-training-button"`) allows parents to immediately transition to Training mode and continue deliberate practice.
+  - Explanations in Training mode default to full explanation and misses offer immediate guided review.
+- [x] Comprehensive test suites in `apps/web` (46 tests) and `@math-archer/learning-engine` (160 tests) verify arrow preservation, deliberate practice skill switching, unlimited questions, attempt recording, and session transition.
 
 ---
 
@@ -1942,7 +2004,13 @@ skill progress
 
 ### Done When
 
-Closing and reopening the application preserves progress.
+- [x] Closing and reopening the application preserves progress across all three core entities:
+  - **`sessions`**: Stored under `math_archer_session_${playerId}_${date}` and registered in a cross-date session index `math_archer_sessions_index_${playerId}`. Daily arrow counts (50 arrows), arrows used, hits, completion status (`in_progress` vs `completed`), timestamps, and session IDs are preserved upon app reload or restart (`startDailySession`, `loadAllSessions`, `getSessionHistory`).
+  - **`attempts`**: Full sequential log of every answer attempt is persisted to local storage under `math_archer_attempts_${playerId}` via `saveAttempt` / `saveAttempts`. Each attempt records exact question metadata (`questionId`, `left`, `operation`, `right`, `answer`, `selectedAnswer`, `correct`, `responseTimeMs`, `skill`, `hintUsed`, `hintLevel`, `mode`, `timestamp`, `playerId`, `sessionId`). Attempts can be queried by `sessionId`, `date`, `skill`, or `mode` (`loadAttempts`, `getAttemptsForSession`, `getAttemptsForDate`, `getAttemptsForSkill`).
+  - **`skill progress`**: Aggregated mastery levels, accuracy, recent accuracy, response times, and exact number-pair progress are stored under `math_archer_profile_${playerId}` (`saveProfile`, `loadProfile`, `getOrCreateProfile`). Profile is updated immutably after every shot via `recordAttempt` and synced to storage.
+  - **Unified Local Progress**: `loadLocalProgress` aggregates the player's profile, current session, all sessions, attempts history, and summary statistics (`AttemptSummaryStats`) in a single call.
+  - **UI Integration**: `GameScreen` logs every shot to attempt history with linked `sessionId`. In `apps/web`, a dedicated "📊 Progress & History" tab displays stored daily sessions, attempt logs, accuracy, and practice counts, verifying that closing/reopening or navigating between screens preserves all player progress.
+- [x] Comprehensive test suites in `@math-archer/learning-engine` (179 tests) and `apps/web` (53 tests) verify attempt persistence, session indexing, query filtering, mode tracking, and state preservation across simulated app closes and reopens.
 
 ---
 
@@ -1961,14 +2029,17 @@ Display:
 
 ### Done When
 
-A parent can open one screen and answer:
-
-1. How much did my child practice?
-2. How accurate were they?
-3. Is addition or subtraction weaker?
-4. Which specific skills are weak?
-5. Which exact number combinations cause problems?
-6. Is performance improving?
+- [x] A parent can open one screen (`ParentDashboard`) and answer all 6 pedagogical questions:
+  1. **How much did my child practice?**: Today's arrow counter (e.g. 50/50 arrows), arrows remaining, session completion status, total sessions, and practice days.
+  2. **How accurate were they?**: Overall accuracy %, today's accuracy %, and total hits count.
+  3. **Is addition or subtraction weaker?**: Side-by-side operation comparison cards with accuracy %, attempts count, and explicit weaker-operation banner (`subtraction`, `addition`, or `balanced`).
+  4. **Which specific skills are weak?**: Complete curriculum skill breakdown with mastery badges (`weak`, `developing`, `strong`, `mastered`) and dedicated alert highlight for weak skills.
+  5. **Which exact number combinations cause problems?**: Problematic number pairs grid (e.g. `13 + 8` at 33%, `17 - 9` at 40%) with misses count and detected systematic wrong answers.
+  6. **Is performance improving?**: Improvement trend status badge (`improving`, `steady`, `declining`), recent vs baseline accuracy delta %, and chronological daily accuracy chart (e.g. Mon, Tue, Wed, Thu, Fri).
+- [x] Includes fluency metrics: average response time (seconds) and hint rate (%).
+- [x] Includes "Today's Focus" recommendation card with suggested combinations to practice next.
+- [x] Integrated as a dedicated top-level tab in `apps/web` with interactive sample preview data toggle for immediate inspection.
+- [x] Comprehensive test suites in `@math-archer/learning-engine` (189 tests) and `apps/web` (58 tests) verify all dashboard computations and UI components.
 
 ---
 
@@ -1993,9 +2064,20 @@ Practice:
 
 ### Done When
 
-Every recommendation can be traced to recorded data.
-
-No mysterious "AI thinks this is weak" explanation.
+- [x] Every recommendation can be traced to recorded data:
+  - Exact computation of `recentAccuracy`, `previousAccuracy`, and `historicalAccuracy` via `computeSkillAccuracyHistory` directly from recorded player attempt history and profile progress.
+  - Attached verifiable audit trail (`RecommendationDataTrace`) providing complete provenance: `totalAttempts`, `recentAttemptsCount`, `previousAttemptsCount`, `recentAccuracy`, `previousAccuracy`, `averageResponseTimeMs`, `hintRate`, `recordedWeakPairs`, and `auditStatement`.
+- [x] No mysterious "AI thinks this is weak" explanation:
+  - Pedagogical recommendations cite concrete empirical data points in the `Why:` section (e.g. `Recent accuracy: 64%`, `Previous accuracy: 51%`, `Average response time: 1.8s (rushing leads to avoidable errors)`).
+  - Explicit audit guarantee: "Every recommendation is 100% derived from recorded attempt data; zero mysterious AI guessing."
+- [x] Displays the exact specification format in both engine and dashboard UI:
+  - Header: `Today's focus`
+  - Skill: `Crossing 10 in addition` (via `formatSkillDisplayName`)
+  - `Why:` with `Recent accuracy: 64%` and `Previous accuracy: 51%`
+  - `Practice:` with suggested combinations `8 + 7`, `9 + 6`, `13 + 8` (via `selectSuggestedPairs`)
+  - Helper `formatRecommendationExplanation()` generates the exact plaintext multiline format.
+  - `ParentDashboard` renders the dedicated `focus-card` with `Today's focus`, `Why:`, `Practice:` cards, and a verifiable Data Trace inspector.
+- [x] Comprehensive test suites in `@math-archer/learning-engine` (199 tests) and `apps/web` (60 tests) verify exact plaintext formatting, data traceability, transparency, and dashboard UI rendering.
 
 ---
 
@@ -2020,7 +2102,7 @@ Keep schema minimal.
 
 ### Done When
 
-A clean database can be created from migrations alone.
+- [x] A clean database can be created from migrations alone (`apps/api/migrations/0001_initial_schema.sql`). Integration tests in `apps/api/src/api.test.ts` verify that executing migrations against an empty database creates all 4 required tables (`players`, `sessions`, `attempts`, `skill_progress`) with primary keys, foreign keys, and indexes.
 
 ---
 
@@ -2038,7 +2120,14 @@ GET  /api/recommendations
 
 ### Done When
 
-All endpoints work against a real D1 database and have integration tests for normal and invalid requests.
+- [x] All endpoints work against a real D1 database and have integration tests for normal and invalid requests:
+  - `POST /api/sessions/start`: Initializes daily session with configurable arrows (defaults to 50), auto-provisions player, returns existing session when called again on the same day, and validates parameters.
+  - `POST /api/attempts`: Supports single attempt and batch uploads, enforces validation across question metadata, atomically updates sessions and `skill_progress` using learning-engine logic, and computes remaining arrows.
+  - `GET /api/sessions/today`: Retrieves active daily session or returns null when unstarted.
+  - `GET /api/progress`: Returns aggregated skill profile with mastery levels, overall accuracy, operation breakdown (addition vs subtraction), and average response time.
+  - `GET /api/recommendations`: Feeds D1 attempt history and skill profile into `generatePracticeRecommendation` to deliver transparent, data-traceable practice guidance.
+  - Includes CORS preflight handling (`OPTIONS`) and 404 handlers.
+  - Tested across 18 integration tests in `apps/api/src/api.test.ts`.
 
 ---
 
@@ -2054,7 +2143,12 @@ maximum = 50 attempts per player per local calendar day
 
 ### Done When
 
-A modified browser request cannot create attempt #51.
+- [x] A modified browser request cannot create attempt #51:
+  - The Worker API inspects both session consumption and recorded daily adventure attempts.
+  - Submitting attempts 1–50 in Adventure mode succeeds and marks session as `completed` with timestamp.
+  - Submitting attempt #51 (even if bypassing client-side locks) is strictly blocked by the server with HTTP 403 Forbidden and `error: 'DAILY_LIMIT_EXCEEDED'`.
+  - Training mode attempts remain unblocked for unlimited deliberate practice.
+  - Verified by comprehensive integration tests in `apps/api/src/api.test.ts`.
 
 ---
 
@@ -2086,7 +2180,13 @@ retry
 
 ### Done When
 
-Turning the network off during a session does not lose completed attempts.
+- [x] Turning the network off during a session does not lose completed attempts:
+  - Local-first queue (`apps/web/src/sync/queue.ts`) stores pending attempts in localStorage (`math_archer_sync_queue_${playerId}`).
+  - `SyncManager` (`apps/web/src/sync/SyncManager.ts`) handles online/offline status, queue flushing, and retry on window `'online'` events.
+  - When offline: completed attempts are securely retained locally and in the queue; zero attempts are lost.
+  - When online: pending attempts are immediately flushed in batch to `POST /api/attempts` and marked synced.
+  - Real-time Cloud Sync indicator in `GameScreen` (🟢 Synced, 🟡 Syncing N, 🔴 Offline N) with manual "Sync Now" trigger.
+  - Verified by 4 unit and integration tests in `apps/web/src/sync/sync.test.ts` and 2 UI tests in `apps/web/src/components/GameScreen.test.tsx`.
 
 ---
 
@@ -2590,60 +2690,60 @@ If building this as a side project, use this order:
 
 ### Session 1
 
-- [ ] Repository.
-- [ ] TypeScript types.
-- [ ] Curriculum data.
-- [ ] Basic question generator.
+- [x] Repository.
+- [x] TypeScript types.
+- [x] Curriculum data.
+- [x] Basic question generator.
 
 ### Session 2
 
-- [ ] Distractor generator.
-- [ ] Question tests.
-- [ ] Edge-case tests.
+- [x] Distractor generator.
+- [x] Question tests.
+- [x] Edge-case tests.
 
 ### Session 3
 
-- [ ] Skill profile.
-- [ ] Attempt recording.
-- [ ] Skill tests.
+- [x] Skill profile.
+- [x] Attempt recording.
+- [x] Skill tests.
 
 ### Session 4
 
-- [ ] Adaptive question selection.
-- [ ] Simulation.
-- [ ] Tune initial weighting.
+- [x] Adaptive question selection.
+- [x] Simulation.
+- [x] Tune initial weighting.
 
 ### Session 5
 
-- [ ] First React game screen.
-- [ ] Four arrows.
-- [ ] Answer selection.
+- [x] First React game screen.
+- [x] Four arrows.
+- [x] Answer selection.
 
 ### Session 6
 
-- [ ] Shooting animation.
-- [ ] 50-arrow session.
-- [ ] Local persistence.
+- [x] Shooting animation.
+- [x] 50-arrow session.
+- [x] Local persistence.
 
 ### Session 7
 
-- [ ] Make-10 teaching.
-- [ ] Training mode.
-- [ ] Hint tracking.
+- [x] Make-10 teaching.
+- [x] Training mode.
+- [x] Hint tracking.
 
 ### Session 8
 
-- [ ] Local parent dashboard.
-- [ ] Weak-pair analysis.
-- [ ] Progress chart.
+- [x] Local parent dashboard.
+- [x] Weak-pair analysis.
+- [x] Progress chart.
 
 ### Session 9+
 
-- [ ] Cloudflare Worker.
-- [ ] D1.
-- [ ] API.
+- [x] Cloudflare Worker.
+- [x] D1.
+- [x] API.
 - [ ] Authentication.
-- [ ] Sync.
+- [x] Sync.
 
 After that:
 

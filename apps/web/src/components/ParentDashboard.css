@@ -1,0 +1,679 @@
+/* ParentDashboard.css - Styling for Math Archer Parent Dashboard */
+
+.parent-dashboard {
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  color: #1f2937;
+  max-width: 860px;
+  margin: 0 auto;
+  padding-bottom: 40px;
+}
+
+/* Header & Controls */
+.dashboard-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 16px;
+  margin-bottom: 24px;
+  border-bottom: 1px solid #e5e7eb;
+  padding-bottom: 16px;
+}
+
+.dashboard-header h2 {
+  margin: 0;
+  font-size: 24px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: #111827;
+}
+
+.dashboard-header p {
+  margin: 4px 0 0;
+  color: #6b7280;
+  font-size: 14px;
+}
+
+.dashboard-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.btn-secondary {
+  padding: 6px 14px;
+  border-radius: 6px;
+  border: 1px solid #d1d5db;
+  background: #ffffff;
+  color: #374151;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  transition: background 0.15s ease, border-color 0.15s ease;
+}
+
+.btn-secondary:hover {
+  background: #f9fafb;
+  border-color: #9ca3af;
+}
+
+.btn-sample {
+  background: #eff6ff;
+  border-color: #bfdbfe;
+  color: #1d4ed8;
+}
+
+.btn-sample:hover {
+  background: #dbeafe;
+}
+
+/* Quick Answer 6-Question Grid */
+.quick-questions-card {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 20px;
+  margin-bottom: 24px;
+}
+
+.quick-questions-card h3 {
+  margin: 0 0 14px;
+  font-size: 16px;
+  color: #334155;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.questions-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 12px;
+}
+
+.question-item {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 12px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.question-item .q-title {
+  font-size: 12px;
+  color: #64748b;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+}
+
+.question-item .q-answer {
+  font-size: 15px;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.question-item .q-sub {
+  font-size: 12px;
+  color: #64748b;
+}
+
+/* Key Metrics Cards */
+.metrics-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+  gap: 14px;
+  margin-bottom: 24px;
+}
+
+.metric-card {
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
+}
+
+.metric-card .metric-label {
+  font-size: 12px;
+  color: #6b7280;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.025em;
+}
+
+.metric-card .metric-val {
+  font-size: 26px;
+  font-weight: 800;
+  color: #111827;
+  line-height: 1.1;
+}
+
+.metric-card .metric-sub {
+  font-size: 12px;
+  color: #6b7280;
+}
+
+/* Arrow Progress Bar */
+.arrow-progress-container {
+  margin-top: 4px;
+  height: 6px;
+  background: #e5e7eb;
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.arrow-progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #3b82f6, #10b981);
+  border-radius: 3px;
+  transition: width 0.3s ease;
+}
+
+/* Two-column layout */
+.dashboard-grid-2col {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+  margin-bottom: 24px;
+}
+
+@media (max-width: 768px) {
+  .dashboard-grid-2col {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Dashboard Sections */
+.dashboard-section {
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  padding: 20px;
+  margin-bottom: 24px;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
+}
+
+.section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.section-header h3 {
+  margin: 0;
+  font-size: 17px;
+  color: #111827;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* Operation Comparison Card */
+.operation-comparison-container {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.operation-cards {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.op-box {
+  background: #f9fafb;
+  border: 2px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 14px;
+  text-align: center;
+}
+
+.op-box.weaker {
+  background: #fffbeb;
+  border-color: #f59e0b;
+}
+
+.op-box.stronger {
+  background: #f0fdf4;
+  border-color: #10b981;
+}
+
+.op-box .op-title {
+  font-size: 13px;
+  font-weight: 700;
+  color: #4b5563;
+  margin-bottom: 6px;
+}
+
+.op-box .op-acc {
+  font-size: 28px;
+  font-weight: 800;
+  color: #111827;
+}
+
+.op-box .op-sub {
+  font-size: 12px;
+  color: #6b7280;
+  margin-top: 4px;
+}
+
+.comparison-banner {
+  padding: 10px 14px;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.comparison-banner.warning {
+  background: #fef3c7;
+  color: #92400e;
+  border: 1px solid #fde68a;
+}
+
+.comparison-banner.balanced {
+  background: #f0fdf4;
+  color: #166534;
+  border: 1px solid #bbf7d0;
+}
+
+.comparison-banner.neutral {
+  background: #f3f4f6;
+  color: #4b5563;
+  border: 1px solid #e5e7eb;
+}
+
+/* Skills Breakdown List */
+.skills-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.skill-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 14px;
+  background: #f9fafb;
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+  gap: 12px;
+}
+
+.skill-row.weak {
+  border-left: 4px solid #ef4444;
+  background: #fef2f2;
+}
+
+.skill-row.mastered {
+  border-left: 4px solid #10b981;
+}
+
+.skill-info {
+  flex: 1;
+}
+
+.skill-name {
+  font-size: 14px;
+  font-weight: 600;
+  color: #111827;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.skill-meta {
+  font-size: 12px;
+  color: #6b7280;
+  margin-top: 2px;
+}
+
+.skill-metrics {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  text-align: right;
+}
+
+.skill-acc {
+  font-size: 16px;
+  font-weight: 700;
+  color: #111827;
+}
+
+/* Mastery Badges */
+.badge {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.badge-weak {
+  background: #fee2e2;
+  color: #b91c1c;
+}
+
+.badge-medium,
+.badge-developing {
+  background: #fef3c7;
+  color: #b45309;
+}
+
+.badge-strong {
+  background: #dbeafe;
+  color: #1d4ed8;
+}
+
+.badge-mastered {
+  background: #d1fae5;
+  color: #047857;
+}
+
+/* Weak Combinations Grid */
+.weak-pairs-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 12px;
+}
+
+.weak-pair-card {
+  background: #fff5f5;
+  border: 1px solid #fecaca;
+  border-radius: 8px;
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.pair-expression {
+  font-family: 'Courier New', Courier, monospace;
+  font-size: 18px;
+  font-weight: 700;
+  color: #991b1b;
+}
+
+.pair-stat {
+  font-size: 12px;
+  color: #4b5563;
+}
+
+.pair-mistake {
+  font-size: 11px;
+  color: #b91c1c;
+  background: #fee2e2;
+  padding: 2px 6px;
+  border-radius: 4px;
+  margin-top: 4px;
+  font-weight: 600;
+}
+
+/* Historical Chart */
+.chart-container {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.chart-bars {
+  display: flex;
+  align-items: flex-end;
+  gap: 16px;
+  height: 140px;
+  padding-top: 20px;
+  border-bottom: 2px solid #e5e7eb;
+}
+
+.chart-bar-group {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  height: 100%;
+  justify-content: flex-end;
+  gap: 6px;
+}
+
+.chart-bar {
+  width: 100%;
+  max-width: 44px;
+  background: linear-gradient(180deg, #3b82f6, #60a5fa);
+  border-radius: 4px 4px 0 0;
+  min-height: 4px;
+  transition: height 0.3s ease;
+  position: relative;
+}
+
+.chart-bar.high {
+  background: linear-gradient(180deg, #10b981, #34d399);
+}
+
+.chart-bar.low {
+  background: linear-gradient(180deg, #f59e0b, #fbbf24);
+}
+
+.chart-bar-label {
+  font-size: 11px;
+  color: #6b7280;
+  font-weight: 600;
+}
+
+.chart-bar-val {
+  font-size: 11px;
+  font-weight: 700;
+  color: #1f2937;
+}
+
+/* Trend badge */
+.trend-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border-radius: 9999px;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.trend-improving {
+  background: #d1fae5;
+  color: #065f46;
+}
+
+.trend-declining {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+.trend-steady {
+  background: #e0f2fe;
+  color: #0369a1;
+}
+
+.trend-insufficient {
+  background: #f3f4f6;
+  color: #4b5563;
+}
+
+/* Today's Focus Card (Task 5.3) */
+.focus-card {
+  background: linear-gradient(135deg, #eff6ff, #f0fdf4);
+  border: 1px solid #bfdbfe;
+  border-radius: 12px;
+  padding: 24px;
+  margin-bottom: 24px;
+  box-shadow: 0 2px 6px rgba(37, 99, 235, 0.06);
+}
+
+.focus-header-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 6px;
+}
+
+.focus-kicker {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #2563eb;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.focus-action-pill {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  padding: 3px 10px;
+  border-radius: 9999px;
+  background: #dbeafe;
+  color: #1e40af;
+  border: 1px solid #bfdbfe;
+}
+
+.focus-skill-title {
+  font-size: 24px;
+  font-weight: 800;
+  color: #1e3a8a;
+  margin: 4px 0 16px;
+}
+
+.focus-body-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+  margin-bottom: 20px;
+}
+
+@media (max-width: 768px) {
+  .focus-body-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.focus-section-label {
+  margin: 0 0 10px;
+  font-size: 15px;
+  font-weight: 800;
+  color: #1e40af;
+}
+
+.focus-why-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.focus-why-item {
+  background: #ffffff;
+  border: 1px solid #bfdbfe;
+  border-left: 4px solid #2563eb;
+  border-radius: 6px;
+  padding: 8px 12px;
+  font-size: 14px;
+  font-weight: 600;
+  color: #1f2937;
+}
+
+.focus-pairs {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.focus-pair-tag {
+  background: #ffffff;
+  border: 1px solid #93c5fd;
+  border-radius: 8px;
+  padding: 8px 16px;
+  font-family: monospace;
+  font-size: 17px;
+  font-weight: 800;
+  color: #1e3a8a;
+  display: inline-flex;
+  align-items: center;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+}
+
+.practice-pair-text {
+  letter-spacing: 0.05em;
+}
+
+/* Verifiable Data Trace (Zero AI Black-Box Guarantee) */
+.focus-data-trace {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 14px 16px;
+  margin-top: 14px;
+}
+
+.data-trace-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.data-trace-badge {
+  font-size: 12px;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.data-trace-guarantee {
+  font-size: 12px;
+  font-weight: 600;
+  color: #059669;
+}
+
+.data-trace-audit {
+  font-size: 13px;
+  color: #475569;
+  line-height: 1.5;
+  margin-bottom: 10px;
+}
+
+.data-trace-stats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.trace-stat-chip {
+  background: #ffffff;
+  border: 1px solid #cbd5e1;
+  border-radius: 6px;
+  padding: 4px 10px;
+  font-size: 12px;
+  color: #334155;
+}
+
