@@ -7,6 +7,7 @@ import type {
   ChildLoginRequest,
   ParentCreateChildRequest,
   ParentUpdateChildRequest,
+  ParentChangePinRequest,
 } from './types';
 import {
   DailyLimitError,
@@ -18,6 +19,7 @@ import {
   createParent,
   getParentByEmail,
   getParentById,
+  updateParentPin,
   createChildProfile,
   getChildrenForParent,
   getChildProfile,
@@ -489,6 +491,51 @@ export default {
           }
 
           return jsonResponse({ success: true }, 200);
+        }
+
+        // PUT /api/parent/pin
+        if (method === 'PUT' && pathname === '/api/parent/pin') {
+          let body: Partial<ParentChangePinRequest> = {};
+          try {
+            body = (await request.json()) as Partial<ParentChangePinRequest>;
+          } catch {
+            return errorResponse('MALFORMED_JSON', 'Request body must be valid JSON', 400);
+          }
+
+          if (!body.newPin || !/^\d{4}$/.test(body.newPin.trim())) {
+            return errorResponse('INVALID_PIN', 'PIN must be exactly 4 digits', 400);
+          }
+
+          const parentRecord = await getParentById(env.DB, parentId);
+          if (!parentRecord) {
+            return errorResponse('NOT_FOUND', 'Parent record not found', 404);
+          }
+
+          if (
+            parentRecord.parent_pin &&
+            body.currentPin !== undefined &&
+            body.currentPin.trim() !== parentRecord.parent_pin
+          ) {
+            return errorResponse('INCORRECT_PIN', 'Current PIN is incorrect', 400);
+          }
+
+          const updated = await updateParentPin(env.DB, parentId, body.newPin.trim());
+          if (!updated) {
+            return errorResponse('INTERNAL_ERROR', 'Failed to update PIN', 500);
+          }
+
+          return jsonResponse(
+            {
+              success: true,
+              parent: {
+                id: updated.id,
+                email: updated.email,
+                name: updated.name,
+                hasPin: true,
+              },
+            },
+            200
+          );
         }
 
         return errorResponse('NOT_FOUND', `Endpoint ${method} ${pathname} not found`, 404);

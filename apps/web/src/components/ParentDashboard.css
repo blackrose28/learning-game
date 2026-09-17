@@ -824,3 +824,13 @@
   font-size: 13px;
   margin-bottom: 14px;
 }
+
+.modal-success-banner {
+  background: #f0fdf4;
+  border: 1px solid #86efac;
+  color: #166534;
+  padding: 8px 12px;
+  border-radius: 6px;
+  font-size: 13px;
+  margin-bottom: 14px;
+}

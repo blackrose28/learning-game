@@ -434,5 +434,85 @@ describe('ParentDashboard Component (Task 5.2)', () => {
         expect(screen.queryByTestId('child-manage-row-child_mia')).not.toBeInTheDocument();
       });
     });
+
+    it('allows changing the parent PIN code with validation and confirmation', async () => {
+      render(
+        <AuthProvider>
+          <ParentDashboard />
+        </AuthProvider>
+      );
+
+      // Open Change Parent PIN modal from switcher bar
+      fireEvent.click(screen.getByTestId('change-parent-pin-btn'));
+      expect(screen.getByTestId('change-parent-pin-modal')).toBeInTheDocument();
+
+      // 1. Validation: Mismatched new PIN and confirmation
+      fireEvent.change(screen.getByTestId('current-parent-pin-input'), {
+        target: { value: '1234' },
+      });
+      fireEvent.change(screen.getByTestId('new-parent-pin-input'), {
+        target: { value: '5678' },
+      });
+      fireEvent.change(screen.getByTestId('confirm-parent-pin-input'), {
+        target: { value: '9999' },
+      });
+      fireEvent.click(screen.getByTestId('save-parent-pin-btn'));
+
+      expect(screen.getByTestId('change-pin-error')).toHaveTextContent(
+        /New PIN and confirmation do not match/i
+      );
+
+      // 2. Validation: Incorrect current PIN
+      fireEvent.change(screen.getByTestId('current-parent-pin-input'), {
+        target: { value: '0000' },
+      });
+      fireEvent.change(screen.getByTestId('confirm-parent-pin-input'), {
+        target: { value: '5678' },
+      });
+      fireEvent.click(screen.getByTestId('save-parent-pin-btn'));
+
+      await waitFor(() => {
+        expect(screen.getByTestId('change-pin-error')).toHaveTextContent(
+          /Current PIN is incorrect/i
+        );
+      });
+
+      // 3. Successful update: Correct current PIN (1234), matching new PIN (5678)
+      fireEvent.change(screen.getByTestId('current-parent-pin-input'), {
+        target: { value: '1234' },
+      });
+      fireEvent.click(screen.getByTestId('save-parent-pin-btn'));
+
+      await waitFor(() => {
+        expect(screen.getByTestId('change-pin-success')).toHaveTextContent(
+          /Parent PIN successfully updated!/i
+        );
+      });
+
+      // Close modal
+      fireEvent.click(screen.getByTestId('cancel-change-pin-btn'));
+      expect(screen.queryByTestId('change-parent-pin-modal')).not.toBeInTheDocument();
+    });
+
+    it('allows opening Change Parent PIN modal from within Manage Profiles modal', () => {
+      render(
+        <AuthProvider>
+          <ParentDashboard />
+        </AuthProvider>
+      );
+
+      // Open Manage Profiles modal
+      fireEvent.click(screen.getByTestId('manage-profiles-btn'));
+      expect(screen.getByTestId('manage-children-modal')).toBeInTheDocument();
+
+      // Click Change PIN from inside the Manage Profiles modal
+      fireEvent.click(screen.getByTestId('manage-change-parent-pin-btn'));
+      expect(screen.queryByTestId('manage-children-modal')).not.toBeInTheDocument();
+      expect(screen.getByTestId('change-parent-pin-modal')).toBeInTheDocument();
+
+      // Close modal
+      fireEvent.click(screen.getByTestId('close-change-pin-btn'));
+      expect(screen.queryByTestId('change-parent-pin-modal')).not.toBeInTheDocument();
+    });
   });
 });

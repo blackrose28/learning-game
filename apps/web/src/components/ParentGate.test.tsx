@@ -87,4 +87,38 @@ describe('ParentGate Component (Task 7.2)', () => {
     fireEvent.click(screen.getByTestId('toggle-pin-mode'));
     expect(screen.getByTestId('keypad-grid')).toBeInTheDocument();
   });
+
+  it('reflects updated PIN and unlocks with the new PIN when changed', async () => {
+    localStorage.setItem('math_archer_parent_pin', '5678');
+    const onSuccess = vi.fn();
+
+    render(
+      <AuthProvider>
+        <ParentGate onSuccess={onSuccess} />
+      </AuthProvider>
+    );
+
+    // Hint should now reflect the updated PIN
+    expect(screen.getByTestId('parent-pin-hint')).toHaveTextContent('5678');
+
+    // Entering old PIN (1234) should fail
+    fireEvent.click(screen.getByTestId('keypad-1'));
+    fireEvent.click(screen.getByTestId('keypad-2'));
+    fireEvent.click(screen.getByTestId('keypad-3'));
+    fireEvent.click(screen.getByTestId('keypad-4'));
+
+    await waitFor(() => {
+      expect(screen.getByTestId('parent-gate-error')).toHaveTextContent(/Incorrect Parent PIN/i);
+    });
+
+    // Entering new PIN (5678) should succeed
+    fireEvent.click(screen.getByTestId('keypad-5'));
+    fireEvent.click(screen.getByTestId('keypad-6'));
+    fireEvent.click(screen.getByTestId('keypad-7'));
+    fireEvent.click(screen.getByTestId('keypad-8'));
+
+    await waitFor(() => {
+      expect(onSuccess).toHaveBeenCalledTimes(1);
+    });
+  });
 });

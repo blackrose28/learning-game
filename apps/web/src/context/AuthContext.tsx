@@ -10,6 +10,7 @@ export interface AuthContextValue {
   currentMode: 'child' | 'parent';
   activeChild: ChildPublicProfile;
   parentUser: ParentPublic | null;
+  parentPin: string;
   isParentUnlocked: boolean;
   availableChildren: ChildPublicProfile[];
   apiClient: MathArcherApiClient;
@@ -24,6 +25,7 @@ export interface AuthContextValue {
     name: string;
     parentPin?: string;
   }) => Promise<void>;
+  changeParentPin: (newPin: string, currentPin?: string) => Promise<boolean>;
   lockParent: () => void;
   switchToChildMode: (child?: ChildPublicProfile) => void;
   refreshChildren: () => Promise<void>;
@@ -80,6 +82,14 @@ export const AuthProvider: React.FC<{
       return stored ? JSON.parse(stored) : DEFAULT_PARENT;
     } catch {
       return DEFAULT_PARENT;
+    }
+  });
+
+  const [parentPin, setParentPin] = useState<string>(() => {
+    try {
+      return localStorage.getItem('math_archer_parent_pin') || '1234';
+    } catch {
+      return '1234';
     }
   });
 
@@ -193,7 +203,7 @@ export const AuthProvider: React.FC<{
           return false;
         }
         // Fallback for local demo PIN only if offline/unreachable
-        if (pin === '1234') {
+        if (pin === parentPin) {
           setIsParentUnlocked(true);
           setCurrentMode('parent');
           setIsLoading(false);
@@ -204,7 +214,7 @@ export const AuthProvider: React.FC<{
         return false;
       }
     },
-    [apiClient]
+    [apiClient, activeChild.parentId, parentUser?.id, parentPin]
   );
 
   const unlockParentWithCredentials = useCallback(
@@ -243,6 +253,14 @@ export const AuthProvider: React.FC<{
       try {
         const res = await apiClient.registerParent(data);
         setParentUser(res.parent);
+        if (data.parentPin) {
+          setParentPin(data.parentPin);
+          try {
+            localStorage.setItem('math_archer_parent_pin', data.parentPin);
+          } catch {
+            // ignore
+          }
+        }
         setIsParentUnlocked(true);
         setCurrentMode('parent');
         setIsLoading(false);
@@ -254,6 +272,56 @@ export const AuthProvider: React.FC<{
       }
     },
     [apiClient]
+  );
+
+  const changeParentPin = useCallback(
+    async (newPin: string, currentPin?: string): Promise<boolean> => {
+      setIsLoading(true);
+      setError(null);
+      try {
+        const res = await apiClient.changeParentPin({ newPin, currentPin });
+        if (res.parent) {
+          setParentUser(res.parent);
+        }
+        setParentPin(newPin);
+        try {
+          localStorage.setItem('math_archer_parent_pin', newPin);
+        } catch {
+          // ignore
+        }
+        setIsLoading(false);
+        return true;
+      } catch (err: unknown) {
+        if (err instanceof ApiError) {
+          setError(err.message);
+          setIsLoading(false);
+          throw err;
+        }
+        // Local fallback (offline/demo)
+        if (currentPin && currentPin !== parentPin) {
+          const msg = 'Current PIN is incorrect';
+          setError(msg);
+          setIsLoading(false);
+          throw new Error(msg);
+        }
+        if (!/^\d{4}$/.test(newPin)) {
+          const msg = 'PIN must be exactly 4 digits';
+          setError(msg);
+          setIsLoading(false);
+          throw new Error(msg);
+        }
+        setParentPin(newPin);
+        try {
+          localStorage.setItem('math_archer_parent_pin', newPin);
+        } catch {
+          // ignore
+        }
+        setParentUser((prev) => (prev ? { ...prev, hasPin: true } : prev));
+        setIsLoading(false);
+        return true;
+      }
+    },
+    [apiClient, parentPin]
   );
 
   const lockParent = useCallback(() => {
@@ -374,6 +442,7 @@ export const AuthProvider: React.FC<{
     currentMode,
     activeChild,
     parentUser,
+    parentPin,
     isParentUnlocked,
     availableChildren,
     apiClient,
@@ -383,6 +452,7 @@ export const AuthProvider: React.FC<{
     unlockParentWithPin,
     unlockParentWithCredentials,
     registerParent,
+    changeParentPin,
     lockParent,
     switchToChildMode,
     refreshChildren,

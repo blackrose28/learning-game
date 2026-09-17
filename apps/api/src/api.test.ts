@@ -870,6 +870,84 @@ describe('Math Archer API Test Suite', () => {
         expect(updateData.child?.name).toBe('Alex Updated');
       });
 
+      it('allows parent to change their 4-digit PIN, enforces validation, and updates authentication', async () => {
+        const pAuth = await parentAuth('parent_default', 'parent@math-archer.local', 'Demo Parent');
+
+        // 1. Invalid PIN formats (too short, non-numeric)
+        const invalidRes = await worker.fetch(
+          new Request('https://api.math-archer.local/api/parent/pin', {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json', ...pAuth },
+            body: JSON.stringify({ currentPin: '1234', newPin: '123' }),
+          }),
+          env
+        );
+        expect(invalidRes.status).toBe(400);
+
+        // 2. Incorrect current PIN
+        const wrongCurrentRes = await worker.fetch(
+          new Request('https://api.math-archer.local/api/parent/pin', {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json', ...pAuth },
+            body: JSON.stringify({ currentPin: '0000', newPin: '5678' }),
+          }),
+          env
+        );
+        expect(wrongCurrentRes.status).toBe(400);
+
+        // 3. Child token forbidden from changing parent PIN
+        const cAuth = await childAuth();
+        const childForbiddenRes = await worker.fetch(
+          new Request('https://api.math-archer.local/api/parent/pin', {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json', ...cAuth },
+            body: JSON.stringify({ currentPin: '1234', newPin: '5678' }),
+          }),
+          env
+        );
+        expect(childForbiddenRes.status).toBe(403);
+
+        // 4. Successful PIN change from 1234 to 5678
+        const changeRes = await worker.fetch(
+          new Request('https://api.math-archer.local/api/parent/pin', {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json', ...pAuth },
+            body: JSON.stringify({ currentPin: '1234', newPin: '5678' }),
+          }),
+          env
+        );
+        expect(changeRes.status).toBe(200);
+        const changeData = (await changeRes.json()) as ApiTestResponse;
+        expect(changeData.success).toBe(true);
+        expect(changeData.parent?.hasPin).toBe(true);
+
+        // 5. Old PIN '1234' is now invalid
+        const oldVerifyRes = await worker.fetch(
+          new Request('https://api.math-archer.local/api/auth/parent/verify-pin', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ parentPin: '1234' }),
+          }),
+          env
+        );
+        const oldVerifyData = (await oldVerifyRes.json()) as ApiTestResponse;
+        expect(oldVerifyData.valid).toBe(false);
+
+        // 6. New PIN '5678' is now valid
+        const newVerifyRes = await worker.fetch(
+          new Request('https://api.math-archer.local/api/auth/parent/verify-pin', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ parentPin: '5678' }),
+          }),
+          env
+        );
+        expect(newVerifyRes.status).toBe(200);
+        const newVerifyData = (await newVerifyRes.json()) as ApiTestResponse;
+        expect(newVerifyData.valid).toBe(true);
+        expect(newVerifyData.token).toBeDefined();
+      });
+
       it('verifies parent PIN even when request carries a child Bearer token', async () => {
         // Log in as child 'player-local'
         const childLoginRes = await worker.fetch(

@@ -8,7 +8,7 @@ interface ParentGateProps {
 }
 
 export const ParentGate: React.FC<ParentGateProps> = ({ onSuccess, onCancel }) => {
-  const { unlockParentWithPin, unlockParentWithCredentials, isLoading } = useAuth();
+  const { unlockParentWithPin, unlockParentWithCredentials, isLoading, parentPin } = useAuth();
   const [pin, setPin] = useState<string>('');
   const [usePasswordMode, setUsePasswordMode] = useState<boolean>(false);
   const [email, setEmail] = useState<string>('parent@math-archer.local');
@@ -130,7 +130,7 @@ export const ParentGate: React.FC<ParentGateProps> = ({ onSuccess, onCancel }) =
             </div>
 
             <div className="hint-pill" data-testid="parent-pin-hint">
-              💡 Demo Parent PIN: <strong>1234</strong>
+              💡 {parentPin === '1234' ? 'Demo Parent PIN' : 'Parent PIN'}: <strong>{parentPin || '1234'}</strong>
             </div>
 
             <button

@@ -231,6 +231,15 @@ export const ParentDashboard: React.FC<ParentDashboardProps> = ({ playerId = 'pl
   const [editGrade, setEditGrade] = useState<string>('1st Grade');
   const [removePin, setRemovePin] = useState<boolean>(false);
 
+  // Change Parent PIN modal fields
+  const [showChangePinModal, setShowChangePinModal] = useState<boolean>(false);
+  const [currentPinInput, setCurrentPinInput] = useState<string>('');
+  const [newPinInput, setNewPinInput] = useState<string>('');
+  const [confirmPinInput, setConfirmPinInput] = useState<string>('');
+  const [pinModalError, setPinModalError] = useState<string | null>(null);
+  const [pinModalSuccess, setPinModalSuccess] = useState<string | null>(null);
+  const [isUpdatingPin, setIsUpdatingPin] = useState<boolean>(false);
+
   const effectivePlayerId = selectedChildId || authContext?.activeChild?.id || playerId;
   const selectedChildObj = authContext?.availableChildren.find((c) => c.id === effectivePlayerId);
 
@@ -329,6 +338,45 @@ export const ParentDashboard: React.FC<ParentDashboardProps> = ({ playerId = 'pl
       loadData();
     } catch (err: unknown) {
       setModalError(err instanceof Error ? err.message : 'Failed to delete child profile');
+    }
+  };
+
+  const openChangePinModal = () => {
+    setCurrentPinInput('');
+    setNewPinInput('');
+    setConfirmPinInput('');
+    setPinModalError(null);
+    setPinModalSuccess(null);
+    setShowChangePinModal(true);
+  };
+
+  const handleChangeParentPinSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!authContext) return;
+    setPinModalError(null);
+    setPinModalSuccess(null);
+
+    if (newPinInput.length !== 4) {
+      setPinModalError('New PIN must be exactly 4 digits');
+      return;
+    }
+
+    if (newPinInput !== confirmPinInput) {
+      setPinModalError('New PIN and confirmation do not match');
+      return;
+    }
+
+    setIsUpdatingPin(true);
+    try {
+      await authContext.changeParentPin(newPinInput, currentPinInput || undefined);
+      setPinModalSuccess('Parent PIN successfully updated!');
+      setCurrentPinInput('');
+      setNewPinInput('');
+      setConfirmPinInput('');
+    } catch (err: unknown) {
+      setPinModalError(err instanceof Error ? err.message : 'Failed to update parent PIN');
+    } finally {
+      setIsUpdatingPin(false);
     }
   };
 
@@ -512,8 +560,30 @@ export const ParentDashboard: React.FC<ParentDashboardProps> = ({ playerId = 'pl
             </button>
           </div>
 
-          <div style={{ fontSize: 12, color: '#64748b' }}>
-            👨‍👩‍👧 Account: <strong>{authContext.parentUser?.name || 'Demo Parent'}</strong>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
+            <div style={{ fontSize: 12, color: '#64748b' }}>
+              👨‍👩‍👧 Account: <strong>{authContext.parentUser?.name || 'Demo Parent'}</strong>
+            </div>
+            <button
+              type="button"
+              data-testid="change-parent-pin-btn"
+              onClick={openChangePinModal}
+              style={{
+                padding: '6px 12px',
+                borderRadius: 20,
+                border: '1px solid #cbd5e1',
+                background: '#ffffff',
+                color: '#334155',
+                fontWeight: 600,
+                fontSize: 12,
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                gap: 4,
+              }}
+            >
+              🔒 Change Parent PIN
+            </button>
           </div>
         </div>
       )}
@@ -666,6 +736,48 @@ export const ParentDashboard: React.FC<ParentDashboardProps> = ({ playerId = 'pl
                 }}
               >
                 Done
+              </button>
+            </div>
+
+            <div
+              style={{
+                marginTop: 20,
+                paddingTop: 16,
+                borderTop: '1px solid #e2e8f0',
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                flexWrap: 'wrap',
+                gap: 10,
+              }}
+            >
+              <div>
+                <div style={{ fontSize: 13, fontWeight: 700, color: '#334155' }}>
+                  Parent Security PIN
+                </div>
+                <div style={{ fontSize: 12, color: '#64748b' }}>
+                  Protect access to this dashboard with a 4-digit code.
+                </div>
+              </div>
+              <button
+                type="button"
+                data-testid="manage-change-parent-pin-btn"
+                onClick={() => {
+                  setShowManageModal(false);
+                  openChangePinModal();
+                }}
+                style={{
+                  padding: '6px 14px',
+                  borderRadius: 6,
+                  border: '1px solid #cbd5e1',
+                  background: '#f8fafc',
+                  color: '#1e293b',
+                  fontSize: 12,
+                  fontWeight: 600,
+                  cursor: 'pointer',
+                }}
+              >
+                🔒 Change PIN
               </button>
             </div>
           </div>
@@ -1041,6 +1153,192 @@ export const ParentDashboard: React.FC<ParentDashboardProps> = ({ playerId = 'pl
                 Yes, Delete Profile
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Change Parent PIN Modal */}
+      {showChangePinModal && (
+        <div className="child-picker-overlay" data-testid="change-parent-pin-modal">
+          <div className="child-picker-modal" style={{ maxWidth: 440, textAlign: 'left' }}>
+            <div
+              style={{
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                marginBottom: 12,
+              }}
+            >
+              <h3 style={{ margin: 0, fontSize: 18, color: '#111827' }}>
+                🔒 Change Parent PIN Code
+              </h3>
+              <button
+                type="button"
+                data-testid="close-change-pin-btn"
+                onClick={() => setShowChangePinModal(false)}
+                style={{
+                  background: 'none',
+                  border: 'none',
+                  fontSize: 18,
+                  cursor: 'pointer',
+                  color: '#6b7280',
+                }}
+              >
+                ✕
+              </button>
+            </div>
+
+            <p style={{ margin: '0 0 16px', fontSize: 13, color: '#64748b' }}>
+              Enter your current PIN and choose a new 4-digit code to protect the Parent Dashboard.
+            </p>
+
+            {pinModalError && (
+              <div className="modal-error-banner" data-testid="change-pin-error">
+                {pinModalError}
+              </div>
+            )}
+
+            {pinModalSuccess && (
+              <div className="modal-success-banner" data-testid="change-pin-success">
+                {pinModalSuccess}
+              </div>
+            )}
+
+            <form onSubmit={handleChangeParentPinSubmit}>
+              <div style={{ marginBottom: 14 }}>
+                <label
+                  style={{
+                    display: 'block',
+                    fontSize: 13,
+                    fontWeight: 600,
+                    color: '#374151',
+                    marginBottom: 4,
+                  }}
+                >
+                  Current PIN
+                </label>
+                <input
+                  type="password"
+                  data-testid="current-parent-pin-input"
+                  value={currentPinInput}
+                  onChange={(e) => setCurrentPinInput(e.target.value.replace(/\D/g, ''))}
+                  placeholder="Enter current 4-digit PIN"
+                  maxLength={4}
+                  style={{
+                    width: '100%',
+                    padding: '10px 12px',
+                    borderRadius: 8,
+                    border: '1px solid #d1d5db',
+                    fontSize: 16,
+                    letterSpacing: 4,
+                    boxSizing: 'border-box',
+                  }}
+                />
+              </div>
+
+              <div style={{ marginBottom: 14 }}>
+                <label
+                  style={{
+                    display: 'block',
+                    fontSize: 13,
+                    fontWeight: 600,
+                    color: '#374151',
+                    marginBottom: 4,
+                  }}
+                >
+                  New 4-Digit PIN
+                </label>
+                <input
+                  type="password"
+                  data-testid="new-parent-pin-input"
+                  value={newPinInput}
+                  onChange={(e) => setNewPinInput(e.target.value.replace(/\D/g, ''))}
+                  placeholder="Enter new 4-digit PIN"
+                  maxLength={4}
+                  required
+                  style={{
+                    width: '100%',
+                    padding: '10px 12px',
+                    borderRadius: 8,
+                    border: '1px solid #d1d5db',
+                    fontSize: 16,
+                    letterSpacing: 4,
+                    boxSizing: 'border-box',
+                  }}
+                />
+              </div>
+
+              <div style={{ marginBottom: 20 }}>
+                <label
+                  style={{
+                    display: 'block',
+                    fontSize: 13,
+                    fontWeight: 600,
+                    color: '#374151',
+                    marginBottom: 4,
+                  }}
+                >
+                  Confirm New PIN
+                </label>
+                <input
+                  type="password"
+                  data-testid="confirm-parent-pin-input"
+                  value={confirmPinInput}
+                  onChange={(e) => setConfirmPinInput(e.target.value.replace(/\D/g, ''))}
+                  placeholder="Re-enter new 4-digit PIN"
+                  maxLength={4}
+                  required
+                  style={{
+                    width: '100%',
+                    padding: '10px 12px',
+                    borderRadius: 8,
+                    border: '1px solid #d1d5db',
+                    fontSize: 16,
+                    letterSpacing: 4,
+                    boxSizing: 'border-box',
+                  }}
+                />
+              </div>
+
+              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 10 }}>
+                <button
+                  type="button"
+                  data-testid="cancel-change-pin-btn"
+                  onClick={() => setShowChangePinModal(false)}
+                  style={{
+                    padding: '8px 16px',
+                    borderRadius: 8,
+                    border: '1px solid #d1d5db',
+                    background: '#fff',
+                    cursor: 'pointer',
+                  }}
+                >
+                  {pinModalSuccess ? 'Close' : 'Cancel'}
+                </button>
+                <button
+                  type="submit"
+                  data-testid="save-parent-pin-btn"
+                  disabled={
+                    isUpdatingPin || newPinInput.length !== 4 || confirmPinInput.length !== 4
+                  }
+                  style={{
+                    padding: '8px 18px',
+                    borderRadius: 8,
+                    border: 'none',
+                    background: '#2563eb',
+                    color: '#fff',
+                    fontWeight: 600,
+                    cursor: 'pointer',
+                    opacity:
+                      isUpdatingPin || newPinInput.length !== 4 || confirmPinInput.length !== 4
+                        ? 0.6
+                        : 1,
+                  }}
+                >
+                  {isUpdatingPin ? 'Updating...' : 'Update PIN'}
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       )}

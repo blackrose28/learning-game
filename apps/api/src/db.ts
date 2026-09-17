@@ -483,6 +483,19 @@ export async function getParentById(db: D1Database, id: string): Promise<ParentR
   return await db.prepare(`SELECT * FROM parents WHERE id = ?`).bind(id).first<ParentRecord>();
 }
 
+export async function updateParentPin(
+  db: D1Database,
+  parentId: string,
+  newPin: string
+): Promise<ParentRecord | null> {
+  const now = new Date().toISOString();
+  await db
+    .prepare(`UPDATE parents SET parent_pin = ?, updated_at = ? WHERE id = ?`)
+    .bind(newPin.trim(), now, parentId)
+    .run();
+  return getParentById(db, parentId);
+}
+
 export async function createChildProfile(
   db: D1Database,
   parentId: string,

@@ -335,6 +335,24 @@ export class MathArcherApiClient {
     return res.json();
   }
 
+  async changeParentPin(params: {
+    newPin: string;
+    currentPin?: string;
+  }): Promise<{ success: boolean; parent: ParentPublic }> {
+    const res = await this.fetchFn(this.url('/api/parent/pin'), {
+      method: 'PUT',
+      headers: this.getHeaders({ 'Content-Type': 'application/json' }),
+      body: JSON.stringify(params),
+    });
+
+    if (!res.ok) {
+      const err = await parseApiError(res);
+      throw new ApiError(err.message, res.status, err.code);
+    }
+
+    return res.json();
+  }
+
   // --- Protected Game / Learning Engine methods ---
 
   async startSession(

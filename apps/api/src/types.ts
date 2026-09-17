@@ -83,6 +83,16 @@ export interface ParentVerifyPinResponse {
   parent?: ParentPublic;
 }
 
+export interface ParentChangePinRequest {
+  currentPin?: string;
+  newPin: string;
+}
+
+export interface ParentChangePinResponse {
+  success: boolean;
+  parent: ParentPublic;
+}
+
 export interface ChildLoginRequest {
   childId: string;
   pin?: string;
