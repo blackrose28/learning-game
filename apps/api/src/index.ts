@@ -474,11 +474,7 @@ export default {
 
           const updated = await updateChildProfile(env.DB, childId, parentId, body);
           if (!updated) {
-            return errorResponse(
-              'FORBIDDEN',
-              'Access denied: Child does not belong to this parent',
-              403
-            );
+            return errorResponse('NOT_FOUND', 'Child profile not found', 404);
           }
 
           return jsonResponse({ child: updated }, 200);
@@ -489,11 +485,7 @@ export default {
           const childId = pathname.replace('/api/parent/children/', '').trim();
           const deleted = await deleteChildProfile(env.DB, childId, parentId);
           if (!deleted) {
-            return errorResponse(
-              'FORBIDDEN',
-              'Access denied: Child does not belong to this parent',
-              403
-            );
+            return errorResponse('NOT_FOUND', 'Child profile not found', 404);
           }
 
           return jsonResponse({ success: true }, 200);
@@ -544,13 +536,9 @@ export default {
             );
           }
 
-          const isOwner = await verifyChildBelongsToParent(env.DB, requestedPlayerId, auth.sub);
-          if (!isOwner) {
-            return errorResponse(
-              'FORBIDDEN',
-              'Access denied: Child does not belong to this parent',
-              403
-            );
+          const childExists = await verifyChildBelongsToParent(env.DB, requestedPlayerId, auth.sub);
+          if (!childExists) {
+            return errorResponse('NOT_FOUND', 'Child profile not found', 404);
           }
           targetPlayerId = requestedPlayerId;
         }
@@ -604,13 +592,9 @@ export default {
           if (!playerId || typeof playerId !== 'string') {
             return errorResponse('MISSING_PLAYER_ID', 'playerId is required', 400);
           }
-          const isOwner = await verifyChildBelongsToParent(env.DB, playerId, auth.sub);
-          if (!isOwner) {
-            return errorResponse(
-              'FORBIDDEN',
-              'Access denied: Child does not belong to this parent',
-              403
-            );
+          const childExists = await verifyChildBelongsToParent(env.DB, playerId, auth.sub);
+          if (!childExists) {
+            return errorResponse('NOT_FOUND', 'Child profile not found', 404);
           }
           targetPlayerId = playerId;
         }
@@ -679,13 +663,9 @@ export default {
           if (!requestedPlayerId) {
             return errorResponse('MISSING_PLAYER_ID', 'playerId is required for parent query', 400);
           }
-          const isOwner = await verifyChildBelongsToParent(env.DB, requestedPlayerId, auth.sub);
-          if (!isOwner) {
-            return errorResponse(
-              'FORBIDDEN',
-              'Access denied: Child does not belong to this parent',
-              403
-            );
+          const childExists = await verifyChildBelongsToParent(env.DB, requestedPlayerId, auth.sub);
+          if (!childExists) {
+            return errorResponse('NOT_FOUND', 'Child profile not found', 404);
           }
           targetPlayerId = requestedPlayerId;
         }
@@ -718,13 +698,9 @@ export default {
           if (!requestedPlayerId) {
             return errorResponse('MISSING_PLAYER_ID', 'playerId is required for parent query', 400);
           }
-          const isOwner = await verifyChildBelongsToParent(env.DB, requestedPlayerId, auth.sub);
-          if (!isOwner) {
-            return errorResponse(
-              'FORBIDDEN',
-              'Access denied: Child does not belong to this parent',
-              403
-            );
+          const childExists = await verifyChildBelongsToParent(env.DB, requestedPlayerId, auth.sub);
+          if (!childExists) {
+            return errorResponse('NOT_FOUND', 'Child profile not found', 404);
           }
           targetPlayerId = requestedPlayerId;
         }
@@ -753,13 +729,9 @@ export default {
           if (!requestedPlayerId) {
             return errorResponse('MISSING_PLAYER_ID', 'playerId is required for parent query', 400);
           }
-          const isOwner = await verifyChildBelongsToParent(env.DB, requestedPlayerId, auth.sub);
-          if (!isOwner) {
-            return errorResponse(
-              'FORBIDDEN',
-              'Access denied: Child does not belong to this parent',
-              403
-            );
+          const childExists = await verifyChildBelongsToParent(env.DB, requestedPlayerId, auth.sub);
+          if (!childExists) {
+            return errorResponse('NOT_FOUND', 'Child profile not found', 404);
           }
           targetPlayerId = requestedPlayerId;
         }

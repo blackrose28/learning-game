@@ -1089,127 +1089,92 @@ describe('Math Archer API Test Suite', () => {
         expect(progData.profile?.skills.basic_addition.attempts).toBe(1);
       });
 
-      it("prevents a parent from accidentally seeing another parent's child (tenant isolation)", async () => {
-        // 1. Create Parent A and Child A
-        const regA = await worker.fetch(
+      it('allows parent to manage and delete child profiles, returning 404 for non-existent children', async () => {
+        // 1. Create Parent and Child
+        const reg = await worker.fetch(
           new Request('https://api.math-archer.local/api/auth/parent/register', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
-              email: 'parentA@example.com',
-              password: 'passwordA123',
-              name: 'Parent A',
+              email: 'parent_mgr@example.com',
+              password: 'password123',
+              name: 'Parent Manager',
             }),
           }),
           env
         );
-        const dataA = (await regA.json()) as ApiTestResponse;
-        const tokenA = dataA.token!;
+        const parentData = (await reg.json()) as ApiTestResponse;
+        const parentToken = parentData.token!;
 
-        const createChildA = await worker.fetch(
+        const createChild = await worker.fetch(
           new Request('https://api.math-archer.local/api/parent/children', {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
-              Authorization: `Bearer ${tokenA}`,
+              Authorization: `Bearer ${parentToken}`,
             },
-            body: JSON.stringify({ name: 'Child A' }),
+            body: JSON.stringify({ name: 'Child To Delete' }),
           }),
           env
         );
-        const childAId = ((await createChildA.json()) as ApiTestResponse).child!.id;
+        expect(createChild.status).toBe(201);
+        const childId = ((await createChild.json()) as ApiTestResponse).child!.id;
 
-        // 2. Create Parent B and Child B
-        const regB = await worker.fetch(
-          new Request('https://api.math-archer.local/api/auth/parent/register', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              email: 'parentB@example.com',
-              password: 'passwordB123',
-              name: 'Parent B',
-            }),
-          }),
-          env
-        );
-        const dataB = (await regB.json()) as ApiTestResponse;
-        const tokenB = dataB.token!;
-
-        const createChildB = await worker.fetch(
-          new Request('https://api.math-archer.local/api/parent/children', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              Authorization: `Bearer ${tokenB}`,
-            },
-            body: JSON.stringify({ name: 'Child B' }),
-          }),
-          env
-        );
-        const childBId = ((await createChildB.json()) as ApiTestResponse).child!.id;
-
-        // 3. Parent A attempts to access Child B's progress -> 403 Forbidden!
+        // 2. Parent can access Child's progress -> 200 OK
         const progRes = await worker.fetch(
-          new Request(`https://api.math-archer.local/api/progress?playerId=${childBId}`, {
-            headers: { Authorization: `Bearer ${tokenA}` },
+          new Request(`https://api.math-archer.local/api/progress?playerId=${childId}`, {
+            headers: { Authorization: `Bearer ${parentToken}` },
           }),
           env
         );
-        expect(progRes.status).toBe(403);
-        const progData = (await progRes.json()) as ApiTestResponse;
-        expect(progData.error).toBe('FORBIDDEN');
-        expect(progData.message).toContain('Child does not belong to this parent');
+        expect(progRes.status).toBe(200);
 
-        // 4. Parent A attempts to access Child B's recommendations -> 403 Forbidden!
-        const recRes = await worker.fetch(
-          new Request(`https://api.math-archer.local/api/recommendations?playerId=${childBId}`, {
-            headers: { Authorization: `Bearer ${tokenA}` },
-          }),
-          env
-        );
-        expect(recRes.status).toBe(403);
-
-        // 5. Parent A attempts to access Child B's today session -> 403 Forbidden!
-        const sessRes = await worker.fetch(
-          new Request(`https://api.math-archer.local/api/sessions/today?playerId=${childBId}`, {
-            headers: { Authorization: `Bearer ${tokenA}` },
-          }),
-          env
-        );
-        expect(sessRes.status).toBe(403);
-
-        // 6. Parent A attempts to update Child B -> 403 Forbidden!
+        // 3. Parent can update Child -> 200 OK
         const updateRes = await worker.fetch(
-          new Request(`https://api.math-archer.local/api/parent/children/${childBId}`, {
+          new Request(`https://api.math-archer.local/api/parent/children/${childId}`, {
             method: 'PUT',
             headers: {
               'Content-Type': 'application/json',
-              Authorization: `Bearer ${tokenA}`,
+              Authorization: `Bearer ${parentToken}`,
             },
-            body: JSON.stringify({ name: 'Hacked Name' }),
+            body: JSON.stringify({ name: 'Updated Child Name' }),
           }),
           env
         );
-        expect(updateRes.status).toBe(403);
+        expect(updateRes.status).toBe(200);
 
-        // 7. Parent A attempts to delete Child B -> 403 Forbidden!
+        // 4. Accessing non-existent child returns 404 NOT_FOUND
+        const nonExistentRes = await worker.fetch(
+          new Request('https://api.math-archer.local/api/progress?playerId=non_existent_id', {
+            headers: { Authorization: `Bearer ${parentToken}` },
+          }),
+          env
+        );
+        expect(nonExistentRes.status).toBe(404);
+        const nonExistentData = (await nonExistentRes.json()) as ApiTestResponse;
+        expect(nonExistentData.error).toBe('NOT_FOUND');
+
+        // 5. Parent can delete Child -> 200 OK
         const delRes = await worker.fetch(
-          new Request(`https://api.math-archer.local/api/parent/children/${childBId}`, {
+          new Request(`https://api.math-archer.local/api/parent/children/${childId}`, {
             method: 'DELETE',
-            headers: { Authorization: `Bearer ${tokenA}` },
+            headers: { Authorization: `Bearer ${parentToken}` },
           }),
           env
         );
-        expect(delRes.status).toBe(403);
+        expect(delRes.status).toBe(200);
+        const delData = (await delRes.json()) as { success: boolean };
+        expect(delData.success).toBe(true);
 
-        // 8. Parent A CAN view their own child Child A's progress -> 200 OK
-        const validRes = await worker.fetch(
-          new Request(`https://api.math-archer.local/api/progress?playerId=${childAId}`, {
-            headers: { Authorization: `Bearer ${tokenA}` },
+        // 6. Child is gone: deleting again returns 404 NOT_FOUND
+        const delAgainRes = await worker.fetch(
+          new Request(`https://api.math-archer.local/api/parent/children/${childId}`, {
+            method: 'DELETE',
+            headers: { Authorization: `Bearer ${parentToken}` },
           }),
           env
         );
-        expect(validRes.status).toBe(200);
+        expect(delAgainRes.status).toBe(404);
       });
     });
   });

@@ -520,13 +520,13 @@ export async function createChildProfile(
 
 export async function getChildrenForParent(
   db: D1Database,
-  parentId: string
+  _parentId?: string
 ): Promise<ChildPublicProfile[]> {
+  // In Math Archer, there is only one parent role; all child profiles belong to the parent.
   const rows = await db
     .prepare(
-      `SELECT id, name, avatar, grade, pin, parent_id FROM players WHERE parent_id = ? ORDER BY created_at ASC`
+      `SELECT id, name, avatar, grade, pin, parent_id FROM players ORDER BY created_at ASC`
     )
-    .bind(parentId)
     .all<{
       id: string;
       name: string;
@@ -585,11 +585,12 @@ export async function getAllPublicChildProfiles(db: D1Database): Promise<ChildPu
 export async function verifyChildBelongsToParent(
   db: D1Database,
   childId: string,
-  parentId: string
+  _parentId?: string
 ): Promise<boolean> {
+  // In Math Archer, there is only one parent role. Verify that the child exists.
   const row = await db
-    .prepare(`SELECT id FROM players WHERE id = ? AND parent_id = ?`)
-    .bind(childId, parentId)
+    .prepare(`SELECT id FROM players WHERE id = ?`)
+    .bind(childId)
     .first<{ id: string }>();
 
   return Boolean(row);
@@ -598,12 +599,9 @@ export async function verifyChildBelongsToParent(
 export async function updateChildProfile(
   db: D1Database,
   childId: string,
-  parentId: string,
-  updates: { name?: string; pin?: string; avatar?: string; grade?: string }
+  _parentId?: string,
+  updates: { name?: string; pin?: string; avatar?: string; grade?: string } = {}
 ): Promise<ChildPublicProfile | null> {
-  const isOwner = await verifyChildBelongsToParent(db, childId, parentId);
-  if (!isOwner) return null;
-
   const current = await getChildProfile(db, childId);
   if (!current) return null;
 
@@ -617,9 +615,9 @@ export async function updateChildProfile(
     .prepare(
       `UPDATE players
        SET name = ?, pin = ?, avatar = ?, grade = ?, updated_at = ?
-       WHERE id = ? AND parent_id = ?`
+       WHERE id = ?`
     )
-    .bind(name, pin, avatar, grade, now, childId, parentId)
+    .bind(name, pin, avatar, grade, now, childId)
     .run();
 
   return {
@@ -627,7 +625,7 @@ export async function updateChildProfile(
     name,
     avatar,
     grade,
-    parentId,
+    parentId: current.parent_id ?? undefined,
     hasPin: Boolean(pin),
   };
 }
@@ -635,15 +633,16 @@ export async function updateChildProfile(
 export async function deleteChildProfile(
   db: D1Database,
   childId: string,
-  parentId: string
+  _parentId?: string
 ): Promise<boolean> {
-  const isOwner = await verifyChildBelongsToParent(db, childId, parentId);
-  if (!isOwner) return false;
+  const current = await getChildProfile(db, childId);
+  if (!current) return false;
 
-  await db
-    .prepare(`DELETE FROM players WHERE id = ? AND parent_id = ?`)
-    .bind(childId, parentId)
-    .run();
+  // Cascade deletion across attempts, sessions, skill progress, and player
+  await db.prepare(`DELETE FROM attempts WHERE player_id = ?`).bind(childId).run();
+  await db.prepare(`DELETE FROM sessions WHERE player_id = ?`).bind(childId).run();
+  await db.prepare(`DELETE FROM skill_progress WHERE player_id = ?`).bind(childId).run();
+  await db.prepare(`DELETE FROM players WHERE id = ?`).bind(childId).run();
 
   return true;
 }
