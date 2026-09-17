@@ -85,4 +85,3 @@ describe('Task 8.2 — Responsive Layout across Multi-Device Viewports', () => {
     });
   });
 });
-

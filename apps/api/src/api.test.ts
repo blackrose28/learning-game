@@ -870,6 +870,39 @@ describe('Math Archer API Test Suite', () => {
         expect(updateData.child?.name).toBe('Alex Updated');
       });
 
+      it('verifies parent PIN even when request carries a child Bearer token', async () => {
+        // Log in as child 'player-local'
+        const childLoginRes = await worker.fetch(
+          new Request('https://api.math-archer.local/api/auth/child/login', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ childId: 'player-local', pin: '1234' }),
+          }),
+          env
+        );
+        expect(childLoginRes.status).toBe(200);
+        const childData = (await childLoginRes.json()) as ApiTestResponse;
+        expect(childData.token).toBeDefined();
+
+        // Verify parent PIN 1234 while child token is in Authorization header
+        const verifyRes = await worker.fetch(
+          new Request('https://api.math-archer.local/api/auth/parent/verify-pin', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              Authorization: `Bearer ${childData.token}`,
+            },
+            body: JSON.stringify({ parentPin: '1234' }),
+          }),
+          env
+        );
+        expect(verifyRes.status).toBe(200);
+        const verifyData = (await verifyRes.json()) as ApiTestResponse;
+        expect(verifyData.valid).toBe(true);
+        expect(verifyData.token).toBeDefined();
+        expect(verifyData.parent?.id).toBe('parent_default');
+      });
+
       it('public can fetch child profiles for easy kid selection without passwords', async () => {
         const res = await worker.fetch(
           new Request('https://api.math-archer.local/api/auth/child/profiles'),

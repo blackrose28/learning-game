@@ -75,6 +75,7 @@ export interface ParentLoginResponse {
 
 export interface ParentVerifyPinRequest {
   parentPin: string;
+  parentId?: string;
 }
 
 export interface ParentVerifyPinResponse {

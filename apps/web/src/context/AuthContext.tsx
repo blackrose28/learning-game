@@ -46,6 +46,7 @@ const DEFAULT_CHILD: ChildPublicProfile = {
   avatar: 'archer-1',
   grade: '1st Grade',
   hasPin: true,
+  parentId: 'parent_default',
 };
 
 const DEFAULT_PARENT: ParentPublic = {
@@ -91,6 +92,7 @@ export const AuthProvider: React.FC<{
       avatar: 'archer-2',
       grade: '1st Grade',
       hasPin: true,
+      parentId: 'parent_default',
     },
   ]);
   const [isLoading, setIsLoading] = useState<boolean>(false);
@@ -166,7 +168,8 @@ export const AuthProvider: React.FC<{
       setIsLoading(true);
       setError(null);
       try {
-        const res = await apiClient.verifyParentPin(pin);
+        const parentId = activeChild.parentId || parentUser?.id;
+        const res = await apiClient.verifyParentPin(pin, parentId);
         if (res.valid) {
           if (res.token) {
             apiClient.setAuthToken(res.token);

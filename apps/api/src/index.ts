@@ -235,9 +235,20 @@ export default {
           return errorResponse('MISSING_PIN', 'parentPin is required', 400);
         }
 
-        let parentId = auth?.sub;
+        let parentId: string | undefined = body.parentId;
+
+        if (!parentId && auth) {
+          if (auth.role === 'parent') {
+            parentId = auth.sub;
+          } else if (auth.role === 'child') {
+            // If currently logged in as a child, verify against that child's parent
+            const childRecord = await getChildProfile(env.DB, auth.sub);
+            parentId = childRecord?.parent_id ?? undefined;
+          }
+        }
+
         if (!parentId) {
-          // Allow verifying PIN for demo parent if not logged in
+          // Allow verifying PIN for demo parent if not logged in or child has no parent_id
           const demoParent = await getParentByEmail(env.DB, 'parent@math-archer.local');
           parentId = demoParent?.id;
         }

@@ -63,7 +63,9 @@
   gap: 6px;
   min-height: 36px;
   min-width: 48px;
-  transition: background 0.15s ease, transform 0.1s ease;
+  transition:
+    background 0.15s ease,
+    transform 0.1s ease;
 }
 
 .install-btn:hover {
@@ -120,4 +122,3 @@
     justify-content: flex-end;
   }
 }
-

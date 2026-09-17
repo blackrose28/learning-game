@@ -61,4 +61,3 @@ describe('Task 8.1 — Make it installable: InstallPrompt Component', () => {
     expect(screen.getByText(/App Mode/i)).toBeInTheDocument();
   });
 });
-

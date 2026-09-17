@@ -185,12 +185,13 @@ export class MathArcherApiClient {
   }
 
   async verifyParentPin(
-    parentPin: string
+    parentPin: string,
+    parentId?: string
   ): Promise<{ valid: boolean; token?: string; parent?: ParentPublic }> {
     const res = await this.fetchFn(this.url('/api/auth/parent/verify-pin'), {
       method: 'POST',
       headers: this.getHeaders({ 'Content-Type': 'application/json' }),
-      body: JSON.stringify({ parentPin }),
+      body: JSON.stringify({ parentPin, parentId }),
     });
 
     if (!res.ok) {
