@@ -1125,6 +1125,25 @@ export const GameScreen: React.FC<GameScreenProps> = ({
           )}
         </div>
         <span className="game-title-badge">Math Archer</span>
+
+        {/* Flying Elemental Arrow Projectile (Task 3.2) */}
+        {activeShot && shotPhase !== 'idle' && (
+          <div
+            className={`flying-arrow element-${activeShot.element} outcome-${activeShot.outcome} phase-${shotPhase}`}
+            data-testid="flying-arrow"
+            data-element={activeShot.element}
+            data-outcome={activeShot.outcome}
+            aria-hidden="true"
+          >
+            <div className="flying-arrow-trail" />
+            <div className="flying-arrow-body">
+              <span className="arrow-tail-feather">🪶</span>
+              <span className="arrow-shaft" />
+              <span className="arrow-head-symbol">▼</span>
+              <span className="arrow-element-badge">{ELEMENT_INFO[activeShot.element].icon}</span>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Learning Engine Adaptation Bar (Task 3.4) */}
@@ -1147,25 +1166,6 @@ export const GameScreen: React.FC<GameScreenProps> = ({
           </span>
         )}
       </div>
-
-      {/* Flying Elemental Arrow Projectile (Task 3.2) */}
-      {activeShot && shotPhase !== 'idle' && (
-        <div
-          className={`flying-arrow element-${activeShot.element} outcome-${activeShot.outcome} phase-${shotPhase}`}
-          data-testid="flying-arrow"
-          data-element={activeShot.element}
-          data-outcome={activeShot.outcome}
-          aria-hidden="true"
-        >
-          <div className="flying-arrow-trail" />
-          <div className="flying-arrow-body">
-            <span className="arrow-tail-feather">🪶</span>
-            <span className="arrow-shaft" />
-            <span className="arrow-head-symbol">▼</span>
-            <span className="arrow-element-badge">{ELEMENT_INFO[activeShot.element].icon}</span>
-          </div>
-        </div>
-      )}
 
       {/* Target Question Display */}
       <div

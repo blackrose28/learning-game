@@ -42,6 +42,7 @@
     sans-serif;
   user-select: none;
   box-sizing: border-box;
+  position: relative;
 }
 
 /* Archer Stage & Shooting Arena */
@@ -210,7 +211,7 @@
 /* Flying Arrow Projectile (Task 3.2) */
 .flying-arrow {
   position: absolute;
-  top: 86px;
+  top: 28px;
   left: 50%;
   z-index: 20;
   pointer-events: none;
@@ -749,6 +750,9 @@
   .keyboard-shortcut-hint {
     display: none; /* Hide keyboard hints on touch mobile */
   }
+  .flying-arrow {
+    top: 20px;
+  }
   .game-mode-selector-bar {
     padding: 6px 8px;
     gap: 6px;
@@ -779,6 +783,9 @@
   }
   .archer-icon {
     font-size: 46px;
+  }
+  .flying-arrow {
+    top: 24px;
   }
   .target-card {
     padding: 18px 14px;
@@ -822,6 +829,9 @@
   }
   .archer-icon {
     font-size: 38px;
+  }
+  .flying-arrow {
+    top: 20px;
   }
   .target-card {
     padding: 12px 18px;

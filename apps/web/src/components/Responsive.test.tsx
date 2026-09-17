@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach } from 'vitest';
-import { render, screen } from '@testing-library/react';
+import { render, screen, fireEvent } from '@testing-library/react';
 import { GameScreen } from './GameScreen';
 
 /**
@@ -81,6 +81,26 @@ describe('Task 8.2 — Responsive Layout across Multi-Device Viewports', () => {
 
         // 4. Session progress section is visible
         expect(screen.getByTestId('progress-section')).toBeVisible();
+
+        // 5. Arrow animation is anchored inside archer-stage
+        const archerStage = screen.getByTestId('archer-stage');
+        expect(archerStage).toBeInTheDocument();
+      });
+
+      it('anchors arrow projectile inside archer-stage during shooting interaction', () => {
+        window.innerWidth = width;
+        window.innerHeight = height;
+        window.dispatchEvent(new Event('resize'));
+
+        render(<GameScreen playerId="player-responsive-arrow-test" autoAdvanceDelayMs={1000} />);
+
+        const archerStage = screen.getByTestId('archer-stage');
+        const fireBtn = screen.getByTestId('choice-fire');
+        fireEvent.click(fireBtn);
+
+        const flyingArrow = screen.getByTestId('flying-arrow');
+        expect(flyingArrow).toBeInTheDocument();
+        expect(archerStage).toContainElement(flyingArrow);
       });
     });
   });
