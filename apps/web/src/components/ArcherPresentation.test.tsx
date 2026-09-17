@@ -143,7 +143,7 @@ describe('Task 9.1 — Archer presentation', () => {
 
       // Procedural audio plays bow release and arrow flight
       expect(playBowSpy).toHaveBeenCalledWith('fire');
-      expect(playFlightSpy).toHaveBeenCalled();
+      expect(playFlightSpy).toHaveBeenCalledWith('fire');
 
       // Flying projectile streaks across range
       const flyingArrow = screen.getByTestId('flying-arrow');
@@ -158,7 +158,7 @@ describe('Task 9.1 — Archer presentation', () => {
       // Target impact: Arrow is lodged and quivers in the bullseye!
       expect(screen.getByTestId('target-card')).toHaveAttribute('data-hit-state', 'hit');
       expect(screen.getByTestId('embedded-arrow')).toBeInTheDocument();
-      expect(playHitSpy).toHaveBeenCalledWith('hit');
+      expect(playHitSpy).toHaveBeenCalledWith('hit', 'fire');
 
       // Feedback banner confirms hit
       expect(screen.getByTestId('feedback-banner')).toHaveTextContent('🎯 Hit!');
@@ -197,7 +197,7 @@ describe('Task 9.1 — Archer presentation', () => {
 
       expect(screen.getByTestId('target-card')).toHaveAttribute('data-hit-state', 'miss');
       expect(screen.queryByTestId('embedded-arrow')).not.toBeInTheDocument();
-      expect(playHitSpy).toHaveBeenCalledWith('miss');
+      expect(playHitSpy).toHaveBeenCalledWith('miss', 'ice');
       expect(screen.getByTestId('target-miss-effect')).toBeInTheDocument();
 
       playHitSpy.mockRestore();

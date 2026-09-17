@@ -1,11 +1,13 @@
 import React from 'react';
 import type { ElementType } from '@math-archer/learning-engine';
+import { ElementalArrowGraphic } from './ElementalArrowGraphic';
 
 export interface ArcheryTargetProps {
   expression: string;
   hitState: 'idle' | 'hit' | 'miss';
   activeElement?: ElementType | null;
   className?: string;
+  equippedEffect?: string;
 }
 
 export const ArcheryTarget: React.FC<ArcheryTargetProps> = ({
@@ -13,6 +15,7 @@ export const ArcheryTarget: React.FC<ArcheryTargetProps> = ({
   hitState,
   activeElement,
   className = '',
+  equippedEffect = 'arrow_effect_classic',
 }) => {
   const elementGlow =
     activeElement === 'fire'
@@ -28,14 +31,11 @@ export const ArcheryTarget: React.FC<ArcheryTargetProps> = ({
   return (
     <div
       className={`target-card hit-${hitState} ${
-        hitState === 'hit'
-          ? 'target-impact-hit'
-          : hitState === 'miss'
-            ? 'target-impact-miss'
-            : ''
+        hitState === 'hit' ? 'target-impact-hit' : hitState === 'miss' ? 'target-impact-miss' : ''
       } ${className}`}
       data-testid="target-card"
       data-hit-state={hitState}
+      data-effect={equippedEffect}
     >
       {/* Wooden Archery Stand Tripod Backdrop */}
       <div className="target-stand" aria-hidden="true">
@@ -84,7 +84,13 @@ export const ArcheryTarget: React.FC<ArcheryTargetProps> = ({
           </defs>
 
           {/* Target Wooden Base & Border */}
-          <circle cx="120" cy="120" r="116" fill="url(#targetRim)" filter="url(#targetDropShadow)" />
+          <circle
+            cx="120"
+            cy="120"
+            r="116"
+            fill="url(#targetRim)"
+            filter="url(#targetDropShadow)"
+          />
           <circle cx="120" cy="120" r="110" fill="#f8fafc" stroke="#cbd5e1" strokeWidth="2" />
 
           {/* Archery Scoring Rings: White -> Black -> Blue -> Red -> Gold */}
@@ -105,7 +111,14 @@ export const ArcheryTarget: React.FC<ArcheryTargetProps> = ({
           <circle cx="120" cy="120" r="16" fill="#b91c1c" stroke="#991b1b" strokeWidth="1" />
 
           {/* Ring 9 & 10: Golden Bullseye (9px & Center 10-X ring) */}
-          <circle cx="120" cy="120" r="10" fill="url(#bullseyeGrad)" stroke="#d97706" strokeWidth="1" />
+          <circle
+            cx="120"
+            cy="120"
+            r="10"
+            fill="url(#bullseyeGrad)"
+            stroke="#d97706"
+            strokeWidth="1"
+          />
           <circle cx="120" cy="120" r="4" fill="#fef08a" stroke="#b45309" strokeWidth="0.8" />
           {/* Center Crosshair + */}
           <line x1="117" y1="120" x2="123" y2="120" stroke="#78350f" strokeWidth="0.8" />
@@ -123,33 +136,15 @@ export const ArcheryTarget: React.FC<ArcheryTargetProps> = ({
           )}
         </svg>
 
-        {/* Embedded Arrow (Stuck in the Bullseye on Hit) */}
+        {/* Embedded Arrow (Stuck in the Bullseye on Hit with distinct elemental geometry) */}
         {hitState === 'hit' && (
-          <div className="embedded-arrow" data-testid="embedded-arrow" aria-hidden="true">
-            <svg
-              className="embedded-arrow-svg"
-              viewBox="0 0 60 120"
-              fill="none"
-              xmlns="http://www.w3.org/2000/svg"
-            >
-              {/* Quivering Arrow Shaft penetrating into target center */}
-              <line
-                x1="30"
-                y1="112"
-                x2="30"
-                y2="10"
-                stroke="#d97706"
-                strokeWidth="4"
-                strokeLinecap="round"
-              />
-              {/* Arrowhead buried at y=112 */}
-              <polygon points="30,118 24,106 36,106" fill="#475569" stroke="#1e293b" strokeWidth="1" />
-              {/* Elemental Crest Fletchings */}
-              <polygon points="30,30 18,12 15,14 28,34" fill={elementGlow} />
-              <polygon points="30,30 42,12 45,14 32,34" fill={elementGlow} />
-              {/* Rear Nock */}
-              <circle cx="30" cy="8" r="2.5" fill="#f8fafc" />
-            </svg>
+          <div
+            className={`embedded-arrow element-${activeElement || 'fire'}`}
+            data-testid="embedded-arrow"
+            data-element={activeElement || 'fire'}
+            aria-hidden="true"
+          >
+            <ElementalArrowGraphic element={activeElement || 'fire'} variant="embedded" />
           </div>
         )}
       </div>
@@ -164,24 +159,47 @@ export const ArcheryTarget: React.FC<ArcheryTargetProps> = ({
         </div>
       </div>
 
-      {/* Impact Visual Effects */}
+      {/* Impact Visual Effects with Distinct Elemental Feedback */}
       {hitState === 'hit' && (
-        <div className="target-hit-effect" data-testid="target-hit-effect">
+        <div
+          className={`target-hit-effect element-${activeElement || 'fire'}`}
+          data-testid="target-hit-effect"
+          data-element={activeElement || 'fire'}
+        >
           <span className="hit-stars" aria-hidden="true">
             ✨🎯✨
           </span>
+          {activeElement && (
+            <span className="hit-element-badge" data-testid="hit-element-badge">
+              {activeElement === 'fire' && '🔥 Flame Combustion!'}
+              {activeElement === 'ice' && '❄️ Frost Shatter!'}
+              {activeElement === 'wind' && '💨 Zephyr Tempest!'}
+              {activeElement === 'earth' && '🪨 Seismic Impact!'}
+            </span>
+          )}
           <div className="hit-ring-burst" aria-hidden="true" />
           <div className="hit-sparkle-burst" aria-hidden="true" />
         </div>
       )}
       {hitState === 'miss' && (
-        <div className="target-miss-effect" data-testid="target-miss-effect">
+        <div
+          className={`target-miss-effect element-${activeElement || 'fire'}`}
+          data-testid="target-miss-effect"
+          data-element={activeElement || 'fire'}
+        >
           <span className="miss-deflect-icon" aria-hidden="true">
             💨 Miss!
           </span>
+          {activeElement && (
+            <span className="miss-element-detail" data-testid="miss-element-detail">
+              {activeElement === 'fire' && '🔥 (Fizzled)'}
+              {activeElement === 'ice' && '❄️ (Chipped)'}
+              {activeElement === 'wind' && '💨 (Whisked)'}
+              {activeElement === 'earth' && '🪨 (Clattered)'}
+            </span>
+          )}
         </div>
       )}
     </div>
   );
 };
-

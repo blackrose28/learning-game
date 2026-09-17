@@ -2349,7 +2349,14 @@ Each should have a distinct visual/audio identity.
 
 ### Done When
 
-The four choices are immediately distinguishable without relying only on color.
+- [x] The four choices are immediately distinguishable without relying only on color:
+  - **Fire arrow**: Features a jagged, multi-barbed flame blade arrowhead (`serrated-flame-blade`), dark charred ashwood shaft with glowing etched flame runes, and triple-tongue flickering flame plume fletchings (`flame-plume-vanes`). Audio release has a snappy thermal crackle, in-flight roaring flame sizzle whoosh, and combustion "whoomp" / crackle impact.
+  - **Ice arrow**: Features a diamond-faceted crystalline prism spearhead (`diamond-crystal-prism`) with center ridge line, pale frosted birch shaft with frozen lattice rune rings, and sharp angular ice-shard vanes (`crystal-shard-vanes`). Audio release has a high-frequency crystalline chime snap, in-flight glassy whistling shimmer, and frosty crystal shatter chime impact.
+  - **Wind arrow**: Features a twin-crescent aerodynamic winged broadhead (`aerodynamic-winged-crescent`) with speed flutes, lightweight bamboo shaft with swirling zephyr spirals, and swept falcon wing curved feathers (`swept-falcon-feathers`). Audio release has an aerodynamic whistling zephyr flutter, in-flight high-speed vortex flutter, and airy vortex release chime impact.
+  - **Earth arrow**: Features a heavy chiseled stone wedge broadhead (`chiseled-stone-broadhead`) with rugged fracture notches, solid dark oak shaft bound with reinforced bronze bands, and square-cut notched leather/hide vanes (`square-notched-hide-vanes`). Audio release has a deep resonant wooden sub-bass thrum, in-flight low aerodynamic drone, and seismic bass impact with stone rubble crumble.
+  - **Archer Quiver Choices**: Each choice card in `GameScreen.tsx` renders authentic vector previews (`ElementalArrowGraphic`), distinct elemental borders and silhouettes (serrated, double-frame, aerodynamic-curved, and chiseled-stone corners), distinct typography badges (`Fire Arrow`, `Ice Arrow`, `Wind Arrow`, `Earth Arrow`), elemental icons (🔥, ❄️, 💨, 🪨), and controller button cues (`(A)`, `(B)`, `(X)`, `(Y)`).
+  - **Bow Nock & Target Embedded**: `ArcherGraphic.tsx` renders element-specific nocked arrows during draw/release; `ArcheryTarget.tsx` lodges the distinct element-specific vertical arrow into the bullseye on hit with tailored elemental feedback (`🔥 Flame Combustion!`, `❄️ Frost Shatter!`, `💨 Zephyr Tempest!`, `🪨 Seismic Impact!`).
+  - Verified by dedicated test suite in `apps/web/src/components/ElementalPresentation.test.tsx` and full regression suite in `apps/web/src/components/ArcherPresentation.test.tsx` and `apps/web/src/components/GameScreen.test.tsx`.
 
 ---
 
@@ -2369,7 +2376,18 @@ Do not build a huge map.
 
 ### Done When
 
-Completing sessions can unlock visible game content.
+- [x] Completing sessions can unlock visible game content:
+  - **Small 5-Area World Model**: Implemented in `@math-archer/learning-engine` (`packages/learning-engine/src/world/`) matching Section 21 of the specification:
+    - **Castle Courtyard** (Castle): Royal archery grounds, home base, unlocked by default from Day 1 (0 sessions).
+    - **Fire Village** (Fire area): Volcanic hearth & ember ridge, focused on addition fluency, unlocked after 1 completed session.
+    - **Ice Kingdom** (Ice area): Glacial spires & frosted glade, focused on subtraction mastery, unlocked after 2 completed sessions.
+    - **Wind Temple** (Wind area): High-altitude zephyr plateau & sky sanctuary, focused on mixed operations, unlocked after 3 completed sessions.
+    - **Earth Mountain** (Earth area): Granite canyon peaks & stone bastion, focused on challenge math, unlocked after 4 completed sessions.
+  - **Interactive World Map**: Built child-friendly visual map (`apps/web/src/components/WorldMap.tsx` and `WorldMap.css`) rendering the canonical hub-and-spoke schema with real-time discovery meter, lock requirements, elemental pedagogy chips, and travel buttons with full keyboard/controller navigation.
+  - **Visible Environmental Transformations**: Created `RangeBackdrop.tsx` which transforms the archery range in `GameScreen` with bespoke SVG scenery, gradient horizons, and elemental atmospheric particles (banners for Castle, rising embers for Fire, snowflakes for Ice, zephyr wind swirls for Wind, and granite monoliths for Earth).
+  - **Session Completion Ceremony & Quick-Travel**: Session completion triggers the new realm celebration card (`🎉 NEW REALM UNLOCKED!`) with one-click travel to newly discovered areas, and summary progression status (`🗺️ World Progression: X / 5 Realms Discovered`).
+  - **Seamless Navigation**: Added `🗺️ World Map` navigation tab (`data-testid="tab-world"`) to `App.tsx` and quick-access toolbar badge (`data-testid="world-area-badge"`) in `GameScreen.tsx`.
+  - Verified by comprehensive test suites in `packages/learning-engine/src/world/world.test.ts`, `apps/web/src/components/WorldProgression.test.tsx`, and `apps/web/src/App.test.tsx`.
 
 ---
 
@@ -2385,7 +2403,18 @@ Add:
 
 ### Done When
 
-The child has a reason to return tomorrow without needing additional math content.
+- [x] The child has a reason to return tomorrow without needing additional math content:
+  - **XP & Level Progression Engine**: Implemented in `@math-archer/learning-engine` (`packages/learning-engine/src/rewards/`) with anti-frustration principles: +10 XP base effort on every attempt, +5 accuracy bonus, +5 resilience bonus (rewarding trying again after a miss), and +100 daily session completion bonus. Level ranks from Level 1 (Novice Archer) up to Level 7 (Legendary Sharpshooter).
+  - **Cosmetic Unlocks**:
+    - **Outfits & Cowls**: Forest Ranger Tunic (Default), Ember Hearth Robe (Level 2), Glacial Frost Cloak (2-day streak), Zephyr Wind Mantle (Level 4), Champion's Royal Cowl (Level 5).
+    - **Bow Skins**: Apprentice Recurve (Default), Sunfire Ember Bow (1 session), Crystalline Longbow (Level 3), Whispering Gale Bow (3 sessions), Golden Sovereign Bow (Level 5).
+    - **Arrow Effects**: Classic Fletch Spark (Default), Twinkling Stardust (1 session), Sparkle Nova Burst (3-day streak), Blazing Embers Trail (Level 2), Rainbow Aurora Glimmer (Level 4).
+    - **Castle Decorations**: Royal Lion Pennants (Default), Dragon Flame Pennants (2 sessions), Silver Pegasus Banners (2-day streak), Guardian Stone Gargoyles (Level 3), Golden Hero Archer Statue (Level 5), Courtyard Lawn, Royal Rose Garden (3 sessions), and Champion's Plinth.
+  - **Live Customization & Graphics Integration**: `ArcherGraphic.tsx` dynamically renders equipped outfit palettes, arm strokes, cowl colors, feather plumes, and bow limbing/horn tips; `RangeBackdrop.tsx` renders custom heraldic banners, stone gargoyles, golden archer monuments, and rose gardens; `ArcheryTarget.tsx` and projectile arrows render custom particle trail auras and celebration effects.
+  - **Achievements System**: Rewarding diverse positive habits: First Flight (first arrow shot), Daily Archer (50 arrows complete), Loyal Ranger (2-day streak return), Kingdom Champion (3-day streak return), Grit & Determination (resilience after miss), Elemental Adept (all 4 elements), Bullseye Focus (5 hits in a row), Realm Wanderer (World map discovery), Ten-Maker (make-10 decomposition), and Royal Wardrobe (collection).
+  - **Royal Armory & Rewards Screen**: Created dedicated, child-friendly showcase screen (`RewardsScreen.tsx` and `RewardsScreen.css`) with interactive hero inspection stage, live equipping buttons, level progress meters, and trophy showcase wall, accessible from the `🏆 Royal Armory` navigation tab.
+  - **Reason to Return Tomorrow (Tomorrow's Bounty)**: Implemented streak calculator that tracks consecutive days without harsh punishment, and highlights a dynamic "🌟 Tomorrow's Daily Bounty" card on session completion and armory header, explicitly previewing tomorrow's streak bonus XP, next cosmetic unlock, and next realm milestone.
+  - Verified by comprehensive test suites in `packages/learning-engine/src/rewards/rewards.test.ts`, `apps/web/src/components/Rewards.test.tsx`, and full monorepo test pass (389 tests passing).
 
 ---
 
@@ -2408,7 +2437,15 @@ Y → Earth
 
 ### Done When
 
-A child can complete questions without keyboard/mouse/touch.
+- [x] A child can complete questions without keyboard/mouse/touch:
+  - **HTML5 Gamepad API & Manager (`apps/web/src/input/gamepad.ts`)**: Built unified gamepad polling loop with edge-triggered button handling, analog stick deadzones, repeat throttling, and dual keyboard/gamepad event simulation.
+  - **Direct Face Button Answering**:
+    - `A` → Fire arrow
+    - `B` → Ice arrow
+    - `X` → Wind arrow
+    - `Y` → Earth arrow
+  - **Colored Xbox Controller Badges**: Rendered authentic circular Xbox button badges directly on each arrow choice card (`btn-a` green `#107c10`, `btn-b` red `#e81123`, `btn-x` blue `#0078d7`, `btn-y` amber `#d97706`).
+  - Child can complete questions with instantaneous muscle memory without needing keyboard, mouse, or touch screen. Verified by `src/input/gamepad.test.ts` and `src/components/XboxController.test.tsx`.
 
 ---
 
@@ -2418,14 +2455,19 @@ Implement visible controller focus.
 
 ### Done When
 
-The child can:
-
-- Start the game.
-- Select answers.
-- Navigate basic menus.
-- Finish the daily session.
-
-using only the controller.
+- [x] The child can:
+  - **Start the game**: Session restart and new practice sessions can be initiated with the `A` button on the primary action button.
+  - **Select answers**: Direct face button execution (`A`, `B`, `X`, `Y`) or 2x2 D-pad/stick spatial navigation with `A` to loose selected elemental arrows.
+  - **Navigate basic menus**:
+    - Bumper tab switching: `LB` moves to previous top navigation tab, `RB` moves to next tab across Game Screen, World Map, Royal Armory, Dashboard, History, and Curriculum.
+    - Help modal: Opened via `View`/`Menu`/`LB`, `A` steps through progressive hint levels, `B` dismisses modal back to question.
+    - World Map & Royal Armory: `B` instantly navigates back to Archery Range.
+    - Header controller status pill (`🎮 Controller Ready`) displays connection state.
+  - **Finish the daily session**:
+    - When all 50 arrows are spent, controller focus automatically lands on the primary completion action (`go-to-training-button` or `restart-button`).
+    - D-pad Up/Down navigates between completion actions ("Practice Weak Skills in Training Mode", "Practice Again", "Open World Map", "Travel to New Realm").
+    - Pressing `A` activates the focused action, allowing the child to complete, review, and restart using only the controller.
+  - **10-Foot Living Room TV Focus Ring**: Prominent high-contrast Xbox green outline (`outline: 3px solid #107c10; box-shadow: 0 0 0 3px #107c10, 0 0 16px rgba(16, 124, 16, 0.65); transform: scale(1.03);`) on all active controller-focused items. Verified by `src/components/XboxController.test.tsx`.
 
 ---
 
@@ -2435,7 +2477,7 @@ Test the actual Xbox Series S.
 
 ### Done When
 
-A complete 50-arrow session works reliably on the real device.
+- [ ] A complete 50-arrow session works reliably on the real device (Left for user verification on their physical Xbox Series S).
 
 Do not assume desktop Edge behavior is equivalent.
 

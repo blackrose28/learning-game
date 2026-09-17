@@ -13,26 +13,60 @@ import { ParentDashboard } from './components/ParentDashboard';
 import { ParentGate } from './components/ParentGate';
 import { ChildProfilePicker } from './components/ChildProfilePicker';
 import { InstallPrompt } from './components/InstallPrompt';
+import { WorldMap } from './components/WorldMap';
+import { RewardsScreen } from './components/RewardsScreen';
 import { AuthProvider, useAuth } from './context/AuthContext';
+import { useGamepad, XboxButton } from './input/useGamepad';
 import './App.css';
 
-const AppContent: React.FC = () => {
+const APP_TABS = ['game', 'world', 'rewards', 'dashboard', 'history', 'curriculum'] as const;
+
+export const AppContent: React.FC = () => {
   const { activeChild, isParentUnlocked } = useAuth();
-  const [activeTab, setActiveTab] = useState<'game' | 'dashboard' | 'history' | 'curriculum'>(
-    'game'
-  );
+  const [activeTab, setActiveTab] = useState<
+    'game' | 'world' | 'rewards' | 'dashboard' | 'history' | 'curriculum'
+  >('game');
   const [progress, setProgress] = useState<LocalProgress>(() => loadLocalProgress());
   const [showChildPicker, setShowChildPicker] = useState<boolean>(false);
   const engineInfo = getEngineInfo();
   const curriculumLevels = getAllCurriculumLevels();
   const [sampleExpression] = useState({ left: 8, right: 7, op: 'add' as const });
 
-  const handleSwitchTab = (tab: 'game' | 'dashboard' | 'history' | 'curriculum') => {
+  const handleSwitchTab = (
+    tab: 'game' | 'world' | 'rewards' | 'dashboard' | 'history' | 'curriculum'
+  ) => {
     if (tab === 'history' || tab === 'dashboard') {
-      setProgress(loadLocalProgress());
+      setProgress(loadLocalProgress(activeChild.id));
     }
     setActiveTab(tab);
   };
+
+  const controllerState = useGamepad({
+    enabled: true,
+    onButtonDown: (btn) => {
+      if (btn === XboxButton.LB) {
+        setActiveTab((curr) => {
+          const idx = APP_TABS.indexOf(curr);
+          const prevIdx = (idx - 1 + APP_TABS.length) % APP_TABS.length;
+          const nextTab = APP_TABS[prevIdx];
+          if (nextTab === 'history' || nextTab === 'dashboard') {
+            setProgress(loadLocalProgress(activeChild.id));
+          }
+          return nextTab;
+        });
+      } else if (btn === XboxButton.RB) {
+        setActiveTab((curr) => {
+          const idx = APP_TABS.indexOf(curr);
+          const nextIdx = (idx + 1) % APP_TABS.length;
+          const nextTab = APP_TABS[nextIdx];
+          if (nextTab === 'history' || nextTab === 'dashboard') {
+            setProgress(loadLocalProgress(activeChild.id));
+          }
+          return nextTab;
+        });
+      }
+    },
+  });
 
   const handleClearHistory = () => {
     clearLocalProgress();
@@ -92,6 +126,23 @@ const AppContent: React.FC = () => {
                 [Switch]
               </button>
             </div>
+
+            {/* Xbox Controller Status Indicator */}
+            {controllerState.isActive && (
+              <div
+                className="controller-status-badge"
+                data-testid="controller-status-badge"
+                title={
+                  controllerState.isConnected
+                    ? `Xbox Controller Connected: ${controllerState.gamepadId}`
+                    : 'Xbox Controller Navigation Ready'
+                }
+              >
+                <span style={{ fontSize: 16 }}>🎮</span>
+                <span style={{ fontSize: 13, fontWeight: 700 }}>Controller Ready</span>
+                <span className="controller-bumper-hints">[LB / RB Tabs]</span>
+              </div>
+            )}
           </div>
         </div>
 
@@ -104,6 +155,22 @@ const AppContent: React.FC = () => {
             className={`nav-tab-btn ${activeTab === 'game' ? 'active' : ''}`}
           >
             🏹 Game Screen
+          </button>
+          <button
+            type="button"
+            data-testid="tab-world"
+            onClick={() => handleSwitchTab('world')}
+            className={`nav-tab-btn ${activeTab === 'world' ? 'active' : ''}`}
+          >
+            🗺️ World Map
+          </button>
+          <button
+            type="button"
+            data-testid="tab-rewards"
+            onClick={() => handleSwitchTab('rewards')}
+            className={`nav-tab-btn ${activeTab === 'rewards' ? 'active' : ''}`}
+          >
+            🏆 Royal Armory
           </button>
           <button
             type="button"
@@ -135,6 +202,19 @@ const AppContent: React.FC = () => {
       {/* Screen Render */}
       {activeTab === 'game' ? (
         <GameScreen key={activeChild.id} playerId={activeChild.id} />
+      ) : activeTab === 'world' ? (
+        <WorldMap
+          key={activeChild.id}
+          playerId={activeChild.id}
+          onSelectArea={() => handleSwitchTab('game')}
+          onBackToGame={() => handleSwitchTab('game')}
+        />
+      ) : activeTab === 'rewards' ? (
+        <RewardsScreen
+          key={activeChild.id}
+          playerId={activeChild.id}
+          onBackToGame={() => handleSwitchTab('game')}
+        />
       ) : activeTab === 'dashboard' ? (
         !isParentUnlocked ? (
           <ParentGate onCancel={() => handleSwitchTab('game')} />

@@ -16,11 +16,9 @@ const ALL_SKILLS: Skill[] = [
 
 describe('Task 1.3 — Distractor generation', () => {
   describe('At least 10,000 generated questions satisfy all acceptance criteria', () => {
-    it(
-      'verifies 10,500 generated questions across all skills (1,500 per skill)',
-      () => {
-        const prng = createMulberry32(54321);
-        let totalQuestionsTested = 0;
+    it('verifies 10,500 generated questions across all skills (1,500 per skill)', () => {
+      const prng = createMulberry32(54321);
+      let totalQuestionsTested = 0;
 
       for (const skill of ALL_SKILLS) {
         for (let i = 0; i < 1500; i++) {

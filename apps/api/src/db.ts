@@ -524,9 +524,7 @@ export async function getChildrenForParent(
 ): Promise<ChildPublicProfile[]> {
   // In Math Archer, there is only one parent role; all child profiles belong to the parent.
   const rows = await db
-    .prepare(
-      `SELECT id, name, avatar, grade, pin, parent_id FROM players ORDER BY created_at ASC`
-    )
+    .prepare(`SELECT id, name, avatar, grade, pin, parent_id FROM players ORDER BY created_at ASC`)
     .all<{
       id: string;
       name: string;

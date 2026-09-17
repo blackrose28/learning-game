@@ -32,12 +32,28 @@ import {
   generateQuestionHint,
   type QuestionHint,
   saveAttempt,
+  type WorldAreaId,
+  type WorldArea,
+  loadWorldProgression,
+  saveActiveArea,
+  getWorldArea,
+  checkNewAreaUnlocked,
+  getCompletedSessionsCount,
+  type PlayerRewardsState,
+  loadPlayerRewards,
+  savePlayerRewards,
+  awardAttemptRewards,
+  awardSessionCompleteRewards,
 } from '@math-archer/learning-engine';
 import './GameScreen.css';
 import { SyncManager, type SyncState } from '../sync';
 import { ArcherGraphic } from './ArcherGraphic';
 import { ArcheryTarget } from './ArcheryTarget';
+import { ElementalArrowGraphic, ELEMENTAL_PROFILES } from './ElementalArrowGraphic';
+import { RangeBackdrop } from './RangeBackdrop';
+import { WorldMap } from './WorldMap';
 import { audioFx } from '../audio/AudioFx';
+import { useGamepad, XboxButton } from '../input/useGamepad';
 
 export type GameMode = 'adventure' | 'training' | 'challenge';
 
@@ -151,6 +167,16 @@ export interface GameScreenProps {
    * Optional custom sync manager instance for cloud synchronization.
    */
   syncManager?: SyncManager;
+
+  /**
+   * Optional initial active world area ID (defaults to loaded active area or 'castle').
+   */
+  initialAreaId?: WorldAreaId;
+
+  /**
+   * Optional callback fired when the active world area changes.
+   */
+  onAreaChange?: (areaId: WorldAreaId) => void;
 }
 
 export const ELEMENT_INFO: Record<ElementType, { icon: string; label: string }> = {
@@ -207,9 +233,48 @@ export const GameScreen: React.FC<GameScreenProps> = ({
   onTrainingSkillChange,
   onAttemptSaved,
   syncManager,
+  initialAreaId,
+  onAreaChange,
 }) => {
   // Game mode (Adventure vs Training, Task 4.2 & Task 4.3)
   const [gameMode, setGameMode] = useState<GameMode>(mode);
+
+  // World Progression & Active Realm State (Task 9.3)
+  const [worldProgression, setWorldProgression] = useState(() =>
+    loadWorldProgression(playerId, storage)
+  );
+  const [activeAreaId, setActiveAreaId] = useState<WorldAreaId>(() => {
+    const loaded = loadWorldProgression(playerId, storage);
+    if (initialAreaId && loaded.unlockedAreaIds.includes(initialAreaId)) {
+      return initialAreaId;
+    }
+    return loaded.activeAreaId;
+  });
+  const [newlyUnlockedArea, setNewlyUnlockedArea] = useState<WorldArea | null>(null);
+  const [isWorldMapOpen, setIsWorldMapOpen] = useState<boolean>(false);
+
+  const handleSelectArea = (areaId: WorldAreaId) => {
+    if (!worldProgression.unlockedAreaIds.includes(areaId)) return;
+    setActiveAreaId(areaId);
+    const updated = saveActiveArea(
+      playerId,
+      areaId,
+      storage,
+      worldProgression.completedSessionsCount
+    );
+    setWorldProgression(updated);
+    onAreaChange?.(areaId);
+    setIsWorldMapOpen(false);
+  };
+
+  // Player Rewards & Cosmetic State (Task 9.4)
+  const [playerRewards, setPlayerRewards] = useState<PlayerRewardsState>(() =>
+    loadPlayerRewards(playerId, storage)
+  );
+  const [recentFloatingXp, setRecentFloatingXp] = useState<string | null>(null);
+  const [rewardToast, setRewardToast] = useState<string | null>(null);
+  const [consecutiveHitsCount, setConsecutiveHitsCount] = useState<number>(0);
+  const [lastAttemptWasMiss, setLastAttemptWasMiss] = useState<boolean>(false);
 
   // Cloud Synchronization Manager (Task 6.4)
   const [activeSyncManager] = useState<SyncManager>(() => {
@@ -313,6 +378,10 @@ export const GameScreen: React.FC<GameScreenProps> = ({
   const [archerState, setArcherState] = useState<ArcherState>('idle');
   const [targetHitState, setTargetHitState] = useState<TargetHitState>('idle');
   const [activeShot, setActiveShot] = useState<ActiveShot | null>(null);
+
+  // Controller focus states (Task 10.2)
+  const [focusedChoiceElement, setFocusedChoiceElement] = useState<ElementType | null>(null);
+  const [completionFocusIndex, setCompletionFocusIndex] = useState<number>(0);
 
   // Progressive Hint Levels (Task 4.2)
   const [isHelpOpen, setIsHelpOpen] = useState<boolean>(false);
@@ -504,9 +573,9 @@ export const GameScreen: React.FC<GameScreenProps> = ({
         outcome,
       });
 
-      // Procedural audio effects (Task 9.1)
+      // Procedural audio effects (Task 9.1 & 9.2)
       audioFx.playBowRelease(choice.element);
-      audioFx.playArrowFlight();
+      audioFx.playArrowFlight(choice.element);
 
       const attempt: Attempt = {
         questionId: question.id,
@@ -578,6 +647,39 @@ export const GameScreen: React.FC<GameScreenProps> = ({
 
       onAnswerSubmit?.(choice, correct);
 
+      // Task 9.4 Rewards: Award attempt XP & evaluate achievements
+      const isMake10 = isMake10Eligible(question);
+      const attemptRewards = awardAttemptRewards(playerRewards, {
+        isCorrect: correct,
+        isMake10,
+        element: choice.element,
+        wasMissPreceding: lastAttemptWasMiss,
+        consecutiveHits: correct ? consecutiveHitsCount + 1 : 0,
+        completedSessionsCount: worldProgression.completedSessionsCount,
+      });
+
+      setPlayerRewards(attemptRewards.nextState);
+      savePlayerRewards(attemptRewards.nextState, storage);
+
+      if (correct) {
+        setConsecutiveHitsCount((prev) => prev + 1);
+        setLastAttemptWasMiss(false);
+      } else {
+        setConsecutiveHitsCount(0);
+        setLastAttemptWasMiss(true);
+      }
+
+      setRecentFloatingXp(`+${attemptRewards.xpAwarded} XP ⭐`);
+
+      if (attemptRewards.levelUp) {
+        setRewardToast(
+          `⭐ LEVEL UP! Level ${attemptRewards.levelUp.newLevel}: ${attemptRewards.levelUp.newTitle}!`
+        );
+      } else if (attemptRewards.newAchievements.length > 0) {
+        const ach = attemptRewards.newAchievements[0];
+        setRewardToast(`🏆 Achievement: ${ach.title}! (+${ach.xpReward} XP)`);
+      }
+
       const flightDelay =
         autoAdvanceDelayMs > 0
           ? shotFlightDurationMs !== undefined
@@ -587,7 +689,25 @@ export const GameScreen: React.FC<GameScreenProps> = ({
 
       const advance = () => {
         if (gameMode === 'adventure' && shouldComplete) {
+          const prevCompletedCount = worldProgression.completedSessionsCount;
           completeSession(currentSession, { storage });
+          const newCompletedCount = getCompletedSessionsCount(playerId, storage);
+          const newlyUnlocked = checkNewAreaUnlocked(prevCompletedCount, newCompletedCount);
+          if (newlyUnlocked) {
+            setNewlyUnlockedArea(newlyUnlocked);
+          }
+          const updatedProg = loadWorldProgression(playerId, storage, newCompletedCount);
+          setWorldProgression(updatedProg);
+
+          // Task 9.4 Rewards: Award session completion bonus, streak advance, & tomorrow's bounty
+          const sessionRewards = awardSessionCompleteRewards(attemptRewards.nextState, {
+            sessionDate: currentSession.date || new Date().toISOString().slice(0, 10),
+            completedSessionsCount: newCompletedCount,
+            realmsDiscovered: updatedProg.unlockedAreaIds.length,
+          });
+          setPlayerRewards(sessionRewards.nextState);
+          savePlayerRewards(sessionRewards.nextState, storage);
+
           setIsCompleted(true);
           setIsTransitioning(false);
           setIsHelpOpen(false);
@@ -638,12 +758,12 @@ export const GameScreen: React.FC<GameScreenProps> = ({
             // Phase 3 & 4: Arrow hits target -> impact reaction and feedback!
             setShotPhase('impact');
             setTargetHitState(outcome);
-            audioFx.playTargetHit(outcome);
+            audioFx.playTargetHit(outcome, choice.element);
           }, flightDelay);
         } else {
           setShotPhase('impact');
           setTargetHitState(outcome);
-          audioFx.playTargetHit(outcome);
+          audioFx.playTargetHit(outcome, choice.element);
         }
 
         // Phase 5: Next question after delay
@@ -651,7 +771,7 @@ export const GameScreen: React.FC<GameScreenProps> = ({
       } else {
         setShotPhase('impact');
         setTargetHitState(outcome);
-        audioFx.playTargetHit(outcome);
+        audioFx.playTargetHit(outcome, choice.element);
         advance();
       }
     },
@@ -706,13 +826,13 @@ export const GameScreen: React.FC<GameScreenProps> = ({
 
       if (['1', '2', '3', '4'].includes(key)) {
         selectedIndex = Number.parseInt(key, 10) - 1;
-      } else if (key === 'f') {
+      } else if (key === 'f' || key === 'a') {
         selectedIndex = question.choices.findIndex((c) => c.element === 'fire');
-      } else if (key === 'i') {
+      } else if (key === 'i' || key === 'b') {
         selectedIndex = question.choices.findIndex((c) => c.element === 'ice');
-      } else if (key === 'w') {
+      } else if (key === 'w' || key === 'x') {
         selectedIndex = question.choices.findIndex((c) => c.element === 'wind');
-      } else if (key === 'e') {
+      } else if (key === 'e' || key === 'y') {
         selectedIndex = question.choices.findIndex((c) => c.element === 'earth');
       }
 
@@ -808,10 +928,174 @@ export const GameScreen: React.FC<GameScreenProps> = ({
     setTargetHitState('idle');
     setActiveShot(null);
     setStats({ hits: 0, total: 0 });
+    setFocusedChoiceElement(null);
+    setCompletionFocusIndex(0);
     questionStartTimeRef.current = Date.now();
   };
 
+  // Total number of completion actions (Task 10.2)
+  const getCompletionActionsCount = useCallback(() => {
+    return newlyUnlockedArea ? 4 : 3;
+  }, [newlyUnlockedArea]);
+
+  const handleExecuteCompletionAction = useCallback(
+    (index: number) => {
+      if (index === 0) {
+        handleModeChange('training');
+      } else if (index === 1) {
+        handleRestart();
+      } else if (index === 2) {
+        setIsWorldMapOpen(true);
+      } else if (index === 3 && newlyUnlockedArea) {
+        handleSelectArea(newlyUnlockedArea.id);
+      }
+    },
+    [handleModeChange, newlyUnlockedArea, handleSelectArea]
+  );
+
+  useEffect(() => {
+    if (isCompleted) {
+      setCompletionFocusIndex(0);
+    }
+  }, [isCompleted]);
+
+  // Phase 10: Xbox Controller Mapping & Focus Navigation
+  useGamepad({
+    enabled: true,
+    onButtonDown: (btn) => {
+      // 1. Session complete screen navigation
+      if (isCompleted && gameMode !== 'training') {
+        if (btn === XboxButton.A) {
+          handleExecuteCompletionAction(completionFocusIndex);
+        } else if (btn === XboxButton.B) {
+          setIsWorldMapOpen(true);
+        }
+        return;
+      }
+
+      // 2. Help modal navigation
+      if (isHelpOpen) {
+        if (btn === XboxButton.A) {
+          if (activeHintLevel === 'strategy_hint') {
+            setActiveHintLevel('partial_decomposition');
+            updateHighestHintLevel('partial_decomposition');
+          } else if (activeHintLevel === 'partial_decomposition') {
+            setActiveHintLevel('full_explanation');
+            updateHighestHintLevel('full_explanation');
+          }
+        } else if (btn === XboxButton.B || btn === XboxButton.View || btn === XboxButton.Menu) {
+          setIsHelpOpen(false);
+        }
+        return;
+      }
+
+      // 3. World map modal navigation
+      if (isWorldMapOpen) {
+        if (btn === XboxButton.B) {
+          setIsWorldMapOpen(false);
+        }
+        return;
+      }
+
+      // 4. In active gameplay / question answering (Task 10.1 & 10.2)
+      if (isTransitioning) return;
+
+      if (btn === XboxButton.A) {
+        // Direct mapping A -> Fire (Task 10.1)
+        // If child specifically focused another choice via D-pad, activate that choice
+        const targetElement =
+          focusedChoiceElement && focusedChoiceElement !== 'fire' ? focusedChoiceElement : 'fire';
+        const targetChoice = question.choices.find((c) => c.element === targetElement);
+        if (targetChoice) {
+          handleSelectChoice(targetChoice);
+        }
+      } else if (btn === XboxButton.B) {
+        // Direct mapping B -> Ice (Task 10.1)
+        const iceChoice = question.choices.find((c) => c.element === 'ice');
+        if (iceChoice) {
+          handleSelectChoice(iceChoice);
+        }
+      } else if (btn === XboxButton.X) {
+        // Direct mapping X -> Wind (Task 10.1)
+        const windChoice = question.choices.find((c) => c.element === 'wind');
+        if (windChoice) {
+          handleSelectChoice(windChoice);
+        }
+      } else if (btn === XboxButton.Y) {
+        // Direct mapping Y -> Earth (Task 10.1)
+        const earthChoice = question.choices.find((c) => c.element === 'earth');
+        if (earthChoice) {
+          handleSelectChoice(earthChoice);
+        }
+      } else if (btn === XboxButton.LB || btn === XboxButton.RB) {
+        // Bumpers switch mode between adventure and training
+        handleModeChange(gameMode === 'adventure' ? 'training' : 'adventure');
+      } else if (btn === XboxButton.View || btn === XboxButton.Menu) {
+        // View/Menu opens help
+        if (isHelpAvailable && !isHelpOpen) {
+          handleRequestHelp();
+        }
+      }
+    },
+    onDirection: (direction) => {
+      // 1. Session complete screen navigation
+      if (isCompleted && gameMode !== 'training') {
+        const count = getCompletionActionsCount();
+        if (direction === 'up') {
+          setCompletionFocusIndex((prev) => (prev > 0 ? prev - 1 : count - 1));
+        } else if (direction === 'down') {
+          setCompletionFocusIndex((prev) => (prev < count - 1 ? prev + 1 : 0));
+        }
+        return;
+      }
+
+      // 2. Question arrow choices navigation (2x2 grid)
+      if (!isCompleted || gameMode === 'training') {
+        setFocusedChoiceElement((current) => {
+          const prev = current ?? 'fire';
+          if (direction === 'right') {
+            if (prev === 'fire') return 'ice';
+            if (prev === 'wind') return 'earth';
+            if (prev === 'ice') return 'fire';
+            if (prev === 'earth') return 'wind';
+          } else if (direction === 'left') {
+            if (prev === 'ice') return 'fire';
+            if (prev === 'earth') return 'wind';
+            if (prev === 'fire') return 'ice';
+            if (prev === 'wind') return 'earth';
+          } else if (direction === 'down') {
+            if (prev === 'fire') return 'wind';
+            if (prev === 'ice') return 'earth';
+            if (prev === 'wind') return 'fire';
+            if (prev === 'earth') return 'ice';
+          } else if (direction === 'up') {
+            if (prev === 'wind') return 'fire';
+            if (prev === 'earth') return 'ice';
+            if (prev === 'fire') return 'wind';
+            if (prev === 'ice') return 'earth';
+          }
+          return prev;
+        });
+      }
+    },
+  });
+
+  if (isWorldMapOpen) {
+    return (
+      <main className="game-container" role="main">
+        <WorldMap
+          playerId={playerId}
+          storage={storage}
+          onSelectArea={handleSelectArea}
+          onBackToGame={() => setIsWorldMapOpen(false)}
+        />
+      </main>
+    );
+  }
+
   if (isCompleted && gameMode !== 'training') {
+    const currentWorldArea = getWorldArea(activeAreaId);
+
     return (
       <main className="game-container">
         {/* Game Mode Selector Toolbar */}
@@ -833,6 +1117,36 @@ export const GameScreen: React.FC<GameScreenProps> = ({
           >
             🏋️ Training
           </button>
+
+          {/* World Realm Badge Button */}
+          <button
+            type="button"
+            className="world-area-badge-btn"
+            data-testid="world-area-badge"
+            onClick={() => setIsWorldMapOpen(true)}
+            title="Open Archery World Map"
+          >
+            <span className="area-icon">{currentWorldArea.icon}</span>
+            <span className="area-name">{currentWorldArea.name}</span>
+            <span className="world-shortcut-tag">[🗺️ Map]</span>
+          </button>
+
+          {/* Player Level & Streak Badges (Task 9.4) */}
+          <span
+            className="player-level-badge"
+            data-testid="player-level-badge"
+            title={`Level ${playerRewards.level}: ${playerRewards.levelTitle}`}
+          >
+            ⭐ Lvl {playerRewards.level}
+          </span>
+          <span
+            className="streak-badge"
+            data-testid="streak-badge"
+            title={`Daily Practice Streak: ${playerRewards.currentStreak} Days`}
+          >
+            🔥 {playerRewards.currentStreak}d
+          </span>
+
           <div
             className="cloud-sync-status-indicator"
             data-testid="cloud-sync-status"
@@ -911,17 +1225,139 @@ export const GameScreen: React.FC<GameScreenProps> = ({
           >
             All daily arrows used for today. Come back tomorrow for 50 new arrows!
           </p>
+
+          {/* Rewards & Level Progression Summary (Task 9.4) */}
+          <div
+            className="session-rewards-summary"
+            data-testid="session-rewards-summary"
+            style={{
+              margin: '12px 0',
+              background: '#f0fdf4',
+              border: '1px solid #bbf7d0',
+              borderRadius: 12,
+              padding: '12px 16px',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: 6,
+              alignItems: 'center',
+            }}
+          >
+            <span style={{ fontWeight: 800, color: '#166534', fontSize: 16 }}>
+              ⭐ Session Complete Bonus: +100 XP Earned!
+            </span>
+            <span style={{ color: '#15803d', fontSize: 14 }}>
+              Archer Rank: <strong>Level {playerRewards.level} ({playerRewards.levelTitle})</strong> • Total XP: {playerRewards.totalXp}
+            </span>
+            <span style={{ color: '#c2410c', fontWeight: 700, fontSize: 14 }}>
+              🔥 Daily Practice Streak: {playerRewards.currentStreak} Day{playerRewards.currentStreak === 1 ? '' : 's'}!
+            </span>
+          </div>
+
+          {/* Tomorrow's Bounty Preview Card - Reason to Return Tomorrow (Task 9.4) */}
+          <div
+            className="tomorrow-bounty-card"
+            data-testid="tomorrow-bounty-card"
+            style={{
+              margin: '12px 0',
+              background: 'linear-gradient(135deg, #fef3c7 0%, #fde68a 100%)',
+              border: '2px solid #f59e0b',
+              borderRadius: 14,
+              padding: '14px 18px',
+              textAlign: 'left',
+              width: '100%',
+              boxSizing: 'border-box',
+            }}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 4 }}>
+              <span style={{ fontSize: 24 }}>{playerRewards.tomorrowReward.icon}</span>
+              <div>
+                <span
+                  style={{
+                    fontSize: 11,
+                    fontWeight: 800,
+                    textTransform: 'uppercase',
+                    color: '#b45309',
+                    display: 'block',
+                  }}
+                >
+                  🌟 TOMORROW'S BOUNTY • {playerRewards.tomorrowReward.unlockCondition}
+                </span>
+                <h4 style={{ margin: '2px 0', fontSize: 16, fontWeight: 800, color: '#78350f' }}>
+                  {playerRewards.tomorrowReward.title}
+                </h4>
+              </div>
+            </div>
+            <p style={{ margin: '4px 0 0', fontSize: 13, color: '#92400e', lineHeight: 1.4 }}>
+              {playerRewards.tomorrowReward.description}
+            </p>
+            <p style={{ margin: '6px 0 0', fontSize: 12, fontWeight: 700, color: '#b45309' }}>
+              🎯 {playerRewards.tomorrowReward.reasonToReturn}
+            </p>
+          </div>
+
+          {/* Newly Unlocked World Content Celebration (Task 9.3) */}
+          {newlyUnlockedArea && (
+            <div
+              className={`world-unlock-celebration area-${newlyUnlockedArea.id}`}
+              data-testid="world-unlock-celebration"
+            >
+              <div className="celebration-badge">🎉 NEW REALM UNLOCKED!</div>
+              <div className="celebration-title">
+                <span>{newlyUnlockedArea.icon}</span> {newlyUnlockedArea.name}
+              </div>
+              <p className="celebration-desc">{newlyUnlockedArea.description}</p>
+              <button
+                type="button"
+                className={`travel-unlocked-btn ${completionFocusIndex === 3 ? 'controller-focused' : ''}`}
+                data-testid="travel-new-realm-btn"
+                data-controller-focus={completionFocusIndex === 3 ? 'true' : undefined}
+                onClick={() => {
+                  handleSelectArea(newlyUnlockedArea.id);
+                }}
+              >
+                🗺️ Travel to {newlyUnlockedArea.name}
+                {completionFocusIndex === 3 && (
+                  <span className="controller-focus-action-tag"> (A) Select</span>
+                )}
+              </button>
+            </div>
+          )}
+
+          {/* World Progress Summary (Task 9.3) */}
+          <div className="session-world-progress" data-testid="session-world-progress">
+            <span className="world-progress-label">
+              🗺️ World Progression: <strong>{worldProgression.unlockedAreaIds.length}</strong> / 5
+              Realms Discovered
+            </span>
+            <button
+              type="button"
+              className={`open-world-map-btn ${completionFocusIndex === 2 ? 'controller-focused' : ''}`}
+              data-testid="session-open-world-map-btn"
+              data-controller-focus={completionFocusIndex === 2 ? 'true' : undefined}
+              onClick={() => setIsWorldMapOpen(true)}
+            >
+              🗺️ Open World Map
+              {completionFocusIndex === 2 && (
+                <span className="controller-focus-action-tag"> (A) Select</span>
+              )}
+            </button>
+          </div>
+
           <div
             className="session-complete-actions"
             style={{ display: 'flex', flexDirection: 'column', gap: 10, alignItems: 'center' }}
           >
             <button
               type="button"
-              className="go-to-training-button"
+              className={`go-to-training-button ${completionFocusIndex === 0 ? 'controller-focused' : ''}`}
               data-testid="go-to-training-button"
+              data-controller-focus={completionFocusIndex === 0 ? 'true' : undefined}
               onClick={() => handleModeChange('training')}
             >
               🏋️ Practice Weak Skills in Training Mode (Unlimited)
+              {completionFocusIndex === 0 && (
+                <span className="controller-focus-action-tag"> (A) Select</span>
+              )}
             </button>
             {restartMessage && (
               <p
@@ -933,12 +1369,16 @@ export const GameScreen: React.FC<GameScreenProps> = ({
               </p>
             )}
             <button
-              className="restart-button"
+              className={`restart-button ${completionFocusIndex === 1 ? 'controller-focused' : ''}`}
               onClick={handleRestart}
               data-testid="restart-button"
+              data-controller-focus={completionFocusIndex === 1 ? 'true' : undefined}
               disabled={!allowSameDayRestart && session.status === 'completed'}
             >
               {allowSameDayRestart ? '🏹 Practice Again' : '🏹 Daily Practice Finished'}
+              {completionFocusIndex === 1 && (
+                <span className="controller-focus-action-tag"> (A) Select</span>
+              )}
             </button>
           </div>
         </div>
@@ -972,11 +1412,41 @@ export const GameScreen: React.FC<GameScreenProps> = ({
         >
           🏋️ Training
         </button>
+
+        {/* World Realm Badge Button (Task 9.3) */}
+        <button
+          type="button"
+          className="world-area-badge-btn"
+          data-testid="world-area-badge"
+          onClick={() => setIsWorldMapOpen(true)}
+          title="Open Archery World Map"
+        >
+          <span className="area-icon">{getWorldArea(activeAreaId).icon}</span>
+          <span className="area-name">{getWorldArea(activeAreaId).name}</span>
+          <span className="world-shortcut-tag">[🗺️ Map]</span>
+        </button>
         {gameMode === 'training' && (
           <span className="training-mode-banner" data-testid="training-mode-banner">
             🏋️ Training Mode (Unlimited Practice & Explanations · 0 Daily Arrows Used)
           </span>
         )}
+
+        {/* Player Level & Streak Badges (Task 9.4) */}
+        <span
+          className="player-level-badge"
+          data-testid="player-level-badge"
+          title={`Level ${playerRewards.level}: ${playerRewards.levelTitle} (${playerRewards.totalXp} XP)`}
+        >
+          ⭐ Lvl {playerRewards.level}
+        </span>
+        <span
+          className="streak-badge"
+          data-testid="streak-badge"
+          title={`Daily Practice Streak: ${playerRewards.currentStreak} Days (Best: ${playerRewards.bestStreak})`}
+        >
+          🔥 {playerRewards.currentStreak}d
+        </span>
+
         <div
           className="cloud-sync-status-indicator"
           data-testid="cloud-sync-status"
@@ -1038,6 +1508,18 @@ export const GameScreen: React.FC<GameScreenProps> = ({
           )}
         </div>
       </div>
+
+      {/* Real-time Rewards Feedback (Task 9.4) */}
+      {recentFloatingXp && (
+        <div className="floating-xp-pill" data-testid="floating-xp-pill" aria-live="polite">
+          {recentFloatingXp}
+        </div>
+      )}
+      {rewardToast && (
+        <div className="reward-toast" data-testid="reward-toast" role="alert">
+          {rewardToast}
+        </div>
+      )}
 
       {/* Deliberate Practice Bar for Weak Skills in Training Mode (Task 4.3) */}
       {gameMode === 'training' && (
@@ -1114,6 +1596,14 @@ export const GameScreen: React.FC<GameScreenProps> = ({
         </div>
       )}
 
+      {/* Visual Environment Range Backdrop (Task 9.3 & Task 9.4) */}
+      <RangeBackdrop
+        areaId={activeAreaId}
+        equippedBanner={playerRewards.equippedCosmetics.castleBanner}
+        equippedStatue={playerRewards.equippedCosmetics.castleStatue}
+        equippedGround={playerRewards.equippedCosmetics.castleGround}
+      />
+
       {/* Archer Character & Shooting Arena */}
       <div className={`archer-stage archer-header phase-${shotPhase}`} data-testid="archer-stage">
         <div
@@ -1122,7 +1612,12 @@ export const GameScreen: React.FC<GameScreenProps> = ({
           data-state={archerState}
         >
           <span className="archer-icon" role="img" aria-label="archer">
-            <ArcherGraphic state={archerState} element={activeShot?.element} />
+            <ArcherGraphic
+              state={archerState}
+              element={activeShot?.element}
+              equippedOutfit={playerRewards.equippedCosmetics.outfit}
+              equippedBow={playerRewards.equippedCosmetics.bow}
+            />
           </span>
           {activeShot && shotPhase === 'shooting' && (
             <span
@@ -1136,7 +1631,7 @@ export const GameScreen: React.FC<GameScreenProps> = ({
         </div>
         <span className="game-title-badge">Math Archer</span>
 
-        {/* Flying Elemental Arrow Projectile (Task 3.2 & Task 9.1) */}
+        {/* Flying Elemental Arrow Projectile (Task 3.2, Task 9.1 & Task 9.2 & Task 9.4) */}
         {activeShot && shotPhase !== 'idle' && (
           <div
             className={`flying-arrow element-${activeShot.element} outcome-${activeShot.outcome} phase-${shotPhase}`}
@@ -1147,10 +1642,11 @@ export const GameScreen: React.FC<GameScreenProps> = ({
           >
             <div className="flying-arrow-trail" />
             <div className="flying-arrow-body">
-              <span className="arrow-tail-feather">🪶</span>
-              <span className="arrow-shaft" />
-              <span className="arrow-head-symbol">▼</span>
-              <span className="arrow-element-badge">{ELEMENT_INFO[activeShot.element].icon}</span>
+              <ElementalArrowGraphic
+                element={activeShot.element}
+                variant="projectile"
+                equippedEffect={playerRewards.equippedCosmetics.arrowEffect}
+              />
             </div>
           </div>
         )}
@@ -1177,11 +1673,12 @@ export const GameScreen: React.FC<GameScreenProps> = ({
         )}
       </div>
 
-      {/* Target Question Display (Task 9.1) */}
+      {/* Target Question Display (Task 9.1 & Task 9.4) */}
       <ArcheryTarget
         expression={formatExpression(question)}
         hitState={targetHitState}
         activeElement={activeShot?.element}
+        equippedEffect={playerRewards.equippedCosmetics.arrowEffect}
       />
 
       {/* Guided Help Request Button (Task 4.1 & Task 4.2) */}
@@ -1564,28 +2061,65 @@ export const GameScreen: React.FC<GameScreenProps> = ({
             }
 
             const info = ELEMENT_INFO[choice.element];
+            const profile = ELEMENTAL_PROFILES[choice.element];
+            const controllerButton =
+              choice.element === 'fire'
+                ? 'A'
+                : choice.element === 'ice'
+                  ? 'B'
+                  : choice.element === 'wind'
+                    ? 'X'
+                    : 'Y';
+
+            const isControllerFocused = focusedChoiceElement === choice.element;
 
             return (
               <button
                 key={`${choice.element}-${choice.value}`}
                 type="button"
-                className={`arrow-button element-${choice.element} ${stateClass}`}
+                className={`arrow-button element-${choice.element} ${stateClass} ${isControllerFocused ? 'controller-focused' : ''}`}
                 data-testid={`choice-${choice.element}`}
                 data-element={choice.element}
+                data-arrowhead-shape={profile.arrowheadShape}
+                data-fletching-shape={profile.fletchingShape}
                 data-value={choice.value}
+                data-controller-focus={isControllerFocused ? 'true' : undefined}
                 disabled={isTransitioning}
                 onClick={() => handleSelectChoice(choice)}
                 aria-label={`${info.label} arrow, value ${choice.value}`}
               >
                 <div className="arrow-fletching-notch" aria-hidden="true" />
-                <div className="arrow-element-content">
-                  <span className="element-icon" role="img" aria-label={info.label}>
-                    {info.icon}
-                  </span>
-                  <span className="element-label">{info.label}</span>
+
+                {/* Top meta row: element icon, name badge, and input shortcuts */}
+                <div className="arrow-card-header">
+                  <div className="arrow-element-content">
+                    <span className="element-icon" role="img" aria-label={info.label}>
+                      {info.icon}
+                    </span>
+                    <div className="element-label-group">
+                      <span className="element-label">{info.label}</span>
+                      <span className="element-type-badge">{profile.name}</span>
+                    </div>
+                  </div>
+                  <div className="arrow-shortcuts-group">
+                    <span className="keyboard-shortcut-hint">[{index + 1}]</span>
+                    <span
+                      className={`controller-shortcut-hint btn-${controllerButton.toLowerCase()}`}
+                      data-testid={`controller-hint-${choice.element}`}
+                      aria-label={`Xbox button ${controllerButton}`}
+                    >
+                      ({controllerButton})
+                    </span>
+                  </div>
                 </div>
-                <span className="arrow-value">{choice.value}</span>
-                <span className="keyboard-shortcut-hint">[{index + 1}]</span>
+
+                {/* Central Arrow with BIG number positioned right in the center of the arrow */}
+                <div className="arrow-centerpiece">
+                  <div className="arrow-graphic-underlay" aria-hidden="true">
+                    <ElementalArrowGraphic element={choice.element} variant="quiver" />
+                  </div>
+                  <span className="arrow-value">{choice.value}</span>
+                </div>
               </button>
             );
           })}

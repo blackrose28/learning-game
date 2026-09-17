@@ -8,6 +8,8 @@ export * from './session';
 export * from './teaching';
 export * from './history';
 export * from './dashboard';
+export * from './world';
+export * from './rewards';
 
 export interface EngineInfo {
   name: string;

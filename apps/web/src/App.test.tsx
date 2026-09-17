@@ -59,6 +59,20 @@ describe('App navigation and Progress & History View', () => {
     expect(screen.queryByTestId('child-profile-picker')).not.toBeInTheDocument();
   });
 
+  it('navigates to World Map tab and renders the world exploration view', () => {
+    render(<App />);
+
+    expect(screen.getByTestId('tab-world')).toBeInTheDocument();
+    fireEvent.click(screen.getByTestId('tab-world'));
+
+    expect(screen.getByTestId('world-map-container')).toBeInTheDocument();
+    expect(screen.getByTestId('world-map-title')).toHaveTextContent(/Archery World Map/i);
+
+    // Click "Back to Archery Range" from WorldMap returns to Game Screen
+    fireEvent.click(screen.getByTestId('back-to-game-btn'));
+    expect(screen.getByTestId('question-expression')).toBeInTheDocument();
+  });
+
   it('displays stored attempts and sessions in Progress & History tab', () => {
     // Seed some attempts and sessions in localStorage
     const today = new Date().toISOString().slice(0, 10);
