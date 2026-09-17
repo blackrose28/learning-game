@@ -2325,7 +2325,14 @@ Add:
 
 ### Done When
 
-Answering a question feels like shooting an arrow rather than clicking a button.
+- [x] Answering a question feels like shooting an arrow rather than clicking a button:
+  - **Archer character**: Created SVG-based child ranger/archer character (`apps/web/src/components/ArcherGraphic.tsx`) with jaunty cowl feather, shoulder quiver with arrows, animated aiming gaze, and articulated limbs for idle breathing, drawing tension, and release follow-through.
+  - **Recurve Bow**: Designed curved laminated wooden limbs with golden horn nocks, leather wrapped riser grip, and dynamic bowstring that draws into high-tension triangular draw posture and recoils with elastic vibration (`bowstring-snap` and `bow-recoil-active`).
+  - **Target**: Implemented official archery tournament target face (`apps/web/src/components/ArcheryTarget.tsx`) with 10 concentric scoring rings (white, slate/black, cyan/blue, red, and gold bullseye with center crosshair), mounted on a wooden archery easel tripod stand with legs and crossbar. Math expression is mounted in a high-contrast legible shield plate.
+  - **Arrow flight**: Elemental projectile with feathered crest, glowing rune shaft, and arrowhead streaks swiftly across the range towards the target with aerodynamic in-flight audio whoosh (`audioFx.playArrowFlight()`).
+  - **Hit animation**: Arrow physically lodges into the target bullseye with authentic damped spring oscillation (`arrow-quiver` animation), triggering kinetic target board recoil (`target-impact-hit`), bullseye shockwave ripple rings, golden sparkle bursts (`✨🎯✨`), and resonant wooden thwack impact audio (`audioFx.playTargetHit('hit')`). Glancing deflection animation and audio on miss.
+  - **Archer's Quiver**: Styled the answer choices grid as an interactive quiver where hovering/focusing pulls an arrow up ready to nock, and selecting triggers procedural string release audio and shooting sequence.
+  - Verified by comprehensive test suite in `apps/web/src/components/ArcherPresentation.test.tsx`, `apps/web/src/components/GameScreen.test.tsx`, and `apps/web/src/components/Responsive.test.tsx`.
 
 ---
 

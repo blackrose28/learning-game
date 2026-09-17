@@ -35,6 +35,9 @@ import {
 } from '@math-archer/learning-engine';
 import './GameScreen.css';
 import { SyncManager, type SyncState } from '../sync';
+import { ArcherGraphic } from './ArcherGraphic';
+import { ArcheryTarget } from './ArcheryTarget';
+import { audioFx } from '../audio/AudioFx';
 
 export type GameMode = 'adventure' | 'training' | 'challenge';
 
@@ -501,6 +504,10 @@ export const GameScreen: React.FC<GameScreenProps> = ({
         outcome,
       });
 
+      // Procedural audio effects (Task 9.1)
+      audioFx.playBowRelease(choice.element);
+      audioFx.playArrowFlight();
+
       const attempt: Attempt = {
         questionId: question.id,
         operation: question.operation,
@@ -631,10 +638,12 @@ export const GameScreen: React.FC<GameScreenProps> = ({
             // Phase 3 & 4: Arrow hits target -> impact reaction and feedback!
             setShotPhase('impact');
             setTargetHitState(outcome);
+            audioFx.playTargetHit(outcome);
           }, flightDelay);
         } else {
           setShotPhase('impact');
           setTargetHitState(outcome);
+          audioFx.playTargetHit(outcome);
         }
 
         // Phase 5: Next question after delay
@@ -642,6 +651,7 @@ export const GameScreen: React.FC<GameScreenProps> = ({
       } else {
         setShotPhase('impact');
         setTargetHitState(outcome);
+        audioFx.playTargetHit(outcome);
         advance();
       }
     },
@@ -1112,7 +1122,7 @@ export const GameScreen: React.FC<GameScreenProps> = ({
           data-state={archerState}
         >
           <span className="archer-icon" role="img" aria-label="archer">
-            🏹
+            <ArcherGraphic state={archerState} element={activeShot?.element} />
           </span>
           {activeShot && shotPhase === 'shooting' && (
             <span
@@ -1126,7 +1136,7 @@ export const GameScreen: React.FC<GameScreenProps> = ({
         </div>
         <span className="game-title-badge">Math Archer</span>
 
-        {/* Flying Elemental Arrow Projectile (Task 3.2) */}
+        {/* Flying Elemental Arrow Projectile (Task 3.2 & Task 9.1) */}
         {activeShot && shotPhase !== 'idle' && (
           <div
             className={`flying-arrow element-${activeShot.element} outcome-${activeShot.outcome} phase-${shotPhase}`}
@@ -1167,40 +1177,12 @@ export const GameScreen: React.FC<GameScreenProps> = ({
         )}
       </div>
 
-      {/* Target Question Display */}
-      <div
-        className={`target-card hit-${targetHitState} ${
-          targetHitState === 'hit'
-            ? 'target-impact-hit'
-            : targetHitState === 'miss'
-              ? 'target-impact-miss'
-              : ''
-        }`}
-        data-testid="target-card"
-        data-hit-state={targetHitState}
-      >
-        <div className="target-bullseye-indicator">TARGET</div>
-        <div className="question-expression" data-testid="question-expression">
-          {formatExpression(question)}
-        </div>
-
-        {/* Impact Visual Effects */}
-        {targetHitState === 'hit' && (
-          <div className="target-hit-effect" data-testid="target-hit-effect">
-            <span className="hit-stars" aria-hidden="true">
-              ✨🎯✨
-            </span>
-            <div className="hit-ring-burst" aria-hidden="true" />
-          </div>
-        )}
-        {targetHitState === 'miss' && (
-          <div className="target-miss-effect" data-testid="target-miss-effect">
-            <span className="miss-deflect-icon" aria-hidden="true">
-              💨 Miss!
-            </span>
-          </div>
-        )}
-      </div>
+      {/* Target Question Display (Task 9.1) */}
+      <ArcheryTarget
+        expression={formatExpression(question)}
+        hitState={targetHitState}
+        activeElement={activeShot?.element}
+      />
 
       {/* Guided Help Request Button (Task 4.1 & Task 4.2) */}
       {isHelpAvailable && (
@@ -1562,45 +1544,52 @@ export const GameScreen: React.FC<GameScreenProps> = ({
         )}
       </div>
 
-      {/* 2x2 Elemental Answer Choices */}
-      <div className="answers-grid" role="group" aria-label="Elemental arrow choices">
-        {question.choices.map((choice, index) => {
-          const isSelected = selectedChoice?.element === choice.element;
-          const isRevealedCorrect =
-            isTransitioning && isCorrect === false && choice.category === 'correct';
+      {/* 2x2 Elemental Answer Choices - The Archer's Quiver */}
+      <div className="quiver-section" data-testid="quiver-section">
+        <div className="quiver-header" aria-hidden="true">
+          <span className="quiver-badge">🏹 ARCHER'S QUIVER</span>
+          <span className="quiver-hint">Draw an arrow to loose at the target</span>
+        </div>
+        <div className="answers-grid" role="group" aria-label="Elemental arrow choices">
+          {question.choices.map((choice, index) => {
+            const isSelected = selectedChoice?.element === choice.element;
+            const isRevealedCorrect =
+              isTransitioning && isCorrect === false && choice.category === 'correct';
 
-          let stateClass = '';
-          if (isSelected) {
-            stateClass = isCorrect ? 'selected-correct' : 'selected-wrong';
-          } else if (isRevealedCorrect) {
-            stateClass = 'revealed-correct';
-          }
+            let stateClass = '';
+            if (isSelected) {
+              stateClass = isCorrect ? 'selected-correct' : 'selected-wrong';
+            } else if (isRevealedCorrect) {
+              stateClass = 'revealed-correct';
+            }
 
-          const info = ELEMENT_INFO[choice.element];
+            const info = ELEMENT_INFO[choice.element];
 
-          return (
-            <button
-              key={`${choice.element}-${choice.value}`}
-              type="button"
-              className={`arrow-button element-${choice.element} ${stateClass}`}
-              data-testid={`choice-${choice.element}`}
-              data-element={choice.element}
-              data-value={choice.value}
-              disabled={isTransitioning}
-              onClick={() => handleSelectChoice(choice)}
-              aria-label={`${info.label} arrow, value ${choice.value}`}
-            >
-              <div className="arrow-element-content">
-                <span className="element-icon" role="img" aria-label={info.label}>
-                  {info.icon}
-                </span>
-                <span className="element-label">{info.label}</span>
-              </div>
-              <span className="arrow-value">{choice.value}</span>
-              <span className="keyboard-shortcut-hint">[{index + 1}]</span>
-            </button>
-          );
-        })}
+            return (
+              <button
+                key={`${choice.element}-${choice.value}`}
+                type="button"
+                className={`arrow-button element-${choice.element} ${stateClass}`}
+                data-testid={`choice-${choice.element}`}
+                data-element={choice.element}
+                data-value={choice.value}
+                disabled={isTransitioning}
+                onClick={() => handleSelectChoice(choice)}
+                aria-label={`${info.label} arrow, value ${choice.value}`}
+              >
+                <div className="arrow-fletching-notch" aria-hidden="true" />
+                <div className="arrow-element-content">
+                  <span className="element-icon" role="img" aria-label={info.label}>
+                    {info.icon}
+                  </span>
+                  <span className="element-label">{info.label}</span>
+                </div>
+                <span className="arrow-value">{choice.value}</span>
+                <span className="keyboard-shortcut-hint">[{index + 1}]</span>
+              </button>
+            );
+          })}
+        </div>
       </div>
 
       {/* 17 / 50 Arrow Counter Progress (Adventure) vs Unlimited Counter (Training) */}
