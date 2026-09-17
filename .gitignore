@@ -31,3 +31,5 @@ coverage
 # Build outputs
 build
 .turbo
+.wrangler
+

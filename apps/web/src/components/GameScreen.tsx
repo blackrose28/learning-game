@@ -285,8 +285,7 @@ export const GameScreen: React.FC<GameScreenProps> = ({
   const [isTransitioning, setIsTransitioning] = useState<boolean>(false);
   const [isCompleted, setIsCompleted] = useState<boolean>(() => {
     return (
-      mode !== 'training' &&
-      (session.status === 'completed' || session.arrowsUsed >= maxArrows)
+      mode !== 'training' && (session.status === 'completed' || session.arrowsUsed >= maxArrows)
     );
   });
 
@@ -351,8 +350,7 @@ export const GameScreen: React.FC<GameScreenProps> = ({
   const handleRequestHelp = useCallback(
     (level?: HintLevel) => {
       if (isTransitioning || (isCompleted && gameMode !== 'training')) return;
-      const targetLevel =
-        level ?? (gameMode === 'training' ? 'full_explanation' : 'strategy_hint');
+      const targetLevel = level ?? (gameMode === 'training' ? 'full_explanation' : 'strategy_hint');
       setActiveHintLevel(targetLevel);
       updateHighestHintLevel(targetLevel);
       setIsHelpOpen(true);
@@ -730,8 +728,7 @@ export const GameScreen: React.FC<GameScreenProps> = ({
     if (gameMode === 'training') {
       setTrainingCount(0);
       setTrainingHits(0);
-      const allowedSkills =
-        selectedTrainingSkill === 'all' ? undefined : [selectedTrainingSkill];
+      const allowedSkills = selectedTrainingSkill === 'all' ? undefined : [selectedTrainingSkill];
       const nextQ = selectNextQuestionWithDistractors(profile, {
         allowedSkills,
         recentSkills: [],
@@ -826,24 +823,44 @@ export const GameScreen: React.FC<GameScreenProps> = ({
           >
             🏋️ Training
           </button>
-          <div className="cloud-sync-status-indicator" data-testid="cloud-sync-status" style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 6 }}>
+          <div
+            className="cloud-sync-status-indicator"
+            data-testid="cloud-sync-status"
+            style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 6 }}
+          >
             {syncState.status === 'synced' && (
-              <span className="sync-badge sync-synced" title="All attempts synced to cloud" style={{ fontSize: 12, color: '#16a34a', fontWeight: 600 }}>
+              <span
+                className="sync-badge sync-synced"
+                title="All attempts synced to cloud"
+                style={{ fontSize: 12, color: '#16a34a', fontWeight: 600 }}
+              >
                 🟢 Synced
               </span>
             )}
             {syncState.status === 'syncing' && (
-              <span className="sync-badge sync-syncing" title="Syncing attempts with server" style={{ fontSize: 12, color: '#ca8a04', fontWeight: 600 }}>
+              <span
+                className="sync-badge sync-syncing"
+                title="Syncing attempts with server"
+                style={{ fontSize: 12, color: '#ca8a04', fontWeight: 600 }}
+              >
                 🟡 Syncing{syncState.pendingCount > 0 ? ` (${syncState.pendingCount})` : ''}...
               </span>
             )}
             {syncState.status === 'offline' && (
-              <span className="sync-badge sync-offline" title="Working offline; attempts queued securely in local storage" style={{ fontSize: 12, color: '#dc2626', fontWeight: 600 }}>
+              <span
+                className="sync-badge sync-offline"
+                title="Working offline; attempts queued securely in local storage"
+                style={{ fontSize: 12, color: '#dc2626', fontWeight: 600 }}
+              >
                 🔴 Offline ({syncState.pendingCount} queued)
               </span>
             )}
             {syncState.status === 'error' && (
-              <span className="sync-badge sync-error" title={syncState.lastError || 'Sync error'} style={{ fontSize: 12, color: '#ea580c', fontWeight: 600 }}>
+              <span
+                className="sync-badge sync-error"
+                title={syncState.lastError || 'Sync error'}
+                style={{ fontSize: 12, color: '#ea580c', fontWeight: 600 }}
+              >
                 ⚠️ Sync issue ({syncState.pendingCount} pending)
               </span>
             )}
@@ -950,24 +967,44 @@ export const GameScreen: React.FC<GameScreenProps> = ({
             🏋️ Training Mode (Unlimited Practice & Explanations · 0 Daily Arrows Used)
           </span>
         )}
-        <div className="cloud-sync-status-indicator" data-testid="cloud-sync-status" style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 6 }}>
+        <div
+          className="cloud-sync-status-indicator"
+          data-testid="cloud-sync-status"
+          style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 6 }}
+        >
           {syncState.status === 'synced' && (
-            <span className="sync-badge sync-synced" title="All attempts synced to cloud" style={{ fontSize: 12, color: '#16a34a', fontWeight: 600 }}>
+            <span
+              className="sync-badge sync-synced"
+              title="All attempts synced to cloud"
+              style={{ fontSize: 12, color: '#16a34a', fontWeight: 600 }}
+            >
               🟢 Synced
             </span>
           )}
           {syncState.status === 'syncing' && (
-            <span className="sync-badge sync-syncing" title="Syncing attempts with server" style={{ fontSize: 12, color: '#ca8a04', fontWeight: 600 }}>
+            <span
+              className="sync-badge sync-syncing"
+              title="Syncing attempts with server"
+              style={{ fontSize: 12, color: '#ca8a04', fontWeight: 600 }}
+            >
               🟡 Syncing{syncState.pendingCount > 0 ? ` (${syncState.pendingCount})` : ''}...
             </span>
           )}
           {syncState.status === 'offline' && (
-            <span className="sync-badge sync-offline" title="Working offline; attempts queued securely in local storage" style={{ fontSize: 12, color: '#dc2626', fontWeight: 600 }}>
+            <span
+              className="sync-badge sync-offline"
+              title="Working offline; attempts queued securely in local storage"
+              style={{ fontSize: 12, color: '#dc2626', fontWeight: 600 }}
+            >
               🔴 Offline ({syncState.pendingCount} queued)
             </span>
           )}
           {syncState.status === 'error' && (
-            <span className="sync-badge sync-error" title={syncState.lastError || 'Sync error'} style={{ fontSize: 12, color: '#ea580c', fontWeight: 600 }}>
+            <span
+              className="sync-badge sync-error"
+              title={syncState.lastError || 'Sync error'}
+              style={{ fontSize: 12, color: '#ea580c', fontWeight: 600 }}
+            >
               ⚠️ Sync issue ({syncState.pendingCount} pending)
             </span>
           )}
@@ -1045,8 +1082,11 @@ export const GameScreen: React.FC<GameScreenProps> = ({
                 const isWeakSkill = p && p.attempts > 0 && p.masteryLevel === 'weak';
                 return (
                   <option key={def.id} value={def.id}>
-                    {isWeakSkill ? '⚠️ ' : ''}{def.name}
-                    {p && p.attempts > 0 ? ` (${p.masteryLevel}, ${Math.round(p.score * 100)}%)` : ''}
+                    {isWeakSkill ? '⚠️ ' : ''}
+                    {def.name}
+                    {p && p.attempts > 0
+                      ? ` (${p.masteryLevel}, ${Math.round(p.score * 100)}%)`
+                      : ''}
                   </option>
                 );
               })}
@@ -1054,7 +1094,10 @@ export const GameScreen: React.FC<GameScreenProps> = ({
 
             {selectedTrainingSkill !== 'all' && (
               <span className="active-deliberate-badge" data-testid="active-deliberate-badge">
-                Focusing: <strong>{getSkillDefinition(selectedTrainingSkill)?.name ?? selectedTrainingSkill}</strong>
+                Focusing:{' '}
+                <strong>
+                  {getSkillDefinition(selectedTrainingSkill)?.name ?? selectedTrainingSkill}
+                </strong>
               </span>
             )}
           </div>
@@ -1442,9 +1485,7 @@ export const GameScreen: React.FC<GameScreenProps> = ({
                           key={`f1-${slot.index}`}
                           className={`ten-frame-slot slot-${slot.type}`}
                           title={
-                            slot.type === 'first'
-                              ? `Start: ${slot.label}`
-                              : `Needed: ${slot.label}`
+                            slot.type === 'first' ? `Start: ${slot.label}` : `Needed: ${slot.label}`
                           }
                         >
                           <span className="dot" />
@@ -1587,9 +1628,7 @@ export const GameScreen: React.FC<GameScreenProps> = ({
               <span role="img" aria-label="training">
                 🏋️
               </span>
-              <span>
-                Practice #{trainingCount + 1}
-              </span>
+              <span>Practice #{trainingCount + 1}</span>
             </div>
             <span className="training-unlimited-badge" data-testid="training-unlimited-badge">
               ♾️ Unlimited Arrows (0 Daily Arrows Used)

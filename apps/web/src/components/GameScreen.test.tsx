@@ -943,7 +943,6 @@ const basicAdditionQuestion: Question = {
 };
 
 describe('Task 4.1 — Implement guided make-10 feedback', () => {
-
   it('Done When: The child can see a complete worked example after requesting help for 8 + 7', () => {
     render(<GameScreen initialQuestion={make10Question8Add7} mode="training" />);
 
@@ -985,7 +984,9 @@ describe('Task 4.1 — Implement guided make-10 feedback', () => {
   });
 
   it('Done When: The child can see a complete worked example for 9 + 6 and 7 + 8', () => {
-    const { unmount } = render(<GameScreen initialQuestion={make10Question9Add6} mode="training" />);
+    const { unmount } = render(
+      <GameScreen initialQuestion={make10Question9Add6} mode="training" />
+    );
 
     fireEvent.click(screen.getByTestId('request-help-button'));
     expect(screen.getByTestId('step-1-equation')).toHaveTextContent('9 + 1 = 10');
@@ -1260,7 +1261,9 @@ describe('Task 4.2 — Implement hint levels', () => {
   });
 
   it('in Adventure mode, missing does not dump full explanation and shows encouraging strategy note', () => {
-    render(<GameScreen initialQuestion={make10Question8Add7} mode="adventure" autoAdvanceDelayMs={100} />);
+    render(
+      <GameScreen initialQuestion={make10Question8Add7} mode="adventure" autoAdvanceDelayMs={100} />
+    );
 
     // Shoot wrong answer (ice = 16)
     fireEvent.click(screen.getByTestId('choice-ice'));
@@ -1533,11 +1536,7 @@ describe('Task 4.3 — Create Training mode', () => {
 
   it('Done When: In Training mode, complete explanations are readily accessible for teachable questions', () => {
     render(
-      <GameScreen
-        initialQuestion={make10Question8Add7}
-        mode="training"
-        autoAdvanceDelayMs={0}
-      />
+      <GameScreen initialQuestion={make10Question8Add7} mode="training" autoAdvanceDelayMs={0} />
     );
 
     // In training mode, requesting help directly opens full explanation (Task 4.2 & 4.3)
@@ -1547,7 +1546,9 @@ describe('Task 4.3 — Create Training mode', () => {
     expect(screen.getByTestId('make10-step-2')).toBeInTheDocument();
     expect(screen.getByTestId('make10-step-3')).toBeInTheDocument();
     expect(screen.getByTestId('ten-frames-visual')).toBeInTheDocument();
-    expect(screen.getByTestId('summary-equation')).toHaveTextContent('8 + 7 = 8 + 2 + 5 = 10 + 5 = 15');
+    expect(screen.getByTestId('summary-equation')).toHaveTextContent(
+      '8 + 7 = 8 + 2 + 5 = 10 + 5 = 15'
+    );
 
     // Child closes explanation and shoots
     fireEvent.click(screen.getByTestId('close-help-button'));
@@ -1556,18 +1557,16 @@ describe('Task 4.3 — Create Training mode', () => {
 
   it('in Training mode, misses show guidance that complete explanation is ready', () => {
     render(
-      <GameScreen
-        initialQuestion={make10Question8Add7}
-        mode="training"
-        autoAdvanceDelayMs={100}
-      />
+      <GameScreen initialQuestion={make10Question8Add7} mode="training" autoAdvanceDelayMs={100} />
     );
 
     // Miss answer (ice = 16)
     fireEvent.click(screen.getByTestId('choice-ice'));
 
     // Feedback displays Make-10 explanation prompt
-    expect(screen.getByTestId('feedback-banner')).toHaveTextContent(/Make-10 explanation available below/i);
+    expect(screen.getByTestId('feedback-banner')).toHaveTextContent(
+      /Make-10 explanation available below/i
+    );
   });
 });
 
@@ -1593,11 +1592,7 @@ describe('Task 5.1 — Build attempt history', () => {
 
     // 1. Initial Session: User opens app and plays 2 questions
     const { unmount } = render(
-      <GameScreen
-        initialQuestion={testQuestion}
-        storage={storage}
-        autoAdvanceDelayMs={0}
-      />
+      <GameScreen initialQuestion={testQuestion} storage={storage} autoAdvanceDelayMs={0} />
     );
 
     expect(screen.getByTestId('arrow-counter')).toHaveTextContent('1 / 50');
@@ -1633,12 +1628,7 @@ describe('Task 5.1 — Build attempt history', () => {
     expect(persistedProfile?.skills.make_10.correct).toBe(1);
 
     // 3. Simulate reopening the application (fresh render with same storage)
-    render(
-      <GameScreen
-        storage={storage}
-        autoAdvanceDelayMs={0}
-      />
-    );
+    render(<GameScreen storage={storage} autoAdvanceDelayMs={0} />);
 
     // Verified: Arrow count and active question are strictly preserved!
     expect(screen.getByTestId('arrow-counter')).toHaveTextContent('2 / 50');
@@ -1660,11 +1650,7 @@ describe('Task 5.1 — Build attempt history', () => {
     const storage = createMemoryStorage();
 
     const { unmount } = render(
-      <GameScreen
-        initialQuestion={testQuestion}
-        storage={storage}
-        autoAdvanceDelayMs={0}
-      />
+      <GameScreen initialQuestion={testQuestion} storage={storage} autoAdvanceDelayMs={0} />
     );
 
     // Child opens help (strategy hint in Adventure mode)
@@ -1719,12 +1705,7 @@ describe('Task 5.1 — Build attempt history', () => {
     // Unmount and reopen
     unmount();
 
-    render(
-      <GameScreen
-        storage={storage}
-        autoAdvanceDelayMs={0}
-      />
-    );
+    render(<GameScreen storage={storage} autoAdvanceDelayMs={0} />);
 
     const attempts = loadAttempts('player-local', storage);
     expect(attempts).toHaveLength(2);
@@ -1747,11 +1728,7 @@ describe('Task 5.1 — Build attempt history', () => {
     saveDailySession(active, storage);
 
     const { unmount } = render(
-      <GameScreen
-        initialQuestion={testQuestion}
-        storage={storage}
-        autoAdvanceDelayMs={0}
-      />
+      <GameScreen initialQuestion={testQuestion} storage={storage} autoAdvanceDelayMs={0} />
     );
 
     expect(screen.getByTestId('arrow-counter')).toHaveTextContent('50 / 50');
@@ -1778,7 +1755,9 @@ describe('Task 5.1 — Build attempt history', () => {
   describe('Task 6.4 — Cloud Synchronization UI Integration', () => {
     it('renders the cloud sync status indicator in the game header', () => {
       const storage = createMemoryStorage();
-      render(<GameScreen initialQuestion={testQuestion} storage={storage} autoAdvanceDelayMs={0} />);
+      render(
+        <GameScreen initialQuestion={testQuestion} storage={storage} autoAdvanceDelayMs={0} />
+      );
 
       const syncStatus = screen.getByTestId('cloud-sync-status');
       expect(syncStatus).toBeInTheDocument();
@@ -1827,6 +1806,3 @@ describe('Task 5.1 — Build attempt history', () => {
     });
   });
 });
-
-
-

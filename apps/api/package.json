@@ -5,6 +5,9 @@
   "type": "module",
   "scripts": {
     "dev": "wrangler dev",
+    "db:migrate": "wrangler d1 migrations apply math-archer-db --local",
+    "db:migrate:remote": "wrangler d1 migrations apply math-archer-db --remote",
+    "deploy": "wrangler deploy",
     "build": "tsc --noEmit",
     "test": "vitest run",
     "typecheck": "tsc --noEmit"

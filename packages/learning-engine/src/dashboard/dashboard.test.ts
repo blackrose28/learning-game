@@ -303,8 +303,8 @@ describe('Parent Dashboard Analytics (Task 5.2)', () => {
       playerId: 'player-test',
       pairs: {
         '13 + 8': { attempts: 4, correct: 1, accuracy: 0.25 },
-        '17 - 9': { attempts: 5, correct: 2, accuracy: 0.40 },
-        '8 + 7': { attempts: 10, correct: 9, accuracy: 0.90 }, // strong pair, should not be weak
+        '17 - 9': { attempts: 5, correct: 2, accuracy: 0.4 },
+        '8 + 7': { attempts: 10, correct: 9, accuracy: 0.9 }, // strong pair, should not be weak
       },
     });
 

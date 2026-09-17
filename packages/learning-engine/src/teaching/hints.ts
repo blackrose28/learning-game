@@ -8,11 +8,7 @@ import {
   type Make10Step,
 } from './make10';
 
-export type HintLevel =
-  | 'none'
-  | 'strategy_hint'
-  | 'partial_decomposition'
-  | 'full_explanation';
+export type HintLevel = 'none' | 'strategy_hint' | 'partial_decomposition' | 'full_explanation';
 
 export const HINT_LEVELS: readonly HintLevel[] = [
   'none',
@@ -64,11 +60,7 @@ export interface FullExplanationHint {
   equation: string;
 }
 
-export type QuestionHint =
-  | NoneHint
-  | StrategyHint
-  | PartialDecompositionHint
-  | FullExplanationHint;
+export type QuestionHint = NoneHint | StrategyHint | PartialDecompositionHint | FullExplanationHint;
 
 export function getNextHintLevel(current: HintLevel): HintLevel | null {
   const index = HINT_LEVELS.indexOf(current);
@@ -119,8 +111,7 @@ export function generateQuestionHint(
   }
 
   const { left, right, operation } = question;
-  const expectedAnswer =
-    question.answer ?? (operation === 'add' ? left + right : left - right);
+  const expectedAnswer = question.answer ?? (operation === 'add' ? left + right : left - right);
 
   // If question is eligible for make-10 decomposition
   if (isMake10Eligible(question)) {
@@ -249,4 +240,3 @@ export function generateQuestionHint(
       };
   }
 }
-

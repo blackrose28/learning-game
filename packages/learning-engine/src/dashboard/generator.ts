@@ -1,5 +1,8 @@
 import { getAllSkills, type Operation, type Skill } from '../curriculum';
-import { detectSystematicMistakes, generatePracticeRecommendation } from '../recommendations/generator';
+import {
+  detectSystematicMistakes,
+  generatePracticeRecommendation,
+} from '../recommendations/generator';
 import { parsePairKey } from '../skills/profile';
 import { getDefaultStorage } from '../session/storage';
 import type { DailySession, SessionStorageAdapter } from '../session/types';
@@ -81,37 +84,39 @@ export function computeParentDashboardData(options: {
   }
 
   const todayAttemptsCount = todayAttempts.length;
-  const todayHitsCount = todayAttemptsCount > 0
-    ? todayAttempts.filter((a) => a.correct).length
-    : (todaySession?.hits ?? 0);
+  const todayHitsCount =
+    todayAttemptsCount > 0
+      ? todayAttempts.filter((a) => a.correct).length
+      : (todaySession?.hits ?? 0);
 
-  const todayAccuracy = todayAttemptsCount > 0
-    ? Number((todayHitsCount / todayAttemptsCount).toFixed(4))
-    : arrowsUsed > 0 && todaySession
-    ? Number((todaySession.hits / arrowsUsed).toFixed(4))
-    : 0;
+  const todayAccuracy =
+    todayAttemptsCount > 0
+      ? Number((todayHitsCount / todayAttemptsCount).toFixed(4))
+      : arrowsUsed > 0 && todaySession
+        ? Number((todaySession.hits / arrowsUsed).toFixed(4))
+        : 0;
 
   const todayAdditionAttempts = todayAttempts.filter((a) => a.operation === 'add');
   const todayAdditionCorrect = todayAdditionAttempts.filter((a) => a.correct).length;
-  const todayAdditionAccuracy = todayAdditionAttempts.length > 0
-    ? Number((todayAdditionCorrect / todayAdditionAttempts.length).toFixed(4))
-    : 0;
+  const todayAdditionAccuracy =
+    todayAdditionAttempts.length > 0
+      ? Number((todayAdditionCorrect / todayAdditionAttempts.length).toFixed(4))
+      : 0;
 
   const todaySubtractionAttempts = todayAttempts.filter((a) => a.operation === 'subtract');
   const todaySubtractionCorrect = todaySubtractionAttempts.filter((a) => a.correct).length;
-  const todaySubtractionAccuracy = todaySubtractionAttempts.length > 0
-    ? Number((todaySubtractionCorrect / todaySubtractionAttempts.length).toFixed(4))
-    : 0;
+  const todaySubtractionAccuracy =
+    todaySubtractionAttempts.length > 0
+      ? Number((todaySubtractionCorrect / todaySubtractionAttempts.length).toFixed(4))
+      : 0;
 
   const todayTotalResponseTime = todayAttempts.reduce((sum, a) => sum + (a.responseTimeMs || 0), 0);
-  const todayAverageResponseTimeMs = todayAttemptsCount > 0
-    ? Math.round(todayTotalResponseTime / todayAttemptsCount)
-    : 0;
+  const todayAverageResponseTimeMs =
+    todayAttemptsCount > 0 ? Math.round(todayTotalResponseTime / todayAttemptsCount) : 0;
 
   const todayHintsUsed = todayAttempts.filter((a) => a.hintUsed).length;
-  const todayHintRate = todayAttemptsCount > 0
-    ? Number((todayHintsUsed / todayAttemptsCount).toFixed(4))
-    : 0;
+  const todayHintRate =
+    todayAttemptsCount > 0 ? Number((todayHintsUsed / todayAttemptsCount).toFixed(4)) : 0;
 
   const today: TodayDashboardMetrics = {
     arrowsUsed,
@@ -133,9 +138,7 @@ export function computeParentDashboardData(options: {
   // -------------------------------------------------------------
   const totalAttempts = attempts.length;
   const totalHits = attempts.filter((a) => a.correct).length;
-  const overallAccuracy = totalAttempts > 0
-    ? Number((totalHits / totalAttempts).toFixed(4))
-    : 0;
+  const overallAccuracy = totalAttempts > 0 ? Number((totalHits / totalAttempts).toFixed(4)) : 0;
 
   const totalSessions = sessions.length;
   const completedSessions = sessions.filter((s) => s.status === 'completed').length;
@@ -149,25 +152,25 @@ export function computeParentDashboardData(options: {
 
   const additionAttempts = attempts.filter((a) => a.operation === 'add');
   const additionCorrect = additionAttempts.filter((a) => a.correct).length;
-  const additionAccuracy = additionAttempts.length > 0
-    ? Number((additionCorrect / additionAttempts.length).toFixed(4))
-    : 0;
+  const additionAccuracy =
+    additionAttempts.length > 0
+      ? Number((additionCorrect / additionAttempts.length).toFixed(4))
+      : 0;
 
   const subtractionAttempts = attempts.filter((a) => a.operation === 'subtract');
   const subtractionCorrect = subtractionAttempts.filter((a) => a.correct).length;
-  const subtractionAccuracy = subtractionAttempts.length > 0
-    ? Number((subtractionCorrect / subtractionAttempts.length).toFixed(4))
-    : 0;
+  const subtractionAccuracy =
+    subtractionAttempts.length > 0
+      ? Number((subtractionCorrect / subtractionAttempts.length).toFixed(4))
+      : 0;
 
   const overallTotalResponseTime = attempts.reduce((sum, a) => sum + (a.responseTimeMs || 0), 0);
-  const overallAverageResponseTimeMs = totalAttempts > 0
-    ? Math.round(overallTotalResponseTime / totalAttempts)
-    : 0;
+  const overallAverageResponseTimeMs =
+    totalAttempts > 0 ? Math.round(overallTotalResponseTime / totalAttempts) : 0;
 
   const overallHintsUsed = attempts.filter((a) => a.hintUsed).length;
-  const overallHintRate = totalAttempts > 0
-    ? Number((overallHintsUsed / totalAttempts).toFixed(4))
-    : 0;
+  const overallHintRate =
+    totalAttempts > 0 ? Number((overallHintsUsed / totalAttempts).toFixed(4)) : 0;
 
   const overall: OverallDashboardMetrics = {
     totalAttempts,
@@ -241,9 +244,7 @@ export function computeParentDashboardData(options: {
     const skillAccuracy = sp?.accuracy ?? 0;
     const recentAcc = sp?.recentAccuracy ?? skillAccuracy;
     const mastery = sp?.masteryLevel ?? 'weak';
-    const isWeakSkill = skillAttempts >= 2
-      ? mastery === 'weak' || skillAccuracy < 0.70
-      : false;
+    const isWeakSkill = skillAttempts >= 2 ? mastery === 'weak' || skillAccuracy < 0.7 : false;
 
     return {
       skillId: def.id,
@@ -315,10 +316,7 @@ export function computeParentDashboardData(options: {
   // 6. Performance Improvement & Historical Trend (Question 6: Is performance improving?)
   // -------------------------------------------------------------
   // Group attempts and sessions by date to build daily history
-  const dateMap = new Map<
-    string,
-    { arrowsUsed: number; attempts: number; hits: number }
-  >();
+  const dateMap = new Map<string, { arrowsUsed: number; attempts: number; hits: number }>();
 
   // Add session data
   for (const s of sessions) {
@@ -442,4 +440,3 @@ export function loadParentDashboard(
     date,
   });
 }
-

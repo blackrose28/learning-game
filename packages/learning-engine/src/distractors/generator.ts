@@ -1,10 +1,12 @@
-import type { BaseQuestion, Question, AnswerChoice, ElementType, DistractorCategory } from '../questions/types';
+import type {
+  BaseQuestion,
+  Question,
+  AnswerChoice,
+  ElementType,
+  DistractorCategory,
+} from '../questions/types';
 import { createMulberry32 } from '../questions/generator';
-import {
-  selectCommonMistakeValue,
-  selectTooLowValue,
-  selectTooHighValue,
-} from './rules';
+import { selectCommonMistakeValue, selectTooLowValue, selectTooHighValue } from './rules';
 
 export interface GenerateDistractorOptions {
   /**
@@ -71,8 +73,7 @@ export function generateDistractors(
   }
 
   const rng =
-    options?.rng ??
-    (options?.seed !== undefined ? createMulberry32(options.seed) : Math.random);
+    options?.rng ?? (options?.seed !== undefined ? createMulberry32(options.seed) : Math.random);
 
   // 1. Select skill-specific common mistake
   const commonMistakeValue = selectCommonMistakeValue(question);
@@ -114,8 +115,7 @@ export function createQuestionWithDistractors(
   options?: GenerateDistractorOptions
 ): Question {
   const id =
-    question.id ??
-    `q_${question.skill}_${question.left}_${question.operation}_${question.right}`;
+    question.id ?? `q_${question.skill}_${question.left}_${question.operation}_${question.right}`;
   const choices = generateDistractors(question, options);
 
   return {
@@ -124,4 +124,3 @@ export function createQuestionWithDistractors(
     choices,
   };
 }
-

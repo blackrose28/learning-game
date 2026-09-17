@@ -15,6 +15,7 @@ import {
   generatePracticeRecommendation,
   type PracticeRecommendation,
 } from '@math-archer/learning-engine';
+import type { ParentRecord, ParentPublic, ChildProfileRecord, ChildPublicProfile } from './types';
 
 export class DailyLimitError extends Error {
   constructor(message = 'Daily limit of 50 arrows reached for this calendar day') {
@@ -30,9 +31,7 @@ export async function ensurePlayer(
 ): Promise<void> {
   const now = new Date().toISOString();
   await db
-    .prepare(
-      `INSERT OR IGNORE INTO players (id, name, created_at, updated_at) VALUES (?, ?, ?, ?)`
-    )
+    .prepare(`INSERT OR IGNORE INTO players (id, name, created_at, updated_at) VALUES (?, ?, ?, ?)`)
     .bind(playerId, name, now, now)
     .run();
 }
@@ -340,12 +339,7 @@ export async function recordAttemptInDb(
   // Update skill progress via learning-engine recordAttempt logic
   const profile = await loadSkillProfileFromDb(db, playerId);
   const updatedProfile = recordAttempt(profile, attempt);
-  await saveSkillProgressToDb(
-    db,
-    playerId,
-    attempt.skill,
-    updatedProfile.skills[attempt.skill]
-  );
+  await saveSkillProgressToDb(db, playerId, attempt.skill, updatedProfile.skills[attempt.skill]);
 
   const remainingArrows = Math.max(0, updatedSession.arrowsAllowed - updatedSession.arrowsUsed);
 
@@ -434,4 +428,222 @@ export async function getPlayerRecommendationsFromDb(
   const attempts = await getAllAttemptsForPlayer(db, playerId);
 
   return generatePracticeRecommendation(profile, attempts);
+}
+
+export async function createParent(
+  db: D1Database,
+  data: {
+    id?: string;
+    email: string;
+    passwordHash: string;
+    salt: string;
+    name: string;
+    parentPin?: string;
+  }
+): Promise<ParentPublic> {
+  const id = data.id || `parent_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`;
+  const now = new Date().toISOString();
+
+  await db
+    .prepare(
+      `INSERT INTO parents (id, email, password_hash, salt, name, parent_pin, created_at, updated_at)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?)`
+    )
+    .bind(
+      id,
+      data.email.toLowerCase().trim(),
+      data.passwordHash,
+      data.salt,
+      data.name.trim(),
+      data.parentPin?.trim() || null,
+      now,
+      now
+    )
+    .run();
+
+  return {
+    id,
+    email: data.email.toLowerCase().trim(),
+    name: data.name.trim(),
+    hasPin: Boolean(data.parentPin && data.parentPin.trim()),
+  };
+}
+
+export async function getParentByEmail(
+  db: D1Database,
+  email: string
+): Promise<ParentRecord | null> {
+  return await db
+    .prepare(`SELECT * FROM parents WHERE lower(email) = lower(?)`)
+    .bind(email.trim())
+    .first<ParentRecord>();
+}
+
+export async function getParentById(db: D1Database, id: string): Promise<ParentRecord | null> {
+  return await db.prepare(`SELECT * FROM parents WHERE id = ?`).bind(id).first<ParentRecord>();
+}
+
+export async function createChildProfile(
+  db: D1Database,
+  parentId: string,
+  data: {
+    id?: string;
+    name: string;
+    pin?: string;
+    avatar?: string;
+    grade?: string;
+  }
+): Promise<ChildPublicProfile> {
+  const id = data.id || `child_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`;
+  const now = new Date().toISOString();
+  const avatar = data.avatar || 'archer-1';
+  const grade = data.grade || '1st Grade';
+  const pin = data.pin?.trim() || null;
+
+  await db
+    .prepare(
+      `INSERT INTO players (id, name, parent_id, pin, avatar, grade, created_at, updated_at)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?)`
+    )
+    .bind(id, data.name.trim(), parentId, pin, avatar, grade, now, now)
+    .run();
+
+  return {
+    id,
+    name: data.name.trim(),
+    avatar,
+    grade,
+    parentId,
+    hasPin: Boolean(pin),
+  };
+}
+
+export async function getChildrenForParent(
+  db: D1Database,
+  parentId: string
+): Promise<ChildPublicProfile[]> {
+  const rows = await db
+    .prepare(
+      `SELECT id, name, avatar, grade, pin, parent_id FROM players WHERE parent_id = ? ORDER BY created_at ASC`
+    )
+    .bind(parentId)
+    .all<{
+      id: string;
+      name: string;
+      avatar: string;
+      grade: string;
+      pin: string | null;
+      parent_id: string | null;
+    }>();
+
+  if (!rows.results) return [];
+
+  return rows.results.map((r) => ({
+    id: r.id,
+    name: r.name,
+    avatar: r.avatar || 'archer-1',
+    grade: r.grade || '1st Grade',
+    parentId: r.parent_id ?? undefined,
+    hasPin: Boolean(r.pin && r.pin.trim()),
+  }));
+}
+
+export async function getChildProfile(
+  db: D1Database,
+  childId: string
+): Promise<ChildProfileRecord | null> {
+  return await db
+    .prepare(`SELECT * FROM players WHERE id = ?`)
+    .bind(childId)
+    .first<ChildProfileRecord>();
+}
+
+export async function getAllPublicChildProfiles(db: D1Database): Promise<ChildPublicProfile[]> {
+  const rows = await db
+    .prepare(`SELECT id, name, avatar, grade, pin, parent_id FROM players ORDER BY name ASC`)
+    .all<{
+      id: string;
+      name: string;
+      avatar: string;
+      grade: string;
+      pin: string | null;
+      parent_id: string | null;
+    }>();
+
+  if (!rows.results) return [];
+
+  return rows.results.map((r) => ({
+    id: r.id,
+    name: r.name,
+    avatar: r.avatar || 'archer-1',
+    grade: r.grade || '1st Grade',
+    parentId: r.parent_id ?? undefined,
+    hasPin: Boolean(r.pin && r.pin.trim()),
+  }));
+}
+
+export async function verifyChildBelongsToParent(
+  db: D1Database,
+  childId: string,
+  parentId: string
+): Promise<boolean> {
+  const row = await db
+    .prepare(`SELECT id FROM players WHERE id = ? AND parent_id = ?`)
+    .bind(childId, parentId)
+    .first<{ id: string }>();
+
+  return Boolean(row);
+}
+
+export async function updateChildProfile(
+  db: D1Database,
+  childId: string,
+  parentId: string,
+  updates: { name?: string; pin?: string; avatar?: string; grade?: string }
+): Promise<ChildPublicProfile | null> {
+  const isOwner = await verifyChildBelongsToParent(db, childId, parentId);
+  if (!isOwner) return null;
+
+  const current = await getChildProfile(db, childId);
+  if (!current) return null;
+
+  const name = updates.name !== undefined ? updates.name.trim() : current.name;
+  const pin = updates.pin !== undefined ? updates.pin.trim() || null : current.pin;
+  const avatar = updates.avatar !== undefined ? updates.avatar : current.avatar;
+  const grade = updates.grade !== undefined ? updates.grade : current.grade;
+  const now = new Date().toISOString();
+
+  await db
+    .prepare(
+      `UPDATE players
+       SET name = ?, pin = ?, avatar = ?, grade = ?, updated_at = ?
+       WHERE id = ? AND parent_id = ?`
+    )
+    .bind(name, pin, avatar, grade, now, childId, parentId)
+    .run();
+
+  return {
+    id: childId,
+    name,
+    avatar,
+    grade,
+    parentId,
+    hasPin: Boolean(pin),
+  };
+}
+
+export async function deleteChildProfile(
+  db: D1Database,
+  childId: string,
+  parentId: string
+): Promise<boolean> {
+  const isOwner = await verifyChildBelongsToParent(db, childId, parentId);
+  if (!isOwner) return false;
+
+  await db
+    .prepare(`DELETE FROM players WHERE id = ? AND parent_id = ?`)
+    .bind(childId, parentId)
+    .run();
+
+  return true;
 }

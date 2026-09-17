@@ -1,0 +1,135 @@
+.child-picker-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 16px;
+}
+
+.child-picker-modal {
+  background: #ffffff;
+  border-radius: 20px;
+  max-width: 520px;
+  width: 100%;
+  padding: 28px 24px;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.2);
+  text-align: center;
+}
+
+.child-picker-header h2 {
+  margin: 0 0 6px;
+  font-size: 24px;
+  font-weight: 800;
+  color: #111827;
+}
+
+.child-picker-header p {
+  margin: 0 0 20px;
+  color: #6b7280;
+  font-size: 14px;
+}
+
+.child-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.child-card {
+  background: #f9fafb;
+  border: 2px solid #e5e7eb;
+  border-radius: 16px;
+  padding: 20px 12px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+.child-card:hover {
+  transform: translateY(-2px);
+  border-color: #3b82f6;
+  background: #eff6ff;
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.15);
+}
+
+.child-card.selected {
+  border-color: #2563eb;
+  background: #dbeafe;
+  box-shadow: 0 4px 14px rgba(37, 99, 235, 0.25);
+}
+
+.child-avatar-circle {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  background: #e0e7ff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 32px;
+  border: 2px solid #c7d2fe;
+}
+
+.child-name {
+  font-size: 16px;
+  font-weight: 700;
+  color: #1f2937;
+}
+
+.child-grade {
+  font-size: 12px;
+  color: #6b7280;
+}
+
+.child-pin-badge {
+  font-size: 11px;
+  background: #f3f4f6;
+  color: #4b5563;
+  padding: 2px 8px;
+  border-radius: 9999px;
+  font-weight: 600;
+}
+
+.child-pin-section {
+  background: #f9fafb;
+  border-radius: 16px;
+  padding: 20px;
+  margin-top: 12px;
+  border: 1px solid #e5e7eb;
+}
+
+.child-picker-error {
+  background: #fee2e2;
+  color: #991b1b;
+  padding: 8px 12px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  margin-bottom: 12px;
+}
+
+.btn-close-picker {
+  background: #f3f4f6;
+  border: 1px solid #d1d5db;
+  border-radius: 10px;
+  padding: 8px 18px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  color: #4b5563;
+  margin-top: 16px;
+}
+
+.btn-close-picker:hover {
+  background: #e5e7eb;
+}

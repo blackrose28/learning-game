@@ -1,0 +1,123 @@
+/* InstallPrompt.css */
+
+.install-prompt-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
+  border: 1px solid #93c5fd;
+  border-radius: 12px;
+  padding: 10px 16px;
+  margin-bottom: 16px;
+  box-shadow: 0 2px 4px rgba(37, 99, 235, 0.06);
+}
+
+.install-prompt-content {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.install-prompt-icon {
+  font-size: 24px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.install-prompt-text {
+  display: flex;
+  flex-direction: column;
+}
+
+.install-prompt-title {
+  font-size: 14px;
+  font-weight: 700;
+  color: #1e40af;
+}
+
+.install-prompt-desc {
+  font-size: 12px;
+  color: #3b82f6;
+  margin-top: 2px;
+}
+
+.install-prompt-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.install-btn {
+  background: #2563eb;
+  color: #ffffff;
+  border: none;
+  border-radius: 8px;
+  padding: 6px 14px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 36px;
+  min-width: 48px;
+  transition: background 0.15s ease, transform 0.1s ease;
+}
+
+.install-btn:hover {
+  background: #1d4ed8;
+  transform: translateY(-1px);
+}
+
+.install-btn:active {
+  transform: translateY(0);
+}
+
+.install-dismiss-btn {
+  background: transparent;
+  border: none;
+  color: #64748b;
+  font-size: 18px;
+  padding: 4px 8px;
+  cursor: pointer;
+  border-radius: 6px;
+  min-width: 36px;
+  min-height: 36px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.install-dismiss-btn:hover {
+  background: rgba(0, 0, 0, 0.05);
+  color: #1e293b;
+}
+
+.standalone-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: #ecfdf5;
+  border: 1px solid #a7f3d0;
+  color: #065f46;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 4px 10px;
+  border-radius: 16px;
+}
+
+@media (max-width: 500px) {
+  .install-prompt-banner {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+    padding: 10px 12px;
+  }
+
+  .install-prompt-actions {
+    justify-content: flex-end;
+  }
+}
+

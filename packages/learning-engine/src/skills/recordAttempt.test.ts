@@ -501,10 +501,13 @@ describe('Task 1.5 — Attempt Recording', () => {
       const unrelatedSkills = allCurriculumSkills.filter((s) => s !== targetSkill);
 
       // Snapshot unrelated skills
-      const initialSnapshots = unrelatedSkills.reduce((acc, skill) => {
-        acc[skill] = { ...initialProfile.skills[skill] };
-        return acc;
-      }, {} as Record<Skill, unknown>);
+      const initialSnapshots = unrelatedSkills.reduce(
+        (acc, skill) => {
+          acc[skill] = { ...initialProfile.skills[skill] };
+          return acc;
+        },
+        {} as Record<Skill, unknown>
+      );
 
       // Record attempt targeting cross_10_addition
       const updatedProfile = recordAttempt(
@@ -616,4 +619,3 @@ describe('Task 1.5 — Attempt Recording', () => {
     });
   });
 });
-

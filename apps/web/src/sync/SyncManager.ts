@@ -202,25 +202,18 @@ export class SyncManager {
         errMessage.includes('fetch') ||
         errMessage.includes('NetworkError');
 
-      const isDailyLimit = isApiError && (err.code === 'DAILY_LIMIT_EXCEEDED' || err.status === 403);
+      const isDailyLimit =
+        isApiError && (err.code === 'DAILY_LIMIT_EXCEEDED' || err.status === 403);
 
       for (const item of pending) {
-        markAttemptStatus(
-          this.playerId,
-          item.id,
-          'failed',
-          errMessage,
-          this.storage
-        );
+        markAttemptStatus(this.playerId, item.id, 'failed', errMessage, this.storage);
       }
 
       const remainingPending = getPendingQueue(this.playerId, this.storage).length;
       this.state = {
         status: isNetworkError ? 'offline' : 'error',
         pendingCount: remainingPending,
-        lastError: isDailyLimit
-          ? 'Daily arrow limit (50) reached on server'
-          : errMessage,
+        lastError: isDailyLimit ? 'Daily arrow limit (50) reached on server' : errMessage,
       };
       this.notify();
       return { synced: 0, failed: pending.length };

@@ -140,4 +140,3 @@ describe('Skill Profile Storage & Controlled Profiles (Task 3.4)', () => {
     });
   });
 });
-

@@ -81,13 +81,13 @@ To ensure rapid execution and focus on what matters most, the following features
 
 The MVP will be considered complete when all of the following criteria are met:
 
-1. [ ] **Daily Session**: A child can launch the game and play a session capped at 50 arrows.
-2. [ ] **Curriculum Coverage**: Generates valid questions across Levels 1–7 (basic to crossing-10 addition and subtraction).
-3. [ ] **Elemental Arrows**: Each question displays four elemental arrows with exactly one correct answer and three plausible distractors.
-4. [ ] **Feedback Loop**: Instant audio-visual feedback on hit/miss without breaking game immersion.
-5. [ ] **Adaptive Practice**: Weak number combinations receive higher recurrence in upcoming questions.
-6. [ ] **Data Logging**: Records timestamp, question specification, selected answer, response time, correctness, and hint usage.
-7. [ ] **Data Persistence**: Data survives browser restarts via local-first storage.
-8. [ ] **Parent Dashboard**: Parents can review accuracy, response times, and specific weak facts.
-9. [ ] **Cross-Device Usability**: Plays comfortably on mobile, tablet, desktop, and Xbox Edge.
-10. [ ] **PWA Support**: App can be installed to home screen and operate offline.
+1. [x] **Daily Session**: A child can launch the game and play a session capped at 50 arrows.
+2. [x] **Curriculum Coverage**: Generates valid questions across Levels 1–7 (basic to crossing-10 addition and subtraction).
+3. [x] **Elemental Arrows**: Each question displays four elemental arrows with exactly one correct answer and three plausible distractors.
+4. [x] **Feedback Loop**: Instant audio-visual feedback on hit/miss without breaking game immersion.
+5. [x] **Adaptive Practice**: Weak number combinations receive higher recurrence in upcoming questions.
+6. [x] **Data Logging**: Records timestamp, question specification, selected answer, response time, correctness, and hint usage.
+7. [x] **Data Persistence**: Data survives browser restarts via local-first storage.
+8. [x] **Parent Dashboard**: Parents can review accuracy, response times, and specific weak facts.
+9. [x] **Cross-Device Usability**: Plays comfortably on mobile, tablet, desktop, and Xbox Edge.
+10. [x] **PWA Support**: App can be installed to home screen and operate offline.

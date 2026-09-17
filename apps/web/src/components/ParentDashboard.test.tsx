@@ -1,6 +1,7 @@
 import { describe, it, expect, beforeEach } from 'vitest';
-import { render, screen, fireEvent } from '@testing-library/react';
+import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { ParentDashboard } from './ParentDashboard';
+import { AuthProvider } from '../context/AuthContext';
 import {
   saveDailySession,
   saveAttempt,
@@ -28,16 +29,17 @@ describe('ParentDashboard Component (Task 5.2)', () => {
   it('displays all 8 required metrics when data is present', () => {
     const playerId = 'player-metrics-test';
 
+    const today = new Date().toISOString().slice(0, 10);
     // 1. Today's session with arrows
     saveDailySession({
       id: 'sess-today',
       playerId,
-      date: '2026-09-16',
+      date: today,
       arrowsAllowed: 50,
       arrowsUsed: 35,
       hits: 30,
       status: 'in_progress',
-      startedAt: '2026-09-16T10:00:00.000Z',
+      startedAt: `${today}T10:00:00.000Z`,
     });
 
     // 2. Addition attempts: 3 attempts, 3 correct (100%), avg speed 2000ms
@@ -121,21 +123,22 @@ describe('ParentDashboard Component (Task 5.2)', () => {
   it('answers all 6 questions clearly in the at-a-glance section', () => {
     const playerId = 'player-q-test';
 
+    const today = new Date().toISOString().slice(0, 10);
     saveDailySession({
       id: 'sess-q',
       playerId,
-      date: '2026-09-16',
+      date: today,
       arrowsAllowed: 50,
       arrowsUsed: 50,
       hits: 40,
       status: 'completed',
-      startedAt: '2026-09-16T10:00:00.000Z',
+      startedAt: `${today}T10:00:00.000Z`,
     });
 
     const profile = createSimulatedProfile({
       playerId,
       skills: {
-        cross_10_subtraction: { level: 'weak', accuracy: 0.50, attempts: 10 },
+        cross_10_subtraction: { level: 'weak', accuracy: 0.5, attempts: 10 },
       },
       pairs: {
         '17 - 9': { attempts: 6, correct: 2, accuracy: 0.33 },
@@ -229,16 +232,17 @@ describe('ParentDashboard Component (Task 5.2)', () => {
 
     expect(screen.getByTestId('today-arrows-metric')).toHaveTextContent('0 / 50');
 
+    const today = new Date().toISOString().slice(0, 10);
     // Add new session to storage
     saveDailySession({
       id: 'sess-new',
       playerId,
-      date: '2026-09-16',
+      date: today,
       arrowsAllowed: 50,
       arrowsUsed: 25,
       hits: 22,
       status: 'in_progress',
-      startedAt: '2026-09-16T12:00:00.000Z',
+      startedAt: `${today}T12:00:00.000Z`,
     });
 
     // Click Refresh
@@ -248,7 +252,7 @@ describe('ParentDashboard Component (Task 5.2)', () => {
   });
 
   describe('Task 5.3 — Recommendation Explanation & Traceability', () => {
-    it('displays the exact Today\'s focus, Why, and Practice format for Crossing 10 in addition', () => {
+    it("displays the exact Today's focus, Why, and Practice format for Crossing 10 in addition", () => {
       render(<ParentDashboard playerId="player-local" />);
 
       // Preview sample data which features Crossing 10 in addition
@@ -286,7 +290,7 @@ describe('ParentDashboard Component (Task 5.2)', () => {
         },
         pairs: {
           '8 + 7': { attempts: 6, correct: 2, accuracy: 0.33 },
-          '9 + 6': { attempts: 5, correct: 2, accuracy: 0.40 },
+          '9 + 6': { attempts: 5, correct: 2, accuracy: 0.4 },
         },
       });
       saveProfile(profile);
@@ -310,5 +314,125 @@ describe('ParentDashboard Component (Task 5.2)', () => {
       expect(focusCardText).not.toMatch(/black[- ]box/i);
     });
   });
-});
 
+  describe('Child Profile Management in Parent Dashboard', () => {
+    it('renders child switcher bar with quick edit and manage profiles buttons', () => {
+      render(
+        <AuthProvider>
+          <ParentDashboard />
+        </AuthProvider>
+      );
+
+      expect(screen.getByTestId('parent-child-switcher-bar')).toBeInTheDocument();
+      expect(screen.getByTestId('manage-profiles-btn')).toBeInTheDocument();
+      expect(screen.getByTestId('add-child-profile-btn')).toBeInTheDocument();
+      expect(screen.getByTestId('quick-edit-child-btn')).toBeInTheDocument();
+    });
+
+    it('allows adding a new child profile with custom avatar, grade, and PIN', async () => {
+      render(
+        <AuthProvider>
+          <ParentDashboard />
+        </AuthProvider>
+      );
+
+      // Open Add Child modal
+      fireEvent.click(screen.getByTestId('add-child-profile-btn'));
+      expect(screen.getByTestId('add-child-modal')).toBeInTheDocument();
+
+      // Enter name
+      fireEvent.change(screen.getByTestId('new-child-name-input'), {
+        target: { value: 'Lucas' },
+      });
+
+      // Change grade
+      fireEvent.change(screen.getByTestId('new-child-grade-select'), {
+        target: { value: '2nd Grade' },
+      });
+
+      // Select avatar
+      fireEvent.click(screen.getByTestId('avatar-option-archer-fire'));
+
+      // Enter PIN
+      fireEvent.change(screen.getByTestId('new-child-pin-input'), {
+        target: { value: '4321' },
+      });
+
+      // Submit form
+      fireEvent.click(screen.getByTestId('save-new-child-btn'));
+
+      await waitFor(() => {
+        expect(screen.queryByTestId('add-child-modal')).not.toBeInTheDocument();
+        expect(screen.getByText('Lucas')).toBeInTheDocument();
+      });
+    });
+
+    it('opens Manage Profiles modal and edits a child name, grade, and passcode', async () => {
+      render(
+        <AuthProvider>
+          <ParentDashboard />
+        </AuthProvider>
+      );
+
+      // Open Manage Profiles modal
+      fireEvent.click(screen.getByTestId('manage-profiles-btn'));
+      expect(screen.getByTestId('manage-children-modal')).toBeInTheDocument();
+      expect(screen.getByTestId('child-manage-list')).toBeInTheDocument();
+
+      // Click Edit on Alex (player-local)
+      fireEvent.click(screen.getByTestId('edit-child-btn-player-local'));
+      expect(screen.getByTestId('edit-child-modal')).toBeInTheDocument();
+
+      // Change Alex to Alexander
+      fireEvent.change(screen.getByTestId('edit-child-name-input'), {
+        target: { value: 'Alexander' },
+      });
+
+      // Change PIN to 9999
+      fireEvent.change(screen.getByTestId('edit-child-pin-input'), {
+        target: { value: '9999' },
+      });
+
+      // Save changes
+      fireEvent.click(screen.getByTestId('save-edit-child-btn'));
+
+      await waitFor(() => {
+        expect(screen.queryByTestId('edit-child-modal')).not.toBeInTheDocument();
+        expect(screen.getByTestId('select-child-btn-player-local')).toHaveTextContent('Alexander');
+      });
+    });
+
+    it('allows deleting a child profile with confirmation prompt', async () => {
+      render(
+        <AuthProvider>
+          <ParentDashboard />
+        </AuthProvider>
+      );
+
+      // Open Manage Profiles modal
+      fireEvent.click(screen.getByTestId('manage-profiles-btn'));
+      expect(screen.getByTestId('manage-children-modal')).toBeInTheDocument();
+
+      // Click Delete on Mia
+      fireEvent.click(screen.getByTestId('delete-child-btn-child_mia'));
+      expect(screen.getByTestId('delete-child-modal')).toBeInTheDocument();
+      expect(screen.getByTestId('delete-child-modal')).toHaveTextContent(
+        /Are you sure you want to delete/i
+      );
+      expect(screen.getByTestId('delete-child-modal')).toHaveTextContent('Mia');
+
+      // Cancel first
+      fireEvent.click(screen.getByTestId('cancel-delete-child-btn'));
+      expect(screen.queryByTestId('delete-child-modal')).not.toBeInTheDocument();
+
+      // Re-open Delete modal and confirm
+      fireEvent.click(screen.getByTestId('delete-child-btn-child_mia'));
+      fireEvent.click(screen.getByTestId('confirm-delete-child-btn'));
+
+      await waitFor(() => {
+        expect(screen.queryByTestId('delete-child-modal')).not.toBeInTheDocument();
+        expect(screen.queryByTestId('child-manage-row-child_mia')).not.toBeInTheDocument();
+      });
+    });
+  });
+});

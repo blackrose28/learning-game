@@ -1,16 +1,27 @@
 {
   "$schema": "node_modules/wrangler/config-schema.json",
-  "name": "math-archer-api",
+  "name": "math-archer",
   "main": "src/index.ts",
   "compatibility_date": "2025-02-14",
   "compatibility_flags": ["nodejs_compat"],
+  "assets": {
+    "directory": "../web/dist",
+    "binding": "ASSETS",
+    "not_found_handling": "single-page-application",
+    "run_worker_first": ["/api/*"],
+  },
+  "routes": [
+    {
+      "pattern": "learn.chuonglv.site",
+      "custom_domain": true,
+    },
+  ],
   "d1_databases": [
     {
       "binding": "DB",
       "database_name": "math-archer-db",
-      "database_id": "math-archer-d1-local",
-      "migrations_dir": "migrations"
-    }
-  ]
+      "database_id": "4f8bbabc-472e-4381-8d75-b2f88a1d680d",
+      "migrations_dir": "migrations",
+    },
+  ],
 }
-

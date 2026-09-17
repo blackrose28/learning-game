@@ -354,38 +354,29 @@ describe('Task 1.4 — Skill Profile', () => {
 
       // Player does 20 basic addition problems: 18 correct (90%), fast, 0 hints -> strong
       for (let i = 0; i < 20; i++) {
-        profile.skills.basic_addition = updateSkillProgress(
-          profile.skills.basic_addition,
-          {
-            correct: i !== 4 && i !== 15, // 18 out of 20 correct (90%)
-            responseTimeMs: 2000,
-            hintUsed: false,
-          }
-        );
+        profile.skills.basic_addition = updateSkillProgress(profile.skills.basic_addition, {
+          correct: i !== 4 && i !== 15, // 18 out of 20 correct (90%)
+          responseTimeMs: 2000,
+          hintUsed: false,
+        });
       }
 
       // Player does 20 crossing-10 addition problems: ~30% correct, slow, hints -> weak
       for (let i = 0; i < 20; i++) {
-        profile.skills.cross_10_addition = updateSkillProgress(
-          profile.skills.cross_10_addition,
-          {
-            correct: i % 3 === 0 && i < 18, // 6 out of 20 correct (30%)
-            responseTimeMs: 8000,
-            hintUsed: i % 3 === 0,
-          }
-        );
+        profile.skills.cross_10_addition = updateSkillProgress(profile.skills.cross_10_addition, {
+          correct: i % 3 === 0 && i < 18, // 6 out of 20 correct (30%)
+          responseTimeMs: 8000,
+          hintUsed: i % 3 === 0,
+        });
       }
 
       // Player does 20 subtraction problems: ~65% correct, average time, 2 hints -> medium
       for (let i = 0; i < 20; i++) {
-        profile.skills.basic_subtraction = updateSkillProgress(
-          profile.skills.basic_subtraction,
-          {
-            correct: i % 3 !== 1, // 13 out of 20 correct (65%)
-            responseTimeMs: 4500,
-            hintUsed: i === 7 || i === 14,
-          }
-        );
+        profile.skills.basic_subtraction = updateSkillProgress(profile.skills.basic_subtraction, {
+          correct: i % 3 !== 1, // 13 out of 20 correct (65%)
+          responseTimeMs: 4500,
+          hintUsed: i === 7 || i === 14,
+        });
       }
 
       expect(isStrong(profile.skills.basic_addition)).toBe(true);

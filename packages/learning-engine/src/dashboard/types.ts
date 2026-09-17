@@ -113,4 +113,3 @@ export interface ParentDashboardData {
   trend: PerformanceTrend;
   recommendation?: PracticeRecommendation;
 }
-

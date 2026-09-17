@@ -63,4 +63,3 @@ export function getTodayDateString(now: Date = new Date()): string {
 export function getSessionStorageKey(playerId: string, date: string): string {
   return `math_archer_session_${playerId}_${date}`;
 }
-

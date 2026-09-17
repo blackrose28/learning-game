@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach } from 'vitest';
-import { render, screen, fireEvent } from '@testing-library/react';
+import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { App } from './App';
 import { saveAttempt, saveDailySession } from '@math-archer/learning-engine';
 
@@ -8,17 +8,28 @@ beforeEach(() => {
 });
 
 describe('App navigation and Progress & History View', () => {
-  it('navigates between Game, Parent Dashboard, Progress & History, and Curriculum tabs', () => {
+  it('navigates between Game, Parent Dashboard (with Parent Gate protection), Progress & History, and Curriculum tabs', async () => {
     render(<App />);
 
-    // Default tab is Game Screen
+    // Default tab is Game Screen with child badge
     expect(screen.getByTestId('tab-game')).toBeInTheDocument();
     expect(screen.getByTestId('question-expression')).toBeInTheDocument();
+    expect(screen.getByTestId('current-player-badge')).toHaveTextContent(/Alex/i);
 
-    // Switch to Parent Dashboard tab
+    // Switch to Parent Dashboard tab: Parent Gate intercepts to protect parent data
     fireEvent.click(screen.getByTestId('tab-dashboard'));
-    expect(screen.getByTestId('parent-dashboard-view')).toBeInTheDocument();
-    expect(screen.getByTestId('today-arrows-metric')).toHaveTextContent('0 / 50');
+    expect(screen.getByTestId('parent-gate')).toBeInTheDocument();
+
+    // Unlock Parent Gate with Demo PIN (1234)
+    fireEvent.click(screen.getByTestId('keypad-1'));
+    fireEvent.click(screen.getByTestId('keypad-2'));
+    fireEvent.click(screen.getByTestId('keypad-3'));
+    fireEvent.click(screen.getByTestId('keypad-4'));
+
+    // Now parent dashboard is unlocked and visible
+    await waitFor(() => {
+      expect(screen.getByTestId('today-arrows-metric')).toHaveTextContent('0 / 50');
+    });
 
     // Switch to Progress & History tab
     fireEvent.click(screen.getByTestId('tab-history'));
@@ -34,17 +45,32 @@ describe('App navigation and Progress & History View', () => {
     expect(screen.getByTestId('question-expression')).toBeInTheDocument();
   });
 
+  it('allows switching child profile via the header badge', () => {
+    render(<App />);
+
+    expect(screen.getByTestId('current-player-badge')).toHaveTextContent(/Alex/i);
+
+    // Open child profile picker
+    fireEvent.click(screen.getByTestId('switch-child-profile-btn'));
+    expect(screen.getByTestId('child-profile-picker')).toBeInTheDocument();
+
+    // Close picker
+    fireEvent.click(screen.getByTestId('close-child-picker-btn'));
+    expect(screen.queryByTestId('child-profile-picker')).not.toBeInTheDocument();
+  });
+
   it('displays stored attempts and sessions in Progress & History tab', () => {
     // Seed some attempts and sessions in localStorage
+    const today = new Date().toISOString().slice(0, 10);
     saveDailySession({
       id: 'session-app-test',
       playerId: 'player-local',
-      date: '2026-09-16',
+      date: today,
       arrowsAllowed: 50,
       arrowsUsed: 10,
       hits: 8,
       status: 'in_progress',
-      startedAt: '2026-09-16T10:00:00.000Z',
+      startedAt: `${today}T10:00:00.000Z`,
     });
 
     saveAttempt({
@@ -103,4 +129,3 @@ describe('App navigation and Progress & History View', () => {
     expect(screen.getByText(/No attempts recorded yet/i)).toBeInTheDocument();
   });
 });
-

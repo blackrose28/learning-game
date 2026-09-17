@@ -1,8 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import {
-  isMake10Eligible,
-  generateMake10Decomposition,
-} from './make10';
+import { isMake10Eligible, generateMake10Decomposition } from './make10';
 
 describe('Task 4.1 — Implement guided make-10 feedback', () => {
   describe('isMake10Eligible', () => {
@@ -20,9 +17,9 @@ describe('Task 4.1 — Implement guided make-10 feedback', () => {
     });
 
     it('identifies questions with make_10 or cross_10_addition skill', () => {
-      expect(
-        isMake10Eligible({ left: 8, right: 7, operation: 'add', skill: 'make_10' })
-      ).toBe(true);
+      expect(isMake10Eligible({ left: 8, right: 7, operation: 'add', skill: 'make_10' })).toBe(
+        true
+      );
       expect(
         isMake10Eligible({ left: 8, right: 7, operation: 'add', skill: 'cross_10_addition' })
       ).toBe(true);
@@ -181,4 +178,3 @@ describe('Task 4.1 — Implement guided make-10 feedback', () => {
     });
   });
 });
-

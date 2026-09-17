@@ -363,4 +363,3 @@ describe('Task 5.1 — Build attempt history', () => {
     });
   });
 });
-

@@ -112,5 +112,3 @@ export interface SelectQuestionOptions {
    */
   previousPairKey?: string;
 }
-
-

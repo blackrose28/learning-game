@@ -66,7 +66,10 @@ export function enqueueAttempt(
   return queuedItem;
 }
 
-export function getPendingQueue(playerId: string, storage?: SessionStorageAdapter): QueuedAttempt[] {
+export function getPendingQueue(
+  playerId: string,
+  storage?: SessionStorageAdapter
+): QueuedAttempt[] {
   const queue = loadQueue(playerId, storage);
   return queue.filter((item) => item.status === 'pending' || item.status === 'failed');
 }
@@ -112,4 +115,3 @@ export function clearQueue(playerId: string, storage?: SessionStorageAdapter): v
   const s = getStorage(storage);
   s.removeItem(getQueueStorageKey(playerId));
 }
-

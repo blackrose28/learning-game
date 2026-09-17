@@ -28,7 +28,8 @@ export function recordAttempt(
   attempt: Attempt,
   options?: RecordAttemptOptions
 ): SkillProfile {
-  const { skill, left, operation, right, correct, responseTimeMs, hintUsed, hintLevel, timestamp } = attempt;
+  const { skill, left, operation, right, correct, responseTimeMs, hintUsed, hintLevel, timestamp } =
+    attempt;
   const now = timestamp || new Date().toISOString();
 
   // 1. Get existing or create fresh progress for the target skill
@@ -101,4 +102,3 @@ export function recordAttempts(
     profile
   );
 }
-

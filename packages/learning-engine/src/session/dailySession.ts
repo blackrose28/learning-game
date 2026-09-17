@@ -6,11 +6,7 @@ import type {
   SubmitAnswerResult,
   SessionStorageAdapter,
 } from './types';
-import {
-  getDefaultStorage,
-  getTodayDateString,
-  getSessionStorageKey,
-} from './storage';
+import { getDefaultStorage, getTodayDateString, getSessionStorageKey } from './storage';
 
 export const DEFAULT_DAILY_ARROWS = 50;
 export const DEFAULT_PLAYER_ID = 'player-local';
@@ -264,10 +260,7 @@ export function submitAnswer(params: SubmitAnswerParams): SubmitAnswerResult {
 /**
  * Marks a session as completed.
  */
-export function completeSession(
-  session?: DailySession,
-  options?: SessionOptions
-): DailySession {
+export function completeSession(session?: DailySession, options?: SessionOptions): DailySession {
   const storage = options?.storage ?? getDefaultStorage();
   let targetSession = session;
 
@@ -318,4 +311,3 @@ export function clearDailySessions(
     storage.clear();
   }
 }
-

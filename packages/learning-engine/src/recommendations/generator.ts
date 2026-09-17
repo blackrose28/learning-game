@@ -1,7 +1,4 @@
-import {
-  getSkillDefinition,
-  type Skill,
-} from '../curriculum';
+import { getSkillDefinition, type Skill } from '../curriculum';
 import { getRecommendedFocus, getWeakSkills } from '../questions/selector';
 import { parsePairKey } from '../skills/profile';
 import type { Attempt, SkillProfile, SkillProgress } from '../skills/types';
@@ -26,10 +23,7 @@ export function detectSystematicMistakes(
   const wrongAttempts = attempts.filter((a) => !a.correct);
 
   // Map: `${pairKey}|${wrongAnswer}` -> list of attempts
-  const grouped = new Map<
-    string,
-    { attempt: Attempt; count: number }
-  >();
+  const grouped = new Map<string, { attempt: Attempt; count: number }>();
 
   for (const att of wrongAttempts) {
     const pairKey = `${att.left} ${att.operation === 'add' ? '+' : '-'} ${att.right}`;
@@ -50,7 +44,7 @@ export function detectSystematicMistakes(
       // If profile is available, filter out normal random slips on well-known pairs
       if (profile && profile.pairs[pairKey]) {
         const pairProgress = profile.pairs[pairKey];
-        if (pairProgress.accuracy >= 0.60 || count / pairProgress.attempts < 0.50) {
+        if (pairProgress.accuracy >= 0.6 || count / pairProgress.attempts < 0.5) {
           continue;
         }
       }
@@ -74,10 +68,7 @@ export function detectSystematicMistakes(
 /**
  * Extracts weak number pairs from the skill profile.
  */
-export function extractWeakPairs(
-  profile: SkillProfile,
-  maxPairs = 6
-): WeakPairSummary[] {
+export function extractWeakPairs(profile: SkillProfile, maxPairs = 6): WeakPairSummary[] {
   return Object.values(profile.pairs)
     .filter((p) => p.attempts >= 2 && p.accuracy < 0.75)
     .sort((a, b) => {
@@ -169,7 +160,8 @@ export function computeSkillAccuracyHistory(
   if (progress && progress.attempts > 0) {
     const totalAttempts = progress.attempts;
     const historicalAccuracy = progress.accuracy;
-    const recentAccuracy = progress.recentAccuracy !== undefined ? progress.recentAccuracy : progress.accuracy;
+    const recentAccuracy =
+      progress.recentAccuracy !== undefined ? progress.recentAccuracy : progress.accuracy;
     const previousAccuracy = progress.accuracy;
     const recentAttemptsCount = Math.min(10, totalAttempts);
     const previousAttemptsCount = Math.max(0, totalAttempts - recentAttemptsCount);
@@ -428,7 +420,11 @@ export function generatePracticeRecommendation(
   const totalAttempts = activeSkills.reduce((sum, s) => sum + s.attempts, 0);
 
   // 1. Check for Fast but Inaccurate (Rushing across attempts)
-  if (totalAttempts >= 15 && metrics.overallAccuracy < 0.60 && metrics.averageResponseTimeMs < 2200) {
+  if (
+    totalAttempts >= 15 &&
+    metrics.overallAccuracy < 0.6 &&
+    metrics.averageResponseTimeMs < 2200
+  ) {
     const primarySkill = weakSkills[0] ?? recommendedFocus[0] ?? 'basic_addition';
     const skillName = formatSkillDisplayName(primarySkill);
     const history = computeSkillAccuracyHistory(primarySkill, profile, attempts);
@@ -479,7 +475,11 @@ export function generatePracticeRecommendation(
   }
 
   // 2. Check for Slow but Accurate (Counting / Fluency Need)
-  if (totalAttempts >= 15 && metrics.overallAccuracy >= 0.88 && metrics.averageResponseTimeMs > 5500) {
+  if (
+    totalAttempts >= 15 &&
+    metrics.overallAccuracy >= 0.88 &&
+    metrics.averageResponseTimeMs > 5500
+  ) {
     const slowestSkill = [...activeSkills].sort(
       (a, b) => b.averageResponseTimeMs - a.averageResponseTimeMs
     )[0];
@@ -534,7 +534,7 @@ export function generatePracticeRecommendation(
 
   // 3. Check for Improving Child
   const improvingSkillProgress = activeSkills.find(
-    (s) => s.attempts >= 10 && s.recentAccuracy - s.accuracy >= 0.18 && s.recentAccuracy >= 0.70
+    (s) => s.attempts >= 10 && s.recentAccuracy - s.accuracy >= 0.18 && s.recentAccuracy >= 0.7
   );
 
   if (improvingSkillProgress) {
@@ -545,10 +545,7 @@ export function generatePracticeRecommendation(
     const recentPct = Math.round(history.recentAccuracy * 100);
     const prevPct = Math.round(history.previousAccuracy * 100);
 
-    const why: string[] = [
-      `Recent accuracy: ${recentPct}%`,
-      `Previous accuracy: ${prevPct}%`,
-    ];
+    const why: string[] = [`Recent accuracy: ${recentPct}%`, `Previous accuracy: ${prevPct}%`];
     const whyDetails: RecommendationWhyItem[] = [
       { label: 'Recent accuracy', value: `${recentPct}%` },
       { label: 'Previous accuracy', value: `${prevPct}%` },
@@ -593,10 +590,7 @@ export function generatePracticeRecommendation(
     const recentPct = Math.round(history.recentAccuracy * 100);
     const prevPct = Math.round(history.previousAccuracy * 100);
 
-    const why: string[] = [
-      `Recent accuracy: ${recentPct}%`,
-      `Previous accuracy: ${prevPct}%`,
-    ];
+    const why: string[] = [`Recent accuracy: ${recentPct}%`, `Previous accuracy: ${prevPct}%`];
     const whyDetails: RecommendationWhyItem[] = [
       { label: 'Recent accuracy', value: `${recentPct}%` },
       { label: 'Previous accuracy', value: `${prevPct}%` },
@@ -639,7 +633,8 @@ export function generatePracticeRecommendation(
     if (topMistake.operation === 'subtract') {
       mistakeSkill = topMistake.left > 10 ? 'cross_10_subtraction' : 'basic_subtraction';
     } else {
-      mistakeSkill = topMistake.left + topMistake.right > 10 ? 'cross_10_addition' : 'basic_addition';
+      mistakeSkill =
+        topMistake.left + topMistake.right > 10 ? 'cross_10_addition' : 'basic_addition';
     }
 
     const skillName = formatSkillDisplayName(mistakeSkill);
@@ -698,7 +693,7 @@ export function generatePracticeRecommendation(
   // 6. Check for Strong Overall (Curriculum Advancement)
   const allMasteredOrStrong =
     activeSkills.length >= 2 &&
-    activeSkills.every((s) => s.score >= 0.80) &&
+    activeSkills.every((s) => s.score >= 0.8) &&
     metrics.overallAccuracy >= 0.85;
 
   if (allMasteredOrStrong) {
@@ -717,7 +712,10 @@ export function generatePracticeRecommendation(
     const whyDetails: RecommendationWhyItem[] = [
       { label: 'Recent accuracy', value: `${recentPct}%` },
       { label: 'Previous accuracy', value: `${prevPct}%` },
-      { label: 'Active curriculum', value: `${Math.round(metrics.overallAccuracy * 100)}% mastered` },
+      {
+        label: 'Active curriculum',
+        value: `${Math.round(metrics.overallAccuracy * 100)}% mastered`,
+      },
     ];
     const dataTrace = buildDataTrace({
       rule: 'advance_curriculum',
@@ -757,10 +755,7 @@ export function generatePracticeRecommendation(
   const recentPct = Math.round(history.recentAccuracy * 100);
   const prevPct = Math.round(history.previousAccuracy * 100);
 
-  const why: string[] = [
-    `Recent accuracy: ${recentPct}%`,
-    `Previous accuracy: ${prevPct}%`,
-  ];
+  const why: string[] = [`Recent accuracy: ${recentPct}%`, `Previous accuracy: ${prevPct}%`];
   const whyDetails: RecommendationWhyItem[] = [
     { label: 'Recent accuracy', value: `${recentPct}%` },
     { label: 'Previous accuracy', value: `${prevPct}%` },

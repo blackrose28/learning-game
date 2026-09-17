@@ -274,8 +274,7 @@ export function generateQuestionSpec(
   options?: GenerateQuestionOptions
 ): BaseQuestion {
   const rng =
-    options?.rng ??
-    (options?.seed !== undefined ? createMulberry32(options.seed) : Math.random);
+    options?.rng ?? (options?.seed !== undefined ? createMulberry32(options.seed) : Math.random);
 
   const pairs = getCachedSkillPairs(skill);
   if (pairs.length === 0) {

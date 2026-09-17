@@ -4,21 +4,28 @@ import {
   solveExpression,
   getAllCurriculumLevels,
   getSkillsForLevel,
-  type Skill,
   loadLocalProgress,
   clearLocalProgress,
   type LocalProgress,
 } from '@math-archer/learning-engine';
 import { GameScreen } from './components/GameScreen';
 import { ParentDashboard } from './components/ParentDashboard';
+import { ParentGate } from './components/ParentGate';
+import { ChildProfilePicker } from './components/ChildProfilePicker';
+import { InstallPrompt } from './components/InstallPrompt';
+import { AuthProvider, useAuth } from './context/AuthContext';
+import './App.css';
 
-export const App: React.FC = () => {
-  const [activeTab, setActiveTab] = useState<'game' | 'dashboard' | 'history' | 'curriculum'>('game');
+const AppContent: React.FC = () => {
+  const { activeChild, isParentUnlocked } = useAuth();
+  const [activeTab, setActiveTab] = useState<'game' | 'dashboard' | 'history' | 'curriculum'>(
+    'game'
+  );
   const [progress, setProgress] = useState<LocalProgress>(() => loadLocalProgress());
+  const [showChildPicker, setShowChildPicker] = useState<boolean>(false);
   const engineInfo = getEngineInfo();
   const curriculumLevels = getAllCurriculumLevels();
   const [sampleExpression] = useState({ left: 8, right: 7, op: 'add' as const });
-  const activeSkill: Skill = 'cross_10_addition';
 
   const handleSwitchTab = (tab: 'game' | 'dashboard' | 'history' | 'curriculum') => {
     if (tab === 'history' || tab === 'dashboard') {
@@ -39,110 +46,101 @@ export const App: React.FC = () => {
   );
 
   return (
-    <main
-      style={{
-        fontFamily: 'system-ui, -apple-system, sans-serif',
-        maxWidth: 800,
-        margin: '40px auto',
-        padding: '0 20px',
-        color: '#1f2937',
-      }}
-    >
-      <header style={{ borderBottom: '2px solid #e5e7eb', paddingBottom: 16, marginBottom: 24 }}>
-        <div
-          style={{
-            display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'center',
-            flexWrap: 'wrap',
-            gap: 12,
-          }}
-        >
+    <main className="app-main-container">
+      <InstallPrompt />
+      <header className="app-header">
+        <div className="app-header-top">
           <div>
-            <h1 style={{ margin: 0, fontSize: 30, display: 'flex', alignItems: 'center', gap: 10 }}>
-              🏹 Math Archer
-            </h1>
-            <p style={{ margin: '6px 0 0', color: '#6b7280', fontSize: 14 }}>
-              Adaptive Archery Math Practice for Children
-            </p>
+            <h1 className="app-title">🏹 Math Archer</h1>
+            <p className="app-subtitle">Adaptive Archery Math Practice for Children</p>
           </div>
-          <nav style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-            <button
-              type="button"
-              data-testid="tab-game"
-              onClick={() => handleSwitchTab('game')}
+
+          {/* Active Player Profile Badge */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+            <div
+              data-testid="current-player-badge"
               style={{
-                padding: '8px 16px',
-                borderRadius: 8,
-                border: activeTab === 'game' ? '2px solid #2563eb' : '2px solid #e5e7eb',
-                background: activeTab === 'game' ? '#eff6ff' : '#ffffff',
-                color: activeTab === 'game' ? '#1e40af' : '#4b5563',
-                fontWeight: 700,
-                cursor: 'pointer',
-                fontSize: 14,
+                display: 'flex',
+                alignItems: 'center',
+                gap: 8,
+                background: '#f0fdf4',
+                border: '1px solid #bbf7d0',
+                borderRadius: 20,
+                padding: '6px 14px',
               }}
             >
-              🏹 Game Screen
-            </button>
-            <button
-              type="button"
-              data-testid="tab-dashboard"
-              onClick={() => handleSwitchTab('dashboard')}
-              style={{
-                padding: '8px 16px',
-                borderRadius: 8,
-                border: activeTab === 'dashboard' ? '2px solid #2563eb' : '2px solid #e5e7eb',
-                background: activeTab === 'dashboard' ? '#eff6ff' : '#ffffff',
-                color: activeTab === 'dashboard' ? '#1e40af' : '#4b5563',
-                fontWeight: 700,
-                cursor: 'pointer',
-                fontSize: 14,
-              }}
-            >
-              👨‍👩‍👧 Parent Dashboard
-            </button>
-            <button
-              type="button"
-              data-testid="tab-history"
-              onClick={() => handleSwitchTab('history')}
-              style={{
-                padding: '8px 16px',
-                borderRadius: 8,
-                border: activeTab === 'history' ? '2px solid #2563eb' : '2px solid #e5e7eb',
-                background: activeTab === 'history' ? '#eff6ff' : '#ffffff',
-                color: activeTab === 'history' ? '#1e40af' : '#4b5563',
-                fontWeight: 700,
-                cursor: 'pointer',
-                fontSize: 14,
-              }}
-            >
-              📊 Progress & History
-            </button>
-            <button
-              type="button"
-              data-testid="tab-curriculum"
-              onClick={() => handleSwitchTab('curriculum')}
-              style={{
-                padding: '8px 16px',
-                borderRadius: 8,
-                border: activeTab === 'curriculum' ? '2px solid #2563eb' : '2px solid #e5e7eb',
-                background: activeTab === 'curriculum' ? '#eff6ff' : '#ffffff',
-                color: activeTab === 'curriculum' ? '#1e40af' : '#4b5563',
-                fontWeight: 700,
-                cursor: 'pointer',
-                fontSize: 14,
-              }}
-            >
-              📋 Curriculum & Engine
-            </button>
-          </nav>
+              <span style={{ fontSize: 16 }}>🏹</span>
+              <span style={{ fontSize: 13, fontWeight: 700, color: '#166534' }}>
+                Playing as: <strong>{activeChild.name}</strong>
+              </span>
+              <button
+                type="button"
+                data-testid="switch-child-profile-btn"
+                onClick={() => setShowChildPicker(true)}
+                style={{
+                  background: 'none',
+                  border: 'none',
+                  color: '#15803d',
+                  textDecoration: 'underline',
+                  cursor: 'pointer',
+                  fontSize: 12,
+                  fontWeight: 600,
+                  padding: 0,
+                  marginLeft: 4,
+                }}
+              >
+                [Switch]
+              </button>
+            </div>
+          </div>
         </div>
+
+        {/* Main Tab Navigation */}
+        <nav className="app-nav">
+          <button
+            type="button"
+            data-testid="tab-game"
+            onClick={() => handleSwitchTab('game')}
+            className={`nav-tab-btn ${activeTab === 'game' ? 'active' : ''}`}
+          >
+            🏹 Game Screen
+          </button>
+          <button
+            type="button"
+            data-testid="tab-dashboard"
+            onClick={() => handleSwitchTab('dashboard')}
+            className={`nav-tab-btn ${activeTab === 'dashboard' ? 'active' : ''}`}
+          >
+            👨‍👩‍👧 Parent Dashboard
+          </button>
+          <button
+            type="button"
+            data-testid="tab-history"
+            onClick={() => handleSwitchTab('history')}
+            className={`nav-tab-btn ${activeTab === 'history' ? 'active' : ''}`}
+          >
+            📊 Progress & History
+          </button>
+          <button
+            type="button"
+            data-testid="tab-curriculum"
+            onClick={() => handleSwitchTab('curriculum')}
+            className={`nav-tab-btn ${activeTab === 'curriculum' ? 'active' : ''}`}
+          >
+            📋 Curriculum & Engine
+          </button>
+        </nav>
       </header>
 
+      {/* Screen Render */}
       {activeTab === 'game' ? (
-        <GameScreen />
+        <GameScreen key={activeChild.id} playerId={activeChild.id} />
       ) : activeTab === 'dashboard' ? (
-        <ParentDashboard />
+        !isParentUnlocked ? (
+          <ParentGate onCancel={() => handleSwitchTab('game')} />
+        ) : (
+          <ParentDashboard playerId={activeChild.id} />
+        )
       ) : activeTab === 'history' ? (
         <section data-testid="local-progress-view">
           <div
@@ -151,70 +149,42 @@ export const App: React.FC = () => {
               justifyContent: 'space-between',
               alignItems: 'center',
               marginBottom: 16,
-              flexWrap: 'wrap',
-              gap: 12,
             }}
           >
-            <div>
-              <h2 style={{ margin: 0, fontSize: 22 }}>📁 Local Progress & Attempt History</h2>
-              <p style={{ margin: '4px 0 0', color: '#6b7280', fontSize: 14 }}>
-                Stored locally: sessions, attempts, and skill progress (Task 5.1).
-              </p>
-            </div>
-            <div style={{ display: 'flex', gap: 8 }}>
-              <button
-                type="button"
-                data-testid="refresh-progress-button"
-                onClick={() => setProgress(loadLocalProgress())}
-                style={{
-                  padding: '6px 12px',
-                  borderRadius: 6,
-                  border: '1px solid #d1d5db',
-                  background: '#f9fafb',
-                  fontSize: 13,
-                  cursor: 'pointer',
-                  fontWeight: 600,
-                }}
-              >
-                🔄 Refresh
-              </button>
-              <button
-                type="button"
-                data-testid="clear-progress-button"
-                onClick={handleClearHistory}
-                style={{
-                  padding: '6px 12px',
-                  borderRadius: 6,
-                  border: '1px solid #fca5a5',
-                  background: '#fef2f2',
-                  color: '#b91c1c',
-                  fontSize: 13,
-                  cursor: 'pointer',
-                  fontWeight: 600,
-                }}
-              >
-                🗑️ Clear History
-              </button>
-            </div>
+            <h2 style={{ margin: 0, fontSize: 20 }}>📊 Local Practice Progress</h2>
+            <button
+              type="button"
+              data-testid="clear-progress-button"
+              onClick={handleClearHistory}
+              style={{
+                background: '#fee2e2',
+                color: '#b91c1c',
+                border: '1px solid #fca5a5',
+                borderRadius: 6,
+                padding: '6px 12px',
+                fontSize: 13,
+                fontWeight: 600,
+                cursor: 'pointer',
+              }}
+            >
+              🗑️ Clear History
+            </button>
           </div>
 
-          {/* Quick Metrics Bar */}
           <div
-            data-testid="progress-metrics-bar"
             style={{
               display: 'grid',
-              gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))',
+              gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))',
               gap: 12,
-              marginBottom: 20,
+              marginBottom: 24,
             }}
           >
             <div
               style={{
-                background: '#ffffff',
+                background: '#f9fafb',
                 border: '1px solid #e5e7eb',
                 borderRadius: 8,
-                padding: 12,
-                textAlign: 'center',
+                padding: 16,
               }}
             >
               <div style={{ fontSize: 12, color: '#6b7280', textTransform: 'uppercase' }}>
@@ -222,219 +192,190 @@ export const App: React.FC = () => {
               </div>
               <div
                 data-testid="total-attempts-metric"
-                style={{ fontSize: 24, fontWeight: 700, color: '#111827' }}
+                style={{ fontSize: 24, fontWeight: 700, marginTop: 4 }}
               >
                 {progress.stats.totalAttempts}
               </div>
             </div>
+
             <div
               style={{
-                background: '#ffffff',
+                background: '#f9fafb',
                 border: '1px solid #e5e7eb',
                 borderRadius: 8,
-                padding: 12,
-                textAlign: 'center',
+                padding: 16,
               }}
             >
               <div style={{ fontSize: 12, color: '#6b7280', textTransform: 'uppercase' }}>
-                Accuracy
+                Overall Accuracy
               </div>
               <div
                 data-testid="accuracy-metric"
-                style={{
-                  fontSize: 24,
-                  fontWeight: 700,
-                  color: progress.stats.accuracy >= 0.8 ? '#059669' : '#d97706',
-                }}
+                style={{ fontSize: 24, fontWeight: 700, marginTop: 4 }}
               >
                 {Math.round(progress.stats.accuracy * 100)}%
               </div>
             </div>
+
             <div
               style={{
-                background: '#ffffff',
+                background: '#f9fafb',
                 border: '1px solid #e5e7eb',
                 borderRadius: 8,
-                padding: 12,
-                textAlign: 'center',
-              }}
-            >
-              <div style={{ fontSize: 12, color: '#6b7280', textTransform: 'uppercase' }}>
-                Sessions
-              </div>
-              <div
-                data-testid="total-sessions-metric"
-                style={{ fontSize: 24, fontWeight: 700, color: '#2563eb' }}
-              >
-                {progress.sessions.length}
-              </div>
-            </div>
-            <div
-              style={{
-                background: '#ffffff',
-                border: '1px solid #e5e7eb',
-                borderRadius: 8,
-                padding: 12,
-                textAlign: 'center',
+                padding: 16,
               }}
             >
               <div style={{ fontSize: 12, color: '#6b7280', textTransform: 'uppercase' }}>
                 Avg Speed
               </div>
               <div
-                data-testid="avg-speed-metric"
-                style={{ fontSize: 24, fontWeight: 700, color: '#4b5563' }}
+                data-testid="speed-metric"
+                style={{ fontSize: 24, fontWeight: 700, marginTop: 4 }}
               >
-                {progress.stats.averageResponseTimeMs > 0
-                  ? `${(progress.stats.averageResponseTimeMs / 1000).toFixed(1)}s`
-                  : '—'}
+                {(progress.stats.averageResponseTimeMs / 1000).toFixed(1)}s
+              </div>
+            </div>
+
+            <div
+              style={{
+                background: '#f9fafb',
+                border: '1px solid #e5e7eb',
+                borderRadius: 8,
+                padding: 16,
+              }}
+            >
+              <div style={{ fontSize: 12, color: '#6b7280', textTransform: 'uppercase' }}>
+                Recorded Sessions
+              </div>
+              <div
+                data-testid="total-sessions-metric"
+                style={{ fontSize: 24, fontWeight: 700, marginTop: 4 }}
+              >
+                {progress.sessions.length}
               </div>
             </div>
           </div>
 
-          {/* Stored Sessions */}
-          <div
-            style={{
-              background: '#ffffff',
-              border: '1px solid #e5e7eb',
-              borderRadius: 8,
-              padding: 16,
-              marginBottom: 20,
-            }}
-          >
-            <h3 style={{ margin: '0 0 12px', fontSize: 16 }}>
-              📅 Daily Sessions ({progress.sessions.length})
-            </h3>
-            {progress.sessions.length === 0 ? (
-              <p style={{ color: '#6b7280', fontSize: 14, margin: 0 }}>
-                No daily sessions recorded yet. Start practicing in Game Screen!
-              </p>
-            ) : (
-              <div
-                data-testid="sessions-history-list"
-                style={{ display: 'flex', flexDirection: 'column', gap: 8 }}
-              >
-                {progress.sessions.map((s) => (
-                  <div
-                    key={s.id}
-                    data-testid={`session-item-${s.id}`}
-                    style={{
-                      display: 'flex',
-                      justifyContent: 'space-between',
-                      alignItems: 'center',
-                      padding: '8px 12px',
-                      background: '#f9fafb',
-                      borderRadius: 6,
-                      fontSize: 14,
-                    }}
-                  >
-                    <div>
-                      <strong>{s.date}</strong>
-                      <span style={{ marginLeft: 8, color: '#6b7280', fontSize: 13 }}>
-                        {s.status === 'completed' ? '🏁 Completed' : '🏹 In Progress'}
-                      </span>
-                    </div>
-                    <div style={{ color: '#374151' }}>
-                      Arrows: <strong>{s.arrowsUsed}</strong> / {s.arrowsAllowed} | Hits:{' '}
-                      <strong style={{ color: '#059669' }}>{s.hits}</strong>
-                    </div>
+          <h3 style={{ fontSize: 16, marginBottom: 12 }}>📅 Daily Sessions</h3>
+          {progress.sessions.length === 0 ? (
+            <p style={{ color: '#6b7280', fontSize: 14 }}>No sessions completed yet.</p>
+          ) : (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 24 }}>
+              {progress.sessions.map((sess) => (
+                <div
+                  key={sess.id}
+                  data-testid={`session-item-${sess.id}`}
+                  style={{
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
+                    background: '#f9fafb',
+                    border: '1px solid #e5e7eb',
+                    borderRadius: 6,
+                    padding: '10px 14px',
+                    fontSize: 14,
+                  }}
+                >
+                  <div>
+                    <strong>{sess.date}</strong>
+                    <span style={{ color: '#6b7280', marginLeft: 8 }}>
+                      ({sess.arrowsUsed} / {sess.arrowsAllowed} arrows)
+                    </span>
                   </div>
-                ))}
-              </div>
-            )}
-          </div>
+                  <div>
+                    <span
+                      style={{
+                        background: sess.status === 'completed' ? '#dcfce7' : '#fef9c3',
+                        color: sess.status === 'completed' ? '#166534' : '#854d0e',
+                        padding: '2px 8px',
+                        borderRadius: 9999,
+                        fontSize: 12,
+                        fontWeight: 600,
+                      }}
+                    >
+                      {sess.status === 'completed' ? '🎯 Completed' : '🏹 In Progress'}
+                    </span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
 
-          {/* Stored Attempts */}
-          <div
-            style={{
-              background: '#ffffff',
-              border: '1px solid #e5e7eb',
-              borderRadius: 8,
-              padding: 16,
-            }}
-          >
-            <h3 style={{ margin: '0 0 12px', fontSize: 16 }}>
-              🎯 Recent Attempt Log ({progress.attempts.length} total)
-            </h3>
-            {progress.attempts.length === 0 ? (
-              <p style={{ color: '#6b7280', fontSize: 14, margin: 0 }}>
-                No attempts recorded yet. Practice questions to record attempts!
-              </p>
-            ) : (
-              <div
-                data-testid="attempt-history-list"
-                style={{ maxHeight: 360, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 6 }}
-              >
-                {[...progress.attempts].reverse().slice(0, 50).map((att, idx) => (
+          <h3 style={{ fontSize: 16, marginBottom: 12 }}>🎯 Recent Question Attempts</h3>
+          {progress.attempts.length === 0 ? (
+            <p style={{ color: '#6b7280', fontSize: 14 }}>No attempts recorded yet.</p>
+          ) : (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+              {progress.attempts
+                .slice(-10)
+                .reverse()
+                .map((att, idx) => (
                   <div
-                    key={`${att.questionId}-${att.timestamp}-${idx}`}
+                    key={idx}
                     data-testid={`attempt-item-${idx}`}
                     style={{
                       display: 'flex',
                       justifyContent: 'space-between',
                       alignItems: 'center',
-                      padding: '8px 12px',
                       background: att.correct ? '#f0fdf4' : '#fef2f2',
-                      borderLeft: `4px solid ${att.correct ? '#16a34a' : '#dc2626'}`,
-                      borderRadius: 4,
-                      fontSize: 13,
+                      border: `1px solid ${att.correct ? '#bbf7d0' : '#fecaca'}`,
+                      borderRadius: 6,
+                      padding: '8px 12px',
+                      fontSize: 14,
                     }}
                   >
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                      <span>{att.correct ? '🎯' : '🏹 Miss'}</span>
-                      <strong style={{ fontFamily: 'monospace', fontSize: 14 }}>
-                        {att.left} {att.operation === 'add' ? '+' : '-'} {att.right} = {att.selectedAnswer}
-                      </strong>
-                      {!att.correct && (
-                        <span style={{ color: '#6b7280' }}>(ans: {att.answer})</span>
-                      )}
-                      <span
-                        style={{
-                          background: '#e0e7ff',
-                          color: '#3730a3',
-                          padding: '1px 6px',
-                          borderRadius: 3,
-                          fontSize: 11,
-                        }}
-                      >
-                        {att.skill}
+                    <div>
+                      <span style={{ fontWeight: 600 }}>
+                        {att.left} {att.operation === 'add' ? '+' : '-'} {att.right} = {att.answer}
                       </span>
-                      {att.hintUsed && (
-                        <span style={{ fontSize: 11, color: '#d97706' }}>💡 hint</span>
-                      )}
+                      <span style={{ color: '#6b7280', fontSize: 12, marginLeft: 8 }}>
+                        (chosen: {att.selectedAnswer})
+                      </span>
                     </div>
-                    <div style={{ color: '#6b7280', fontSize: 12 }}>
-                      {att.responseTimeMs ? `${(att.responseTimeMs / 1000).toFixed(1)}s` : ''} |{' '}
-                      {att.mode ?? 'adventure'}
+                    <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
+                      <span style={{ fontSize: 12, color: '#6b7280' }}>
+                        {(att.responseTimeMs / 1000).toFixed(1)}s
+                      </span>
+                      <span>{att.correct ? '✅' : '❌'}</span>
                     </div>
                   </div>
                 ))}
-              </div>
-            )}
-          </div>
+            </div>
+          )}
         </section>
       ) : (
         <>
           <section
             style={{
-              background: '#f9fafb',
-              border: '1px solid #e5e7eb',
+              background: '#f8fafc',
+              border: '1px solid #e2e8f0',
               borderRadius: 8,
               padding: 20,
               marginBottom: 20,
             }}
           >
-            <h2 style={{ fontSize: 18, marginTop: 0 }}>System Status</h2>
-            <ul style={{ listStyle: 'none', padding: 0, margin: 0, lineHeight: 1.8 }}>
+            <h2 style={{ fontSize: 20, marginTop: 0, marginBottom: 8 }}>
+              Educational Engine Status
+            </h2>
+            <ul style={{ margin: 0, paddingLeft: 20, lineHeight: 1.8 }}>
               <li>
-                <strong>Learning Engine Package:</strong> {engineInfo.name} (v{engineInfo.version})
+                <strong>Engine:</strong> {engineInfo.name} (v{engineInfo.version})
               </li>
               <li>
-                <strong>Engine Status:</strong>{' '}
-                <span style={{ color: '#059669', fontWeight: 600 }}>{engineInfo.status}</span>
-              </li>
-              <li>
-                <strong>Initial Skill Target:</strong> <code>{activeSkill}</code>
+                <strong>Status:</strong>{' '}
+                <span
+                  style={{
+                    display: 'inline-block',
+                    background: '#dcfce7',
+                    color: '#15803d',
+                    padding: '2px 8px',
+                    borderRadius: 9999,
+                    fontSize: 12,
+                    fontWeight: 600,
+                  }}
+                >
+                  {engineInfo.status.toUpperCase()}
+                </span>
               </li>
             </ul>
           </section>
@@ -577,6 +518,22 @@ export const App: React.FC = () => {
           </section>
         </>
       )}
+
+      {/* Child Profile Picker Modal */}
+      {showChildPicker && (
+        <ChildProfilePicker
+          onClose={() => setShowChildPicker(false)}
+          onSelect={() => setShowChildPicker(false)}
+        />
+      )}
     </main>
+  );
+};
+
+export const App: React.FC = () => {
+  return (
+    <AuthProvider>
+      <AppContent />
+    </AuthProvider>
   );
 };

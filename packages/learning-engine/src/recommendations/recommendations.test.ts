@@ -10,7 +10,7 @@ import type { Attempt } from '../skills/types';
 
 describe('Task 5.3 — Recommendation Explanation & Traceability', () => {
   describe('Exact Output Representation (Plan Task 5.3)', () => {
-    it('generates the exact Today\'s focus / Why / Practice text for Crossing 10 in addition', () => {
+    it("generates the exact Today's focus / Why / Practice text for Crossing 10 in addition", () => {
       // Profile for child struggling on crossing 10 addition:
       // Recent accuracy: 64%, previous accuracy: 51%
       const profile = createSimulatedProfile({
@@ -30,10 +30,7 @@ describe('Task 5.3 — Recommendation Explanation & Traceability', () => {
 
       // Verify individual properties
       expect(rec.skillName).toBe('Crossing 10 in addition');
-      expect(rec.why).toEqual([
-        'Recent accuracy: 64%',
-        'Previous accuracy: 51%',
-      ]);
+      expect(rec.why).toEqual(['Recent accuracy: 64%', 'Previous accuracy: 51%']);
       expect(rec.suggestedPairs).toEqual(['8 + 7', '9 + 6', '13 + 8']);
 
       // Verify exact plaintext format required by Task 5.3
@@ -87,7 +84,9 @@ describe('Task 5.3 — Recommendation Explanation & Traceability', () => {
       expect(rec.dataTrace.recordedWeakPairs).toEqual([
         { pairKey: '8 + 7', accuracy: 0.33, attempts: 6 },
       ]);
-      expect(rec.dataTrace.auditStatement).toContain("Traced to 28 recorded attempts in 'Crossing 10 in addition'");
+      expect(rec.dataTrace.auditStatement).toContain(
+        "Traced to 28 recorded attempts in 'Crossing 10 in addition'"
+      );
       expect(rec.dataTrace.auditStatement).toContain('Recent accuracy: 64%');
       expect(rec.dataTrace.auditStatement).toContain('previous accuracy: 51%');
       expect(rec.dataTrace.auditStatement).toContain('zero mysterious AI guessing');
@@ -133,7 +132,11 @@ describe('Task 5.3 — Recommendation Explanation & Traceability', () => {
         });
       }
 
-      const history = computeSkillAccuracyHistory('cross_10_addition', createEmptyProfile(playerId), attempts);
+      const history = computeSkillAccuracyHistory(
+        'cross_10_addition',
+        createEmptyProfile(playerId),
+        attempts
+      );
 
       expect(history.totalAttempts).toBe(28);
       expect(history.recentAttemptsCount).toBe(10); // Window of last 10 attempts
@@ -157,7 +160,7 @@ describe('Task 5.3 — Recommendation Explanation & Traceability', () => {
       const profile = createSimulatedProfile({
         playerId: 'transparent-learner',
         skills: {
-          cross_10_subtraction: { level: 'weak', accuracy: 0.40, recentAccuracy: 0.50, attempts: 20 },
+          cross_10_subtraction: { level: 'weak', accuracy: 0.4, recentAccuracy: 0.5, attempts: 20 },
         },
       });
 
@@ -188,7 +191,12 @@ describe('Task 5.3 — Recommendation Explanation & Traceability', () => {
       const profile = createSimulatedProfile({
         playerId: 'rusher',
         skills: {
-          basic_addition: { level: 'weak', accuracy: 0.45, attempts: 20, averageResponseTimeMs: 1800 },
+          basic_addition: {
+            level: 'weak',
+            accuracy: 0.45,
+            attempts: 20,
+            averageResponseTimeMs: 1800,
+          },
         },
       });
 
@@ -204,7 +212,12 @@ describe('Task 5.3 — Recommendation Explanation & Traceability', () => {
       const profile = createSimulatedProfile({
         playerId: 'slow_counter',
         skills: {
-          basic_addition: { level: 'mastered', accuracy: 0.95, attempts: 25, averageResponseTimeMs: 6200 },
+          basic_addition: {
+            level: 'mastered',
+            accuracy: 0.95,
+            attempts: 25,
+            averageResponseTimeMs: 6200,
+          },
         },
       });
 
@@ -221,7 +234,7 @@ describe('Task 5.3 — Recommendation Explanation & Traceability', () => {
           cross_10_addition: {
             level: 'developing',
             accuracy: 0.55,
-            recentAccuracy: 0.80,
+            recentAccuracy: 0.8,
             attempts: 16,
           },
         },
@@ -229,10 +242,7 @@ describe('Task 5.3 — Recommendation Explanation & Traceability', () => {
 
       const rec = generatePracticeRecommendation(profile);
       expect(rec.action).toBe('consolidate_progress');
-      expect(rec.why).toEqual([
-        'Recent accuracy: 80%',
-        'Previous accuracy: 55%',
-      ]);
+      expect(rec.why).toEqual(['Recent accuracy: 80%', 'Previous accuracy: 55%']);
       expect(rec.headline).toContain('Consolidate Crossing 10 in addition');
     });
 
@@ -257,7 +267,7 @@ describe('Task 5.3 — Recommendation Explanation & Traceability', () => {
       const profile = createSimulatedProfile({
         playerId: 'systematic-player',
         skills: {
-          cross_10_addition: { level: 'medium', accuracy: 0.70, attempts: 20 },
+          cross_10_addition: { level: 'medium', accuracy: 0.7, attempts: 20 },
         },
         pairs: {
           '13 + 8': { attempts: 4, correct: 0, accuracy: 0.0 },
@@ -269,7 +279,11 @@ describe('Task 5.3 — Recommendation Explanation & Traceability', () => {
       expect(rec.systematicMistakes).toBeDefined();
       expect(rec.systematicMistakes![0].pairKey).toBe('13 + 8');
       expect(rec.systematicMistakes![0].wrongAnswer).toBe(20);
-      expect(rec.why.some((w) => w.includes('Repeated error: Answered 20 instead of 21 on 13 + 8 (4 times)'))).toBe(true);
+      expect(
+        rec.why.some((w) =>
+          w.includes('Repeated error: Answered 20 instead of 21 on 13 + 8 (4 times)')
+        )
+      ).toBe(true);
       expect(rec.suggestedPairs).toContain('13 + 8');
     });
 
@@ -278,7 +292,7 @@ describe('Task 5.3 — Recommendation Explanation & Traceability', () => {
         playerId: 'master-student',
         skills: {
           basic_addition: { level: 'mastered', accuracy: 0.95, attempts: 25, score: 0.92 },
-          make_10: { level: 'mastered', accuracy: 0.92, attempts: 25, score: 0.90 },
+          make_10: { level: 'mastered', accuracy: 0.92, attempts: 25, score: 0.9 },
         },
       });
 

@@ -85,7 +85,10 @@ export interface ControlledProfilePresetInfo {
   targetSkill?: Skill;
 }
 
-export const CONTROLLED_TEST_PROFILES: Record<ControlledTestProfileKey, ControlledProfilePresetInfo> = {
+export const CONTROLLED_TEST_PROFILES: Record<
+  ControlledTestProfileKey,
+  ControlledProfilePresetInfo
+> = {
   fresh_beginner: {
     key: 'fresh_beginner',
     label: 'Fresh / Beginner',
@@ -101,19 +104,22 @@ export const CONTROLLED_TEST_PROFILES: Record<ControlledTestProfileKey, Controll
   weak_subtraction: {
     key: 'weak_subtraction',
     label: 'Weak at Subtraction',
-    description: 'Strong at addition, but weak at basic subtraction (score 0.32). Adapts to subtraction.',
+    description:
+      'Strong at addition, but weak at basic subtraction (score 0.32). Adapts to subtraction.',
     targetSkill: 'basic_subtraction',
   },
   weak_cross_10_addition: {
     key: 'weak_cross_10_addition',
     label: 'Weak at Cross-10 Addition',
-    description: 'Strong at basic addition, but weak at crossing 10 (score 0.30). Adapts to crossing 10.',
+    description:
+      'Strong at basic addition, but weak at crossing 10 (score 0.30). Adapts to crossing 10.',
     targetSkill: 'cross_10_addition',
   },
   mastered_beginner: {
     key: 'mastered_beginner',
     label: 'Mastered Level 1',
-    description: 'Basic addition & addition within 10 mastered (score 1.0). Advances to challenge frontier.',
+    description:
+      'Basic addition & addition within 10 mastered (score 1.0). Advances to challenge frontier.',
     targetSkill: 'make_10',
   },
 };
@@ -152,8 +158,8 @@ export function createControlledTestProfile(
           addition_within_10: {
             level: 'strong',
             attempts: 20,
-            accuracy: 0.90,
-            recentAccuracy: 0.90,
+            accuracy: 0.9,
+            recentAccuracy: 0.9,
             score: 0.88,
             hintsUsed: 0,
             averageResponseTimeMs: 2000,
@@ -169,7 +175,7 @@ export function createControlledTestProfile(
             level: 'weak',
             attempts: 20,
             accuracy: 0.32,
-            recentAccuracy: 0.30,
+            recentAccuracy: 0.3,
             score: 0.32,
             hintsUsed: 4,
             averageResponseTimeMs: 6800,
@@ -195,8 +201,8 @@ export function createControlledTestProfile(
           addition_within_10: {
             level: 'strong',
             attempts: 20,
-            accuracy: 0.90,
-            recentAccuracy: 0.90,
+            accuracy: 0.9,
+            recentAccuracy: 0.9,
             score: 0.88,
             hintsUsed: 0,
             averageResponseTimeMs: 2000,
@@ -211,9 +217,9 @@ export function createControlledTestProfile(
           cross_10_addition: {
             level: 'weak',
             attempts: 20,
-            accuracy: 0.30,
-            recentAccuracy: 0.30,
-            score: 0.30,
+            accuracy: 0.3,
+            recentAccuracy: 0.3,
+            score: 0.3,
             hintsUsed: 4,
             averageResponseTimeMs: 7000,
           },
@@ -229,8 +235,8 @@ export function createControlledTestProfile(
           addition_within_10: {
             level: 'strong',
             attempts: 20,
-            accuracy: 0.90,
-            recentAccuracy: 0.90,
+            accuracy: 0.9,
+            recentAccuracy: 0.9,
             score: 0.88,
             hintsUsed: 0,
             averageResponseTimeMs: 2000,

@@ -63,4 +63,3 @@ export interface LocalProgress {
   stats: AttemptSummaryStats;
   lastUpdated: string;
 }
-

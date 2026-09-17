@@ -64,10 +64,7 @@ describe('Task 1.6 — Adaptive Question Selection', () => {
         },
       });
 
-      const categories = categorizeSkills(profile, [
-        'cross_10_addition',
-        'basic_addition',
-      ]);
+      const categories = categorizeSkills(profile, ['cross_10_addition', 'basic_addition']);
 
       expect(categories.weak).toEqual(['cross_10_addition']);
       expect(categories.mastered).toEqual(['basic_addition']);
@@ -78,15 +75,17 @@ describe('Task 1.6 — Adaptive Question Selection', () => {
 
   describe('Distribution Normalization', () => {
     it('returns default distribution when all categories are available', () => {
-      const normalized = normalizeDistribution(
-        DEFAULT_SELECTION_DISTRIBUTION,
-        ['weak', 'developing', 'mastered', 'challenge']
-      );
+      const normalized = normalizeDistribution(DEFAULT_SELECTION_DISTRIBUTION, [
+        'weak',
+        'developing',
+        'mastered',
+        'challenge',
+      ]);
 
-      expect(normalized.weak).toBeCloseTo(0.50, 4);
+      expect(normalized.weak).toBeCloseTo(0.5, 4);
       expect(normalized.developing).toBeCloseTo(0.25, 4);
       expect(normalized.mastered).toBeCloseTo(0.15, 4);
-      expect(normalized.challenge).toBeCloseTo(0.10, 4);
+      expect(normalized.challenge).toBeCloseTo(0.1, 4);
       expect(
         normalized.weak + normalized.developing + normalized.mastered + normalized.challenge
       ).toBeCloseTo(1.0, 4);
@@ -94,23 +93,21 @@ describe('Task 1.6 — Adaptive Question Selection', () => {
 
     it('dynamically redistributes weight when certain categories are empty', () => {
       // Suppose challenge is empty; remaining total = 0.50 + 0.25 + 0.15 = 0.90
-      const normalized = normalizeDistribution(
-        DEFAULT_SELECTION_DISTRIBUTION,
-        ['weak', 'developing', 'mastered']
-      );
+      const normalized = normalizeDistribution(DEFAULT_SELECTION_DISTRIBUTION, [
+        'weak',
+        'developing',
+        'mastered',
+      ]);
 
-      expect(normalized.weak).toBeCloseTo(0.50 / 0.90, 4); // ~0.5556
-      expect(normalized.developing).toBeCloseTo(0.25 / 0.90, 4); // ~0.2778
-      expect(normalized.mastered).toBeCloseTo(0.15 / 0.90, 4); // ~0.1667
+      expect(normalized.weak).toBeCloseTo(0.5 / 0.9, 4); // ~0.5556
+      expect(normalized.developing).toBeCloseTo(0.25 / 0.9, 4); // ~0.2778
+      expect(normalized.mastered).toBeCloseTo(0.15 / 0.9, 4); // ~0.1667
       expect(normalized.challenge).toBe(0);
       expect(normalized.weak + normalized.developing + normalized.mastered).toBeCloseTo(1.0, 4);
     });
 
     it('allocates 100% to the single available category', () => {
-      const normalized = normalizeDistribution(
-        DEFAULT_SELECTION_DISTRIBUTION,
-        ['mastered']
-      );
+      const normalized = normalizeDistribution(DEFAULT_SELECTION_DISTRIBUTION, ['mastered']);
 
       expect(normalized.mastered).toBe(1.0);
       expect(normalized.weak).toBe(0);
@@ -124,10 +121,10 @@ describe('Task 1.6 — Adaptive Question Selection', () => {
         ['weak', 'developing', 'mastered', 'challenge']
       );
 
-      expect(normalized.weak).toBeCloseTo(0.50, 4);
+      expect(normalized.weak).toBeCloseTo(0.5, 4);
       expect(normalized.developing).toBeCloseTo(0.25, 4);
       expect(normalized.mastered).toBeCloseTo(0.15, 4);
-      expect(normalized.challenge).toBeCloseTo(0.10, 4);
+      expect(normalized.challenge).toBeCloseTo(0.1, 4);
     });
   });
 
@@ -193,11 +190,11 @@ describe('Task 1.6 — Adaptive Question Selection', () => {
       expect(categoryCounts.weak / TOTAL_QUESTIONS).toBeGreaterThanOrEqual(0.45);
       expect(categoryCounts.weak / TOTAL_QUESTIONS).toBeLessThanOrEqual(0.55);
 
-      expect(categoryCounts.developing / TOTAL_QUESTIONS).toBeGreaterThanOrEqual(0.20);
-      expect(categoryCounts.developing / TOTAL_QUESTIONS).toBeLessThanOrEqual(0.30);
+      expect(categoryCounts.developing / TOTAL_QUESTIONS).toBeGreaterThanOrEqual(0.2);
+      expect(categoryCounts.developing / TOTAL_QUESTIONS).toBeLessThanOrEqual(0.3);
 
-      expect(categoryCounts.mastered / TOTAL_QUESTIONS).toBeGreaterThanOrEqual(0.10);
-      expect(categoryCounts.mastered / TOTAL_QUESTIONS).toBeLessThanOrEqual(0.20);
+      expect(categoryCounts.mastered / TOTAL_QUESTIONS).toBeGreaterThanOrEqual(0.1);
+      expect(categoryCounts.mastered / TOTAL_QUESTIONS).toBeLessThanOrEqual(0.2);
 
       expect(categoryCounts.challenge / TOTAL_QUESTIONS).toBeGreaterThanOrEqual(0.06);
       expect(categoryCounts.challenge / TOTAL_QUESTIONS).toBeLessThanOrEqual(0.14);
@@ -239,7 +236,7 @@ describe('Task 1.6 — Adaptive Question Selection', () => {
       // developing: 25/90 = 27.8%
       // mastered: 15/90 = 16.7%
       expect(counts.cross_10_addition).toBeGreaterThan(counts.basic_addition * 2.5);
-      expect(counts.cross_10_addition / TOTAL).toBeGreaterThanOrEqual(0.50);
+      expect(counts.cross_10_addition / TOTAL).toBeGreaterThanOrEqual(0.5);
       expect(counts.cross_10_addition / TOTAL).toBeLessThanOrEqual(0.62);
 
       expect(counts.basic_subtraction / TOTAL).toBeGreaterThanOrEqual(0.22);
@@ -262,8 +259,8 @@ describe('Task 1.6 — Adaptive Question Selection', () => {
 
       // Custom: 80% weak, 20% developing, 0% mastered, 0% challenge
       const customDistribution = {
-        weak: 0.80,
-        developing: 0.20,
+        weak: 0.8,
+        developing: 0.2,
         mastered: 0,
         challenge: 0,
       };

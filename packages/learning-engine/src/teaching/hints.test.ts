@@ -1,10 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import {
-  generateQuestionHint,
-  getNextHintLevel,
-  getPreviousHintLevel,
-  HINT_LEVELS,
-} from './hints';
+import { generateQuestionHint, getNextHintLevel, getPreviousHintLevel, HINT_LEVELS } from './hints';
 
 describe('Task 4.2 — Implement Hint Levels in Learning Engine', () => {
   describe('Hint Level Progression & Navigation', () => {
@@ -82,9 +77,7 @@ describe('Task 4.2 — Implement Hint Levels in Learning Engine', () => {
         expect(hint.decomposition?.steps).toHaveLength(3);
         expect(hint.decomposition?.visual.frame1FilledCount).toBe(10);
         expect(hint.decomposition?.visual.frame2FilledCount).toBe(5);
-        expect(hint.decomposition?.summary.equation).toBe(
-          '8 + 7 = 8 + 2 + 5 = 10 + 5 = 15'
-        );
+        expect(hint.decomposition?.summary.equation).toBe('8 + 7 = 8 + 2 + 5 = 10 + 5 = 15');
       }
     });
   });

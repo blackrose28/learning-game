@@ -154,4 +154,3 @@ export interface SubmitAnswerResult {
    */
   spentArrowIndex: number;
 }
-

@@ -91,4 +91,3 @@ export interface Attempt {
 export interface RecordAttemptOptions {
   recentWindowSize?: number;
 }
-

@@ -1,7 +1,4 @@
-import {
-  CURRICULUM_LEVELS,
-  type Skill,
-} from '../curriculum';
+import { CURRICULUM_LEVELS, type Skill } from '../curriculum';
 import { createQuestionWithDistractors } from '../distractors/generator';
 import { isDeveloping, isStrong, isWeak } from '../skills/profile';
 import type { SkillProfile } from '../skills/types';
@@ -15,10 +12,10 @@ import type {
 } from './types';
 
 export const DEFAULT_SELECTION_DISTRIBUTION: Required<SelectionDistribution> = {
-  weak: 0.50,
+  weak: 0.5,
   developing: 0.25,
   mastered: 0.15,
-  challenge: 0.10,
+  challenge: 0.1,
 };
 
 const SELECTION_CATEGORIES: readonly SelectionCategory[] = [
@@ -146,7 +143,9 @@ export function normalizeDistribution(
   for (const cat of availableCategories) {
     const configuredWeight = distribution?.[cat];
     const weight =
-      typeof configuredWeight === 'number' && !Number.isNaN(configuredWeight) && configuredWeight >= 0
+      typeof configuredWeight === 'number' &&
+      !Number.isNaN(configuredWeight) &&
+      configuredWeight >= 0
         ? configuredWeight
         : DEFAULT_SELECTION_DISTRIBUTION[cat];
 
@@ -260,8 +259,7 @@ export function selectNextQuestion(
   options?: SelectQuestionOptions
 ): QuestionSpec {
   const rng =
-    options?.rng ??
-    (options?.seed !== undefined ? createMulberry32(options.seed) : Math.random);
+    options?.rng ?? (options?.seed !== undefined ? createMulberry32(options.seed) : Math.random);
 
   // 1. Partition skills into pedagogical categories
   const categorized = categorizeSkills(profile, options?.allowedSkills);
@@ -305,10 +303,7 @@ export function selectNextQuestion(
   }
 
   // 4. Normalize category weights across available categories
-  const normalizedWeights = normalizeDistribution(
-    options?.distribution,
-    availableCategories
-  );
+  const normalizedWeights = normalizeDistribution(options?.distribution, availableCategories);
 
   // 5. Sample a category
   const selectedCategory = sampleCategory(normalizedWeights, availableCategories, rng);

@@ -225,4 +225,3 @@ export function generateMake10Decomposition(
     visual,
   };
 }
-

@@ -64,7 +64,7 @@ describe('Task 2.1 — Build a simulated child', () => {
         seed: 101,
       });
 
-      expect(result.summary.overallAccuracy).toBeGreaterThanOrEqual(0.90);
+      expect(result.summary.overallAccuracy).toBeGreaterThanOrEqual(0.9);
       expect(result.summary.averageResponseTimeMs).toBeLessThan(2500);
       expect(result.summary.hintRate).toBeLessThan(0.05);
 
@@ -86,13 +86,13 @@ describe('Task 2.1 — Build a simulated child', () => {
       // Basic addition is strong
       const basicAdd = result.summary.skillBreakdown.basic_addition;
       if (basicAdd) {
-        expect(basicAdd.accuracy).toBeGreaterThan(0.80);
+        expect(basicAdd.accuracy).toBeGreaterThan(0.8);
       }
 
       // Make 10 or crossing 10 is weak
       const make10 = result.summary.skillBreakdown.make_10;
       if (make10) {
-        expect(make10.accuracy).toBeLessThan(0.50);
+        expect(make10.accuracy).toBeLessThan(0.5);
         expect(make10.masteryLevel).toBe('weak');
       }
 
@@ -114,18 +114,20 @@ describe('Task 2.1 — Build a simulated child', () => {
       // Addition is strong
       const basicAdd = result.summary.skillBreakdown.basic_addition;
       if (basicAdd) {
-        expect(basicAdd.accuracy).toBeGreaterThan(0.80);
+        expect(basicAdd.accuracy).toBeGreaterThan(0.8);
       }
 
       // Subtraction is weak
       const basicSub = result.summary.skillBreakdown.basic_subtraction;
       if (basicSub) {
-        expect(basicSub.accuracy).toBeLessThan(0.50);
+        expect(basicSub.accuracy).toBeLessThan(0.5);
         expect(basicSub.masteryLevel).toBe('weak');
       }
 
       expect(result.recommendation.action).toBe('remediate_weakness');
-      expect(['basic_subtraction', 'cross_10_subtraction']).toContain(result.recommendation.primarySkill);
+      expect(['basic_subtraction', 'cross_10_subtraction']).toContain(
+        result.recommendation.primarySkill
+      );
       expect(result.recommendation.suggestedPairs.length).toBeGreaterThan(0);
     });
   });
@@ -138,7 +140,7 @@ describe('Task 2.1 — Build a simulated child', () => {
         seed: 404,
       });
 
-      expect(result.summary.overallAccuracy).toBeLessThan(0.60);
+      expect(result.summary.overallAccuracy).toBeLessThan(0.6);
       expect(result.summary.averageResponseTimeMs).toBeLessThan(2000);
 
       expect(result.recommendation.action).toBe('encourage_accuracy');
@@ -220,4 +222,3 @@ describe('Task 2.1 — Build a simulated child', () => {
     });
   });
 });
-

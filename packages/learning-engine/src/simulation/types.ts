@@ -127,4 +127,3 @@ export interface MultiSessionSimulationResult {
     trajectories: Partial<Record<Skill, SkillProgressionTrajectory>>;
   };
 }
-

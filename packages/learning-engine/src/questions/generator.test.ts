@@ -70,9 +70,7 @@ describe('Task 1.2 — Question generation', () => {
 
     it('covers edge case 9 + 9 = 18 (crossing 10 addition upper bound)', () => {
       const pool = getSkillQuestionPool('cross_10_addition');
-      const edgeCase = pool.find(
-        (q) => q.left === 9 && q.right === 9 && q.operation === 'add'
-      );
+      const edgeCase = pool.find((q) => q.left === 9 && q.right === 9 && q.operation === 'add');
       expect(edgeCase).toBeDefined();
       expect(edgeCase?.answer).toBe(18);
       expect(isQuestionInSkillBounds(edgeCase!, 'cross_10_addition')).toBe(true);
@@ -173,4 +171,3 @@ describe('Task 1.2 — Question generation', () => {
     });
   });
 });
-

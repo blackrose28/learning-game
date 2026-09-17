@@ -5,6 +5,10 @@
   "type": "module",
   "scripts": {
     "dev": "pnpm --filter web dev",
+    "dev:api": "pnpm --filter api dev",
+    "db:migrate": "pnpm --filter api db:migrate",
+    "db:migrate:remote": "pnpm --filter api db:migrate:remote",
+    "deploy": "pnpm build && pnpm --filter api deploy",
     "build": "pnpm -r run build",
     "test": "pnpm -r run test",
     "lint": "eslint .",

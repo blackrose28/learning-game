@@ -50,7 +50,9 @@ export function formatQuestion(question: BaseQuestion): string {
 /**
  * Formats an expression string without the answer (e.g., "8 + 7").
  */
-export function formatExpression(question: Pick<BaseQuestion, 'left' | 'right' | 'operation'>): string {
+export function formatExpression(
+  question: Pick<BaseQuestion, 'left' | 'right' | 'operation'>
+): string {
   const symbol = question.operation === 'add' ? '+' : '-';
   return `${question.left} ${symbol} ${question.right}`;
 }
@@ -61,4 +63,3 @@ export function formatExpression(question: Pick<BaseQuestion, 'left' | 'right' |
 export function validateBaseQuestion(question: BaseQuestion): boolean {
   return solveExpression(question.left, question.right, question.operation) === question.answer;
 }
-

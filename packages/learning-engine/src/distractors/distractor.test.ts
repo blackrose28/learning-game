@@ -1,15 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import type { Skill } from '../curriculum';
-import {
-  generateQuestionSpec,
-  getSkillQuestionPool,
-  createMulberry32,
-} from '../questions';
-import {
-  generateDistractors,
-  createQuestionWithDistractors,
-  ELEMENT_TYPES,
-} from './generator';
+import { generateQuestionSpec, getSkillQuestionPool, createMulberry32 } from '../questions';
+import { generateDistractors, createQuestionWithDistractors, ELEMENT_TYPES } from './generator';
 import { getCommonMistakeCandidates } from './rules';
 
 const ALL_SKILLS: Skill[] = [
@@ -303,4 +295,3 @@ describe('Task 1.3 — Distractor generation', () => {
     });
   });
 });
-

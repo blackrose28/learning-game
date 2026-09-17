@@ -1704,7 +1704,6 @@ This is only the initial algorithm. Make the percentages configurable.
   ```
 - [x] Generated 1,000 questions and verified that crossing-10 addition appears substantially more often than mastered skills (~50% vs ~15%).
 
-
 ---
 
 # Phase 2 — Prove the Learning Engine With Simulation
@@ -2207,7 +2206,13 @@ The child should have a simple login mechanism.
 
 ### Done When
 
-The child can start the game without entering a complicated password, while the parent dashboard remains protected.
+- [x] The child can start the game without entering a complicated password, while the parent dashboard remains protected:
+  - Database schema (`apps/api/migrations/0002_auth_and_profiles.sql`) creates `parents` table and links `players` (`parent_id REFERENCES parents(id) ON DELETE CASCADE`, `pin`, `avatar`, `grade`).
+  - Auth helper (`apps/api/src/auth.ts`) provides Web Crypto PBKDF2 password hashing and HMAC-SHA256 JWT signing/verification.
+  - Public profile picker API (`GET /api/auth/child/profiles`) and simple login endpoint (`POST /api/auth/child/login`) allow child login with a 4-digit numeric PIN (or 1-click start when PIN not required).
+  - Web client UI includes `ChildProfilePicker` with archer avatars and kid-friendly keypad.
+  - Parent dashboard remains locked behind `ParentGate` with PIN/password verification.
+  - Verified by 8 integration tests in `apps/api/src/api.test.ts` and unit tests in `apps/web/src/components/ChildProfilePicker.test.tsx`.
 
 ---
 
@@ -2215,10 +2220,21 @@ The child can start the game without entering a complicated password, while the 
 
 ### Done When
 
-- [ ] Child cannot access parent dashboard.
-- [ ] Parent cannot accidentally see another parent's child.
-- [ ] API verifies authorization on every protected endpoint.
-- [ ] No child progress endpoint relies only on a client-supplied player ID.
+- [x] Child cannot access parent dashboard:
+  - Frontend `ParentGate` intercepts dashboard tab navigation when parent mode is not unlocked, requiring parent PIN or password.
+  - Worker API (`/api/parent/*`) strictly checks authorization token role; child tokens receive HTTP 403 Forbidden (`FORBIDDEN: Parent role required`).
+  - Verified by `apps/web/src/components/ParentGate.test.tsx` and API tests in `apps/api/src/api.test.ts`.
+- [x] Parent cannot accidentally see another parent's child:
+  - Strict tenant boundary isolation in Worker API: `verifyChildBelongsToParent` validates `childId` against `parent_id = token.sub`.
+  - Parent A querying or mutating Parent B's child progress, recommendations, sessions, or profile receives HTTP 403 Forbidden.
+  - Verified by comprehensive tenant isolation tests in `apps/api/src/api.test.ts`.
+- [x] API verifies authorization on every protected endpoint:
+  - Bearer token authentication enforced on `POST /api/sessions/start`, `POST /api/attempts`, `GET /api/sessions/today`, `GET /api/progress`, `GET /api/recommendations`, and `/api/parent/*`.
+  - Unauthenticated requests or invalid/expired tokens strictly return HTTP 401 Unauthorized (`UNAUTHORIZED`).
+- [x] No child progress endpoint relies only on a client-supplied player ID:
+  - Child tokens automatically lock the target player ID to `token.sub` directly on the server; client-supplied spoofed player IDs in request bodies or query parameters are ignored or verified against the token identity.
+  - Parent tokens require verifying child ownership before serving progress data.
+  - Verified by tampering resistance tests in `apps/api/src/api.test.ts`.
 
 ---
 
@@ -2237,7 +2253,13 @@ Implement:
 
 ### Done When
 
-The app can be installed from Chrome/Edge on a phone/tablet and launches without normal browser chrome.
+- [x] The app can be installed from Chrome/Edge on a phone/tablet and launches without normal browser chrome:
+  - Configured `vite-plugin-pwa` in `apps/web/vite.config.ts` with `display: 'standalone'`, `registerType: 'autoUpdate'`, theme color `#2563eb`, background `#f8fafc`, and shortcuts.
+  - Generated crisp multi-resolution icons: 192x192, 512x512, 512x512 maskable, 180x180 Apple touch icon, and SVG icons in `apps/web/public/icons/` and `apps/web/public/`.
+  - Added standalone PWA meta tags and safe-area viewport in `apps/web/index.html`.
+  - Implemented `InstallPrompt` banner component (`apps/web/src/components/InstallPrompt.tsx`) capturing `beforeinstallprompt` with standalone detection (`apps/web/src/pwa.ts`).
+  - Workbox precaches all 21 app shell assets including HTML, JS, CSS, and icons.
+  - Verified by unit tests in `apps/web/src/components/InstallPrompt.test.tsx` and production PWA build.
 
 ---
 
@@ -2253,7 +2275,13 @@ Test:
 
 ### Done When
 
-No answer is too small to comfortably tap and the four choices remain obvious at every target size.
+- [x] No answer is too small to comfortably tap and the four choices remain obvious at every target size:
+  - Small Phone Portrait (<= 380px, e.g. 320px–375px): Compact arena padding, reduced header margins, distinct elemental icons and large numbers with minimum 64px tap target height (exceeding 48px WCAG standard).
+  - Medium & Large Phone (381px–540px): 72px comfortable touch buttons, dynamic typography, clear elemental borders.
+  - Tablet Landscape (min-width: 768px with short height): Compact vertical footprint preventing vertical scrolling on landscape tablets, Chromebooks, and Xbox Edge.
+  - Desktop (>= 1200px): Centered, elegant layout with keyboard shortcut indicators `[1]`, `[2]`, `[3]`, `[4]` displayed alongside elemental arrows.
+  - Safe-area inset support: `env(safe-area-inset-*)` integrated into `App.css` and `GameScreen.css` for notches and home bars.
+  - Verified by comprehensive viewport test suite in `apps/web/src/components/Responsive.test.tsx` across all 5 form factors.
 
 ---
 
@@ -2269,7 +2297,13 @@ Queue attempts locally.
 
 ### Done When
 
-A previously loaded game can complete a session without network connectivity and synchronizes later.
+- [x] A previously loaded game can complete a session without network connectivity and synchronizes later:
+  - App shell, game assets, and `@math-archer/learning-engine` are precached by Service Worker (`sw.js`).
+  - Learning engine runs 100% locally in browser, generating adaptive math questions, evaluating answers, and updating skill mastery without requiring active network.
+  - Completed attempts and daily sessions during offline periods are persisted in local storage and queued in `localStorage` via `SyncManager` (`apps/web/src/sync/queue.ts`).
+  - Reconnecting to network automatically triggers queue flush (`flushQueue()`), synchronizing all queued attempts to `POST /api/attempts` without data loss.
+  - Real-time cloud sync status reflects offline/syncing/synced state with manual "Sync Now" capability.
+  - Verified by full end-to-end integration test in `apps/web/src/test/offline-session.test.tsx`.
 
 ---
 
@@ -2742,7 +2776,7 @@ If building this as a side project, use this order:
 - [x] Cloudflare Worker.
 - [x] D1.
 - [x] API.
-- [ ] Authentication.
+- [x] Authentication.
 - [x] Sync.
 
 After that:

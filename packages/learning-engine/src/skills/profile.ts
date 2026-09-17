@@ -79,14 +79,15 @@ export function calculateSkillScore(params: {
     attempts >= 10
       ? 0.25 * accuracy + 0.75 * effectiveRecent
       : attempts >= 3
-      ? 0.4 * accuracy + 0.6 * effectiveRecent
-      : accuracy;
+        ? 0.4 * accuracy + 0.6 * effectiveRecent
+        : accuracy;
 
   // Progressive penalty for repeated hint dependency:
   // - Low / occasional hint use (hintRate <= 0.20): mild penalty (up to 0.03)
   // - Repeated hint use (0.20 < hintRate <= 0.50): progressive penalty (0.03 to 0.135)
   // - Heavy / chronic hint dependence (hintRate > 0.50): strong penalty (up to 0.31)
-  const hintRate = params.hintRate !== undefined ? params.hintRate : attempts > 0 ? hintsUsed / attempts : 0;
+  const hintRate =
+    params.hintRate !== undefined ? params.hintRate : attempts > 0 ? hintsUsed / attempts : 0;
   let hintPenalty = 0;
   if (hintRate > 0) {
     if (hintRate <= 0.2) {
@@ -257,10 +258,13 @@ export function createEmptyProfile(playerId?: string): SkillProfile {
   const now = new Date().toISOString();
   const allSkills = getAllSkills();
 
-  const skills = allSkills.reduce((acc, skillDef) => {
-    acc[skillDef.id] = createEmptySkillProgress(skillDef.id, playerId);
-    return acc;
-  }, {} as Record<Skill, SkillProgress>);
+  const skills = allSkills.reduce(
+    (acc, skillDef) => {
+      acc[skillDef.id] = createEmptySkillProgress(skillDef.id, playerId);
+      return acc;
+    },
+    {} as Record<Skill, SkillProgress>
+  );
 
   return {
     playerId,
@@ -372,7 +376,8 @@ export function createSimulatedSkillProgress(
   const config: SimulatedSkillConfig =
     typeof configOrLevel === 'string' ? { level: configOrLevel } : configOrLevel;
 
-  const targetLevel = config.level ?? (config.score !== undefined ? classifyMasteryLevel(config.score) : 'weak');
+  const targetLevel =
+    config.level ?? (config.score !== undefined ? classifyMasteryLevel(config.score) : 'weak');
 
   let defaultAttempts = 20;
   let defaultAccuracy = 0.35;

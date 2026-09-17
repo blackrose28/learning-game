@@ -12,30 +12,47 @@ const mockMeta: D1Meta = {
   changes: 0,
 };
 
+import { signToken } from './auth';
+
+export const TEST_JWT_SECRET = 'test-jwt-secret-key-12345';
+
 export function createTestD1Database(applyMigration = true): D1Database {
   const sqlite = new DatabaseSync(':memory:');
 
   if (applyMigration) {
-    const migrationPath = path.resolve(__dirname, '../migrations/0001_initial_schema.sql');
-    const migrationSql = fs.readFileSync(migrationPath, 'utf8');
-    sqlite.exec(migrationSql);
+    const migration1 = fs.readFileSync(
+      path.resolve(__dirname, '../migrations/0001_initial_schema.sql'),
+      'utf8'
+    );
+    sqlite.exec(migration1);
+    const migration2Path = path.resolve(__dirname, '../migrations/0002_auth_and_profiles.sql');
+    if (fs.existsSync(migration2Path)) {
+      const migration2 = fs.readFileSync(migration2Path, 'utf8');
+      sqlite.exec(migration2);
+    }
   }
 
-  const createPreparedStatement = (query: string, boundValues: unknown[] = []): D1PreparedStatement => {
+  const createPreparedStatement = (
+    query: string,
+    boundValues: unknown[] = []
+  ): D1PreparedStatement => {
     return {
       bind(...values: unknown[]) {
         return createPreparedStatement(query, values);
       },
       async first<T = unknown>(colName?: string): Promise<T | null> {
         const stmt = sqlite.prepare(query);
-        const row = stmt.get(...(boundValues as (string | number | bigint | boolean | null)[])) as Record<string, unknown> | undefined;
+        const row = stmt.get(...(boundValues as (string | number | bigint | boolean | null)[])) as
+          Record<string, unknown> | undefined;
         if (!row) return null;
         if (colName) return (row[colName] ?? null) as T;
         return row as T;
       },
       async all<T = unknown>(): Promise<D1Result<T>> {
         const stmt = sqlite.prepare(query);
-        const results = stmt.all(...(boundValues as (string | number | bigint | boolean | null)[])) as T[];
+        const results = stmt.all(
+          ...(boundValues as (string | number | bigint | boolean | null)[])
+        ) as T[];
         return {
           results,
           success: true,
@@ -94,4 +111,38 @@ export function createTestD1Database(applyMigration = true): D1Database {
   };
 
   return d1;
+}
+
+export async function createTestParentToken(
+  parentId = 'parent_default',
+  email = 'parent@math-archer.local',
+  name = 'Demo Parent'
+): Promise<string> {
+  return await signToken(
+    {
+      sub: parentId,
+      role: 'parent',
+      email,
+      name,
+      exp: Math.floor(Date.now() / 1000) + 86400,
+    },
+    TEST_JWT_SECRET
+  );
+}
+
+export async function createTestChildToken(
+  childId = 'player-local',
+  name = 'Alex',
+  parentId = 'parent_default'
+): Promise<string> {
+  return await signToken(
+    {
+      sub: childId,
+      role: 'child',
+      name,
+      parentId,
+      exp: Math.floor(Date.now() / 1000) + 86400,
+    },
+    TEST_JWT_SECRET
+  );
 }

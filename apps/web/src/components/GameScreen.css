@@ -693,20 +693,186 @@
   background: #15803d;
 }
 
-/* Mobile Responsiveness */
-@media (max-width: 480px) {
+/* Responsive Multi-Device Styles (Task 8.2) */
+
+/* Small Phone Portrait (<= 380px, e.g. iPhone SE, 320px–375px) */
+@media (max-width: 380px) {
+  .game-container {
+    padding: 10px 6px;
+    max-width: 100%;
+  }
+  .archer-stage,
+  .archer-header {
+    margin-bottom: 12px;
+  }
+  .archer-icon {
+    font-size: 40px;
+  }
+  .game-title-badge {
+    font-size: 11px;
+  }
+  .target-card {
+    padding: 14px 10px;
+    margin-bottom: 16px;
+    border-radius: 16px;
+    border-width: 2px;
+  }
   .question-expression {
-    font-size: 42px;
+    font-size: 32px;
+  }
+  .target-subtext {
+    font-size: 12px;
+  }
+  .answers-grid {
+    gap: 8px;
+    margin-bottom: 18px;
+  }
+  .arrow-button {
+    padding: 8px 10px;
+    min-height: 64px; /* Accessible touch target >= 48px */
+    border-radius: 12px;
+  }
+  .arrow-element-content {
+    gap: 4px;
+  }
+  .element-icon {
+    font-size: 20px;
+  }
+  .element-label {
+    font-size: 10px;
+    font-weight: 700;
+  }
+  .arrow-value {
+    font-size: 24px;
+    font-weight: 800;
+  }
+  .keyboard-shortcut-hint {
+    display: none; /* Hide keyboard hints on touch mobile */
+  }
+  .game-mode-selector-bar {
+    padding: 6px 8px;
+    gap: 6px;
+    flex-wrap: wrap;
+  }
+  .game-mode-tab {
+    padding: 4px 10px;
+    font-size: 12px;
+    min-height: 36px;
+  }
+  .progress-section {
+    padding: 8px 12px;
+  }
+  .arrow-counter {
+    font-size: 13px;
+  }
+}
+
+/* Medium / Large Phone Portrait (381px - 540px, e.g. iPhone 12/14/15, Pixel) */
+@media (min-width: 381px) and (max-width: 540px) {
+  .game-container {
+    padding: 14px 12px;
+    max-width: 100%;
+  }
+  .archer-stage,
+  .archer-header {
+    margin-bottom: 16px;
+  }
+  .archer-icon {
+    font-size: 46px;
+  }
+  .target-card {
+    padding: 18px 14px;
+    margin-bottom: 20px;
+  }
+  .question-expression {
+    font-size: 38px;
+  }
+  .answers-grid {
+    gap: 12px;
+    margin-bottom: 24px;
   }
   .arrow-button {
     padding: 12px 14px;
-    min-height: 72px;
+    min-height: 72px; /* High-comfort touch target */
+    border-radius: 14px;
   }
   .element-icon {
-    font-size: 26px;
+    font-size: 24px;
+  }
+  .element-label {
+    font-size: 11px;
   }
   .arrow-value {
     font-size: 28px;
+  }
+  .keyboard-shortcut-hint {
+    display: none;
+  }
+}
+
+/* Tablet Landscape & Landscape Viewports (Short Height) */
+@media (min-width: 768px) and (orientation: landscape) and (max-height: 700px) {
+  .game-container {
+    padding: 10px 16px;
+    max-width: 740px;
+  }
+  .archer-stage,
+  .archer-header {
+    margin-bottom: 8px;
+  }
+  .archer-icon {
+    font-size: 38px;
+  }
+  .target-card {
+    padding: 12px 18px;
+    margin-bottom: 12px;
+    max-width: 440px;
+  }
+  .question-expression {
+    font-size: 36px;
+  }
+  .answers-grid {
+    gap: 10px;
+    margin-bottom: 14px;
+    max-width: 460px;
+  }
+  .arrow-button {
+    padding: 10px 14px;
+    min-height: 64px;
+  }
+  .arrow-value {
+    font-size: 26px;
+  }
+  .feedback-banner {
+    padding: 6px 14px;
+    margin-bottom: 8px;
+    font-size: 14px;
+  }
+}
+
+/* Desktop Screens (>= 1200px) */
+@media (min-width: 1200px) {
+  .game-container {
+    max-width: 720px;
+    padding: 32px 24px;
+  }
+  .target-card {
+    max-width: 520px;
+    padding: 32px 28px;
+  }
+  .question-expression {
+    font-size: 52px;
+  }
+  .answers-grid {
+    max-width: 520px;
+    gap: 18px;
+  }
+  .arrow-button {
+    min-height: 84px;
+    padding: 18px 22px;
+  }
+  .arrow-value {
+    font-size: 32px;
   }
 }
 

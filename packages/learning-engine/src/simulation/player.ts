@@ -109,7 +109,8 @@ export const PRESET_BEHAVIORS: Record<SimulatedProfilePreset, SimulatedChildBeha
 export function resolveChildBehavior(config: PlayerSimulationConfig): SimulatedChildBehavior {
   const presetBehavior = config.preset ? PRESET_BEHAVIORS[config.preset] : {};
 
-  const strengths = config.strengths ?? config.behavior?.strengths ?? presetBehavior.strengths ?? [];
+  const strengths =
+    config.strengths ?? config.behavior?.strengths ?? presetBehavior.strengths ?? [];
   const weaknesses =
     config.weaknesses ?? config.behavior?.weaknesses ?? presetBehavior.weaknesses ?? [];
 
@@ -130,14 +131,15 @@ export function resolveChildBehavior(config: PlayerSimulationConfig): SimulatedC
     baseAccuracy: config.behavior?.baseAccuracy ?? presetBehavior.baseAccuracy ?? 0.75,
     strengthAccuracy: config.behavior?.strengthAccuracy ?? presetBehavior.strengthAccuracy ?? 0.95,
     weaknessAccuracy: config.behavior?.weaknessAccuracy ?? presetBehavior.weaknessAccuracy ?? 0.35,
-    baseResponseTimeMs: config.behavior?.baseResponseTimeMs ?? presetBehavior.baseResponseTimeMs ?? 3000,
+    baseResponseTimeMs:
+      config.behavior?.baseResponseTimeMs ?? presetBehavior.baseResponseTimeMs ?? 3000,
     strengthResponseTimeMs:
       config.behavior?.strengthResponseTimeMs ?? presetBehavior.strengthResponseTimeMs ?? 1900,
     weaknessResponseTimeMs:
       config.behavior?.weaknessResponseTimeMs ?? presetBehavior.weaknessResponseTimeMs ?? 6500,
     hintProbability: config.behavior?.hintProbability ?? presetBehavior.hintProbability ?? 0.05,
     weaknessHintProbability:
-      config.behavior?.weaknessHintProbability ?? presetBehavior.weaknessHintProbability ?? 0.30,
+      config.behavior?.weaknessHintProbability ?? presetBehavior.weaknessHintProbability ?? 0.3,
     learningRate: config.behavior?.learningRate ?? presetBehavior.learningRate,
     systematicMistakes:
       config.behavior?.systematicMistakes ?? presetBehavior.systematicMistakes ?? [],
@@ -181,7 +183,11 @@ export function simulatePlayer(config: PlayerSimulationConfig): SimulationResult
 
     // 2. Check if a systematic mistake rule applies to this question
     const systematicRule = behavior.systematicMistakes?.find((rule) => {
-      if (rule.pairKey && rule.pairKey === `${question.left} ${question.operation === 'add' ? '+' : '-'} ${question.right}`) {
+      if (
+        rule.pairKey &&
+        rule.pairKey ===
+          `${question.left} ${question.operation === 'add' ? '+' : '-'} ${question.right}`
+      ) {
         return true;
       }
       if (
@@ -238,7 +244,10 @@ export function simulatePlayer(config: PlayerSimulationConfig): SimulationResult
         if (wrongChoices.length > 0) {
           // Prefer common mistake distractor if available
           const commonMistake = wrongChoices.find((c) => c.category === 'common_mistake');
-          const picked = commonMistake && rng() < 0.7 ? commonMistake : wrongChoices[Math.floor(rng() * wrongChoices.length)];
+          const picked =
+            commonMistake && rng() < 0.7
+              ? commonMistake
+              : wrongChoices[Math.floor(rng() * wrongChoices.length)];
           selectedAnswer = picked.value;
           category = picked.category;
         } else {
@@ -270,7 +279,7 @@ export function simulatePlayer(config: PlayerSimulationConfig): SimulationResult
 
     // 6. Calculate hint usage
     const hintProb = isWeakness
-      ? (behavior.weaknessHintProbability ?? 0.30)
+      ? (behavior.weaknessHintProbability ?? 0.3)
       : (behavior.hintProbability ?? 0.05);
     const hintUsed = !correct && rng() < hintProb;
 
@@ -328,8 +337,10 @@ export function simulatePlayer(config: PlayerSimulationConfig): SimulationResult
     recommendation,
     summary: {
       totalAttempts: attempts.length,
-      overallAccuracy: attempts.length > 0 ? Number((totalCorrect / attempts.length).toFixed(4)) : 0,
-      averageResponseTimeMs: attempts.length > 0 ? Math.round(totalResponseTime / attempts.length) : 0,
+      overallAccuracy:
+        attempts.length > 0 ? Number((totalCorrect / attempts.length).toFixed(4)) : 0,
+      averageResponseTimeMs:
+        attempts.length > 0 ? Math.round(totalResponseTime / attempts.length) : 0,
       hintRate: attempts.length > 0 ? Number((totalHints / attempts.length).toFixed(4)) : 0,
       skillBreakdown,
     },
@@ -494,8 +505,8 @@ export function simulateSessions(
 
       // 6. Calculate hint usage
       const hintProb = isWeakness
-        ? behavior.weaknessHintProbability ?? 0.30
-        : behavior.hintProbability ?? 0.05;
+        ? (behavior.weaknessHintProbability ?? 0.3)
+        : (behavior.hintProbability ?? 0.05);
       const hintUsed = !correct && rng() < hintProb;
 
       simulatedTimestampMs += responseTimeMs + 2000;
@@ -582,9 +593,7 @@ export function simulateSessions(
 
   for (const skill of allEncounteredSkills) {
     const sessionQuestionCounts = sessions.map((sess) => sess.questionCounts[skill] ?? 0);
-    const sessionQuestionPercentages = sessions.map(
-      (sess) => sess.questionPercentages[skill] ?? 0
-    );
+    const sessionQuestionPercentages = sessions.map((sess) => sess.questionPercentages[skill] ?? 0);
     const sessionAccuracies = sessions.map((sess) => sess.accuracyPerSkill[skill] ?? 0);
     const sessionScores = sessions.map((sess) => sess.scorePerSkill[skill] ?? 0);
     const sessionMasteryLevels = sessions.map((sess) => sess.masteryPerSkill[skill] ?? 'weak');
@@ -621,4 +630,3 @@ export function simulateSessions(
  * Alias for simulateSessions representing the complete learning loop test runner.
  */
 export const simulateLearningLoop = simulateSessions;
-

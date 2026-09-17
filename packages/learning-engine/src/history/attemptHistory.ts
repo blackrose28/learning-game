@@ -8,11 +8,7 @@ import { getDefaultStorage } from '../session/storage';
 import type { SessionStorageAdapter } from '../session/types';
 import { getOrCreateProfile, getProfileStorageKey } from '../skills/storage';
 import type { Attempt, SkillProfile } from '../skills/types';
-import type {
-  AttemptQueryOptions,
-  AttemptSummaryStats,
-  LocalProgress,
-} from './types';
+import type { AttemptQueryOptions, AttemptSummaryStats, LocalProgress } from './types';
 
 export const ATTEMPT_STORAGE_KEY_PREFIX = 'math_archer_attempts_';
 
@@ -205,9 +201,7 @@ export function computeAttemptStats(attempts: readonly Attempt[]): AttemptSummar
     additionAttempts > 0 ? Number((additionCorrect / additionAttempts).toFixed(4)) : 0;
 
   const subtractionAttempts = attempts.filter((a) => a.operation === 'subtract').length;
-  const subtractionCorrect = attempts.filter(
-    (a) => a.operation === 'subtract' && a.correct
-  ).length;
+  const subtractionCorrect = attempts.filter((a) => a.operation === 'subtract' && a.correct).length;
   const subtractionAccuracy =
     subtractionAttempts > 0 ? Number((subtractionCorrect / subtractionAttempts).toFixed(4)) : 0;
 
@@ -274,4 +268,3 @@ export function clearLocalProgress(
   clearDailySessions(storage, playerId);
   storage.removeItem(getProfileStorageKey(playerId));
 }
-

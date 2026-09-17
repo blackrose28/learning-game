@@ -7,6 +7,7 @@ Welcome to the documentation for **Math Archer**, an adaptive math game for chil
 ```text
 Math Archer/
 ├── apps/
+│   ├── api/                # Cloudflare Worker API + D1 Database
 │   └── web/                # Main React + Vite web client (PWA)
 ├── packages/
 │   └── learning-engine/    # Standalone math question generator and skill tracking engine
@@ -29,7 +30,13 @@ pnpm install
 ### Development
 
 ```bash
-# Start web app
+# Apply local D1 database migrations (first time or schema change)
+pnpm db:migrate
+
+# Start backend Worker API (http://localhost:8787)
+pnpm dev:api
+
+# Start web app (http://localhost:5173)
 pnpm dev
 
 # Run unit tests across all packages

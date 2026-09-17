@@ -1,0 +1,146 @@
+/* App.css - Overall Responsive Layout & Safe Area Styling */
+
+:root {
+  --app-max-width: 860px;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  background-color: #f8fafc;
+  color: #1f2937;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  /* Prevent horizontal bouncing/scrolling on mobile devices */
+  overflow-x: hidden;
+}
+
+.app-main-container {
+  max-width: var(--app-max-width);
+  margin: 24px auto;
+  padding: 0 16px;
+  box-sizing: border-box;
+  width: 100%;
+  padding-top: max(12px, env(safe-area-inset-top));
+  padding-bottom: max(24px, env(safe-area-inset-bottom));
+  padding-left: max(16px, env(safe-area-inset-left));
+  padding-right: max(16px, env(safe-area-inset-right));
+}
+
+.app-header {
+  border-bottom: 2px solid #e5e7eb;
+  padding-bottom: 16px;
+  margin-bottom: 24px;
+}
+
+.app-header-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.app-title {
+  margin: 0;
+  font-size: 30px;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: #0f172a;
+}
+
+.app-subtitle {
+  margin: 4px 0 0;
+  color: #64748b;
+  font-size: 14px;
+}
+
+/* Header Navigation Bar */
+.app-nav {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-top: 16px;
+}
+
+.nav-tab-btn {
+  padding: 10px 16px;
+  border-radius: 8px;
+  font-weight: 700;
+  cursor: pointer;
+  font-size: 14px;
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  transition: all 0.15s ease;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
+}
+
+.nav-tab-btn.active {
+  border: 2px solid #2563eb;
+  background: #eff6ff;
+  color: #1e40af;
+}
+
+.nav-tab-btn:not(.active) {
+  border: 2px solid #e2e8f0;
+  background: #ffffff;
+  color: #475569;
+}
+
+.nav-tab-btn:hover:not(.active) {
+  background: #f1f5f9;
+  border-color: #cbd5e1;
+}
+
+/* Mobile Responsiveness (Small & Large Phones) */
+@media (max-width: 540px) {
+  .app-main-container {
+    margin: 8px auto;
+    padding-left: max(10px, env(safe-area-inset-left));
+    padding-right: max(10px, env(safe-area-inset-right));
+  }
+
+  .app-header {
+    margin-bottom: 16px;
+    padding-bottom: 12px;
+  }
+
+  .app-title {
+    font-size: 24px;
+  }
+
+  .app-subtitle {
+    font-size: 13px;
+  }
+
+  .app-nav {
+    gap: 6px;
+    margin-top: 12px;
+  }
+
+  .nav-tab-btn {
+    padding: 8px 12px;
+    font-size: 13px;
+    min-height: 44px;
+    flex: 1 1 calc(50% - 6px);
+    justify-content: center;
+  }
+}
+
+/* Ultra-compact screen (<= 340px) */
+@media (max-width: 340px) {
+  .app-title {
+    font-size: 20px;
+  }
+  .nav-tab-btn {
+    font-size: 12px;
+    padding: 6px 8px;
+  }
+}
+

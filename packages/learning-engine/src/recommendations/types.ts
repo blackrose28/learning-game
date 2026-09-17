@@ -73,4 +73,3 @@ export interface PracticeRecommendation {
   weakPairs?: WeakPairSummary[];
   generatedAt: string;
 }
-
