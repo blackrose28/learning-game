@@ -7,12 +7,20 @@ import type {
   MasteryLevel,
   Operation,
   HintLevel,
+  WorldProgressionState,
+  WorldAreaId,
+  PlayerRewardsState,
+  EquippedCosmetics,
 } from '@math-archer/learning-engine';
 import {
   createEmptyProfile,
   recordAttempt,
   computeAttemptStats,
   generatePracticeRecommendation,
+  computeUnlockedAreas,
+  calculateLevel,
+  getDefaultTomorrowReward,
+  DEFAULT_EQUIPPED,
   type PracticeRecommendation,
 } from '@math-archer/learning-engine';
 import type { ParentRecord, ParentPublic, ChildProfileRecord, ChildPublicProfile } from './types';
@@ -129,6 +137,40 @@ export async function getTodaySessionFromDb(
     startedAt: row.started_at,
     completedAt: row.completed_at ?? undefined,
   };
+}
+
+export async function getAllSessionsForPlayer(
+  db: D1Database,
+  playerId: string
+): Promise<DailySession[]> {
+  const rows = await db
+    .prepare(`SELECT * FROM sessions WHERE player_id = ? ORDER BY date ASC`)
+    .bind(playerId)
+    .all<{
+      id: string;
+      player_id: string;
+      date: string;
+      arrows_allowed: number;
+      arrows_used: number;
+      hits: number;
+      status: 'in_progress' | 'completed';
+      started_at: string;
+      completed_at: string | null;
+    }>();
+
+  if (!rows.results) return [];
+
+  return rows.results.map((row) => ({
+    id: row.id,
+    playerId: row.player_id,
+    date: row.date,
+    arrowsAllowed: row.arrows_allowed,
+    arrowsUsed: row.arrows_used,
+    hits: row.hits,
+    status: row.status,
+    startedAt: row.started_at,
+    completedAt: row.completed_at ?? undefined,
+  }));
 }
 
 export async function countDailyAdventureAttempts(
@@ -398,6 +440,250 @@ export async function getAllAttemptsForPlayer(
   }));
 }
 
+export async function loadWorldProgressionFromDb(
+  db: D1Database,
+  playerId: string
+): Promise<WorldProgressionState | null> {
+  const row = await db
+    .prepare(`SELECT * FROM player_world_progression WHERE player_id = ?`)
+    .bind(playerId)
+    .first<{
+      player_id: string;
+      active_area_id: string;
+      completed_sessions_count: number;
+      unlocked_area_ids: string;
+      updated_at: string;
+    }>();
+
+  if (!row) return null;
+
+  let unlockedAreaIds: WorldAreaId[] = ['castle'];
+  try {
+    const parsed = JSON.parse(row.unlocked_area_ids);
+    if (Array.isArray(parsed) && parsed.length > 0) {
+      unlockedAreaIds = parsed as WorldAreaId[];
+    }
+  } catch {
+    unlockedAreaIds = ['castle'];
+  }
+
+  const lastUnlockedAreaId = unlockedAreaIds[unlockedAreaIds.length - 1] ?? 'castle';
+
+  return {
+    playerId: row.player_id,
+    activeAreaId: row.active_area_id as WorldAreaId,
+    completedSessionsCount: row.completed_sessions_count,
+    unlockedAreaIds,
+    lastUnlockedAreaId,
+  };
+}
+
+export async function saveWorldProgressionToDb(
+  db: D1Database,
+  playerId: string,
+  progression: Partial<WorldProgressionState>
+): Promise<WorldProgressionState> {
+  await ensurePlayer(db, playerId);
+
+  const existing = await loadWorldProgressionFromDb(db, playerId);
+  const completedSessionsCount =
+    progression.completedSessionsCount ?? existing?.completedSessionsCount ?? 0;
+  const unlockedAreaIds =
+    progression.unlockedAreaIds ??
+    existing?.unlockedAreaIds ??
+    computeUnlockedAreas(completedSessionsCount);
+  const activeAreaId = (progression.activeAreaId ?? existing?.activeAreaId ?? 'castle') as WorldAreaId;
+  const lastUnlockedAreaId = unlockedAreaIds[unlockedAreaIds.length - 1] ?? 'castle';
+  const now = new Date().toISOString();
+
+  await db
+    .prepare(
+      `INSERT INTO player_world_progression (player_id, active_area_id, completed_sessions_count, unlocked_area_ids, updated_at)
+       VALUES (?, ?, ?, ?, ?)
+       ON CONFLICT(player_id) DO UPDATE SET
+         active_area_id = excluded.active_area_id,
+         completed_sessions_count = excluded.completed_sessions_count,
+         unlocked_area_ids = excluded.unlocked_area_ids,
+         updated_at = excluded.updated_at`
+    )
+    .bind(playerId, activeAreaId, completedSessionsCount, JSON.stringify(unlockedAreaIds), now)
+    .run();
+
+  return {
+    playerId,
+    activeAreaId,
+    completedSessionsCount,
+    unlockedAreaIds,
+    lastUnlockedAreaId,
+  };
+}
+
+export async function loadPlayerRewardsFromDb(
+  db: D1Database,
+  playerId: string
+): Promise<PlayerRewardsState | null> {
+  const row = await db
+    .prepare(`SELECT * FROM player_rewards WHERE player_id = ?`)
+    .bind(playerId)
+    .first<{
+      player_id: string;
+      total_xp: number;
+      level: number;
+      current_streak: number;
+      best_streak: number;
+      last_active_date: string | null;
+      unlocked_cosmetic_ids: string;
+      equipped_cosmetics: string;
+      unlocked_achievement_ids: string;
+      achievement_progress: string;
+      updated_at: string;
+    }>();
+
+  if (!row) return null;
+
+  const totalXp = Number(row.total_xp) || 0;
+  const levelInfo = calculateLevel(totalXp);
+
+  let unlockedCosmetics: string[] = [];
+  try {
+    const parsed = JSON.parse(row.unlocked_cosmetic_ids);
+    if (Array.isArray(parsed)) unlockedCosmetics = parsed;
+  } catch {
+    unlockedCosmetics = [];
+  }
+
+  let equippedCosmetics: EquippedCosmetics = DEFAULT_EQUIPPED;
+  try {
+    const parsed = JSON.parse(row.equipped_cosmetics);
+    if (parsed && typeof parsed === 'object') {
+      equippedCosmetics = { ...DEFAULT_EQUIPPED, ...parsed };
+    }
+  } catch {
+    equippedCosmetics = DEFAULT_EQUIPPED;
+  }
+
+  let unlockedAchievements: string[] = [];
+  try {
+    const parsed = JSON.parse(row.unlocked_achievement_ids);
+    if (Array.isArray(parsed)) unlockedAchievements = parsed;
+  } catch {
+    unlockedAchievements = [];
+  }
+
+  let achievementProgress: Record<string, number> = {};
+  try {
+    const parsed = JSON.parse(row.achievement_progress);
+    if (parsed && typeof parsed === 'object') achievementProgress = parsed;
+  } catch {
+    achievementProgress = {};
+  }
+
+  const currentStreak = Number(row.current_streak) || 0;
+  const bestStreak = Number(row.best_streak) || 0;
+
+  return {
+    playerId,
+    totalXp,
+    level: levelInfo.level,
+    currentLevelXp: levelInfo.currentLevelXp,
+    nextLevelXp: levelInfo.nextLevelXp,
+    levelProgressPct: levelInfo.levelProgressPct,
+    levelTitle: levelInfo.title,
+    currentStreak,
+    bestStreak,
+    lastActiveDate: row.last_active_date,
+    unlockedCosmeticIds: unlockedCosmetics,
+    equippedCosmetics,
+    unlockedAchievementIds: unlockedAchievements,
+    achievementProgress,
+    tomorrowReward: getDefaultTomorrowReward(currentStreak),
+  };
+}
+
+export async function savePlayerRewardsToDb(
+  db: D1Database,
+  playerId: string,
+  rewards: Partial<PlayerRewardsState>
+): Promise<PlayerRewardsState> {
+  await ensurePlayer(db, playerId);
+
+  const existing = await loadPlayerRewardsFromDb(db, playerId);
+  const totalXp = Math.max(0, rewards.totalXp ?? existing?.totalXp ?? 0);
+  const levelInfo = calculateLevel(totalXp);
+  const currentStreak = rewards.currentStreak ?? existing?.currentStreak ?? 0;
+  const bestStreak = Math.max(rewards.bestStreak ?? existing?.bestStreak ?? 0, currentStreak);
+  const lastActiveDate =
+    rewards.lastActiveDate !== undefined ? rewards.lastActiveDate : (existing?.lastActiveDate ?? null);
+
+  const unlockedCosmetics = Array.from(
+    new Set([...(existing?.unlockedCosmeticIds ?? []), ...(rewards.unlockedCosmeticIds ?? [])])
+  );
+  const equippedCosmetics: EquippedCosmetics = {
+    ...(existing?.equippedCosmetics ?? DEFAULT_EQUIPPED),
+    ...(rewards.equippedCosmetics ?? {}),
+  };
+  const unlockedAchievements = Array.from(
+    new Set([...(existing?.unlockedAchievementIds ?? []), ...(rewards.unlockedAchievementIds ?? [])])
+  );
+  const achievementProgress = {
+    ...(existing?.achievementProgress ?? {}),
+    ...(rewards.achievementProgress ?? {}),
+  };
+  const now = new Date().toISOString();
+
+  await db
+    .prepare(
+      `INSERT INTO player_rewards (
+        player_id, total_xp, level, current_streak, best_streak, last_active_date,
+        unlocked_cosmetic_ids, equipped_cosmetics, unlocked_achievement_ids,
+        achievement_progress, updated_at
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      ON CONFLICT(player_id) DO UPDATE SET
+        total_xp = excluded.total_xp,
+        level = excluded.level,
+        current_streak = excluded.current_streak,
+        best_streak = excluded.best_streak,
+        last_active_date = excluded.last_active_date,
+        unlocked_cosmetic_ids = excluded.unlocked_cosmetic_ids,
+        equipped_cosmetics = excluded.equipped_cosmetics,
+        unlocked_achievement_ids = excluded.unlocked_achievement_ids,
+        achievement_progress = excluded.achievement_progress,
+        updated_at = excluded.updated_at`
+    )
+    .bind(
+      playerId,
+      totalXp,
+      levelInfo.level,
+      currentStreak,
+      bestStreak,
+      lastActiveDate,
+      JSON.stringify(unlockedCosmetics),
+      JSON.stringify(equippedCosmetics),
+      JSON.stringify(unlockedAchievements),
+      JSON.stringify(achievementProgress),
+      now
+    )
+    .run();
+
+  return {
+    playerId,
+    totalXp,
+    level: levelInfo.level,
+    currentLevelXp: levelInfo.currentLevelXp,
+    nextLevelXp: levelInfo.nextLevelXp,
+    levelProgressPct: levelInfo.levelProgressPct,
+    levelTitle: levelInfo.title,
+    currentStreak,
+    bestStreak,
+    lastActiveDate,
+    unlockedCosmeticIds: unlockedCosmetics,
+    equippedCosmetics,
+    unlockedAchievementIds: unlockedAchievements,
+    achievementProgress,
+    tomorrowReward: getDefaultTomorrowReward(currentStreak),
+  };
+}
+
 export async function getPlayerProgressFromDb(
   db: D1Database,
   playerId: string,
@@ -406,17 +692,28 @@ export async function getPlayerProgressFromDb(
   profile: SkillProfile;
   stats: AttemptSummaryStats;
   currentSession: DailySession | null;
+  sessions: DailySession[];
+  attempts: Attempt[];
+  worldProgression: WorldProgressionState | null;
+  rewards: PlayerRewardsState | null;
 }> {
   const targetDate = date ?? new Date().toISOString().slice(0, 10);
   const profile = await loadSkillProfileFromDb(db, playerId);
   const attempts = await getAllAttemptsForPlayer(db, playerId);
   const stats = computeAttemptStats(attempts);
   const currentSession = await getTodaySessionFromDb(db, playerId, targetDate);
+  const sessions = await getAllSessionsForPlayer(db, playerId);
+  const worldProgression = await loadWorldProgressionFromDb(db, playerId);
+  const rewards = await loadPlayerRewardsFromDb(db, playerId);
 
   return {
     profile,
     stats,
     currentSession,
+    sessions,
+    attempts,
+    worldProgression,
+    rewards,
   };
 }
 

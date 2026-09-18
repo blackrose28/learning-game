@@ -4,6 +4,8 @@ import type {
   SkillProfile,
   AttemptSummaryStats,
   PracticeRecommendation,
+  WorldProgressionState,
+  PlayerRewardsState,
 } from '@math-archer/learning-engine';
 
 export interface ParentPublic {
@@ -42,6 +44,20 @@ export interface ProgressResponse {
   profile: SkillProfile;
   stats: AttemptSummaryStats;
   currentSession: DailySession | null;
+  sessions?: DailySession[];
+  attempts?: Attempt[];
+  worldProgression?: WorldProgressionState | null;
+  rewards?: PlayerRewardsState | null;
+}
+
+export interface UpdateWorldResponse {
+  success: boolean;
+  worldProgression: WorldProgressionState;
+}
+
+export interface UpdateRewardsResponse {
+  success: boolean;
+  rewards: PlayerRewardsState;
 }
 
 export interface RecommendationsResponse {
@@ -130,8 +146,13 @@ export class MathArcherApiClient {
 
   private getHeaders(extraHeaders: Record<string, string> = {}): Record<string, string> {
     const headers: Record<string, string> = { ...extraHeaders };
-    if (this.token) {
-      headers['Authorization'] = `Bearer ${this.token}`;
+    const token =
+      this.token ||
+      (typeof localStorage !== 'undefined'
+        ? localStorage.getItem('math_archer_auth_token')
+        : null);
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`;
     }
     return headers;
   }
@@ -445,6 +466,42 @@ export class MathArcherApiClient {
     const res = await this.fetchFn(this.url(`/api/recommendations?${query.toString()}`), {
       method: 'GET',
       headers: this.getHeaders(),
+    });
+
+    if (!res.ok) {
+      const err = await parseApiError(res);
+      throw new ApiError(err.message, res.status, err.code);
+    }
+
+    return res.json();
+  }
+
+  async updateWorldProgression(
+    data: Partial<WorldProgressionState>,
+    playerId?: string
+  ): Promise<UpdateWorldResponse> {
+    const res = await this.fetchFn(this.url('/api/progress/world'), {
+      method: 'PUT',
+      headers: this.getHeaders({ 'Content-Type': 'application/json' }),
+      body: JSON.stringify({ ...data, ...(playerId ? { playerId } : {}) }),
+    });
+
+    if (!res.ok) {
+      const err = await parseApiError(res);
+      throw new ApiError(err.message, res.status, err.code);
+    }
+
+    return res.json();
+  }
+
+  async updatePlayerRewards(
+    data: Partial<PlayerRewardsState>,
+    playerId?: string
+  ): Promise<UpdateRewardsResponse> {
+    const res = await this.fetchFn(this.url('/api/progress/rewards'), {
+      method: 'PUT',
+      headers: this.getHeaders({ 'Content-Type': 'application/json' }),
+      body: JSON.stringify({ ...data, ...(playerId ? { playerId } : {}) }),
     });
 
     if (!res.ok) {

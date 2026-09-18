@@ -54,6 +54,7 @@ import { RangeBackdrop } from './RangeBackdrop';
 import { WorldMap } from './WorldMap';
 import { audioFx } from '../audio/AudioFx';
 import { useGamepad, XboxButton } from '../input/useGamepad';
+import { useSafeAuth } from '../context/AuthContext';
 
 export type GameMode = 'adventure' | 'training' | 'challenge';
 
@@ -238,6 +239,7 @@ export const GameScreen: React.FC<GameScreenProps> = ({
 }) => {
   // Game mode (Adventure vs Training, Task 4.2 & Task 4.3)
   const [gameMode, setGameMode] = useState<GameMode>(mode);
+  const auth = useSafeAuth();
 
   // World Progression & Active Realm State (Task 9.3)
   const [worldProgression, setWorldProgression] = useState(() =>
@@ -265,6 +267,7 @@ export const GameScreen: React.FC<GameScreenProps> = ({
     setWorldProgression(updated);
     onAreaChange?.(areaId);
     setIsWorldMapOpen(false);
+    auth?.apiClient.updateWorldProgression(updated, playerId).catch(() => {});
   };
 
   // Player Rewards & Cosmetic State (Task 9.4)
@@ -283,6 +286,7 @@ export const GameScreen: React.FC<GameScreenProps> = ({
       new SyncManager({
         playerId,
         storage,
+        apiClient: auth?.apiClient,
       })
     );
   });
@@ -660,6 +664,7 @@ export const GameScreen: React.FC<GameScreenProps> = ({
 
       setPlayerRewards(attemptRewards.nextState);
       savePlayerRewards(attemptRewards.nextState, storage);
+      auth?.apiClient.updatePlayerRewards(attemptRewards.nextState, playerId).catch(() => {});
 
       if (correct) {
         setConsecutiveHitsCount((prev) => prev + 1);
@@ -707,6 +712,8 @@ export const GameScreen: React.FC<GameScreenProps> = ({
           });
           setPlayerRewards(sessionRewards.nextState);
           savePlayerRewards(sessionRewards.nextState, storage);
+          auth?.apiClient.updatePlayerRewards(sessionRewards.nextState, playerId).catch(() => {});
+          auth?.apiClient.updateWorldProgression(updatedProg, playerId).catch(() => {});
 
           setIsCompleted(true);
           setIsTransitioning(false);

@@ -133,6 +133,25 @@ export const AuthProvider: React.FC<{
     }
   }, [activeChild]);
 
+  // Auto-authenticate default/active child profile on startup if no auth token is set
+  useEffect(() => {
+    const existingToken = apiClient.getAuthToken();
+    if (!existingToken && activeChild) {
+      const pinToTry =
+        activeChild.id === 'player-local' ? '1234' : !activeChild.hasPin ? undefined : undefined;
+      if (pinToTry !== undefined || !activeChild.hasPin) {
+        apiClient
+          .loginChild(activeChild.id, pinToTry)
+          .then((res) => {
+            setActiveChild(res.child);
+          })
+          .catch(() => {
+            // Offline or server unreachable; keep local profile seamlessly
+          });
+      }
+    }
+  }, [apiClient, activeChild]);
+
   const loginAsChild = useCallback(
     async (childId: string, pin?: string): Promise<boolean> => {
       setIsLoading(true);

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   getEngineInfo,
   solveExpression,
@@ -17,20 +17,36 @@ import { WorldMap } from './components/WorldMap';
 import { RewardsScreen } from './components/RewardsScreen';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { useGamepad, XboxButton } from './input/useGamepad';
+import { hydratePlayerProgress } from './sync';
 import './App.css';
 
 const APP_TABS = ['game', 'world', 'rewards', 'dashboard', 'history', 'curriculum'] as const;
 
 export const AppContent: React.FC = () => {
-  const { activeChild, isParentUnlocked } = useAuth();
+  const { activeChild, isParentUnlocked, apiClient } = useAuth();
   const [activeTab, setActiveTab] = useState<
     'game' | 'world' | 'rewards' | 'dashboard' | 'history' | 'curriculum'
   >('game');
   const [progress, setProgress] = useState<LocalProgress>(() => loadLocalProgress());
+  const [syncTick, setSyncTick] = useState<number>(0);
   const [showChildPicker, setShowChildPicker] = useState<boolean>(false);
   const engineInfo = getEngineInfo();
   const curriculumLevels = getAllCurriculumLevels();
   const [sampleExpression] = useState({ left: 8, right: 7, op: 'add' as const });
+
+  // Startup and profile switch cloud hydration
+  useEffect(() => {
+    let isMounted = true;
+    hydratePlayerProgress(activeChild.id, apiClient).then(() => {
+      if (isMounted) {
+        setProgress(loadLocalProgress(activeChild.id));
+        setSyncTick((t) => t + 1);
+      }
+    });
+    return () => {
+      isMounted = false;
+    };
+  }, [activeChild.id, apiClient]);
 
   const handleSwitchTab = (
     tab: 'game' | 'world' | 'rewards' | 'dashboard' | 'history' | 'curriculum'
@@ -201,17 +217,17 @@ export const AppContent: React.FC = () => {
 
       {/* Screen Render */}
       {activeTab === 'game' ? (
-        <GameScreen key={activeChild.id} playerId={activeChild.id} />
+        <GameScreen key={`${activeChild.id}_${syncTick}`} playerId={activeChild.id} />
       ) : activeTab === 'world' ? (
         <WorldMap
-          key={activeChild.id}
+          key={`${activeChild.id}_${syncTick}`}
           playerId={activeChild.id}
           onSelectArea={() => handleSwitchTab('game')}
           onBackToGame={() => handleSwitchTab('game')}
         />
       ) : activeTab === 'rewards' ? (
         <RewardsScreen
-          key={activeChild.id}
+          key={`${activeChild.id}_${syncTick}`}
           playerId={activeChild.id}
           onBackToGame={() => handleSwitchTab('game')}
         />
@@ -219,7 +235,7 @@ export const AppContent: React.FC = () => {
         !isParentUnlocked ? (
           <ParentGate onCancel={() => handleSwitchTab('game')} />
         ) : (
-          <ParentDashboard playerId={activeChild.id} />
+          <ParentDashboard key={`${activeChild.id}_${syncTick}`} playerId={activeChild.id} />
         )
       ) : activeTab === 'history' ? (
         <section data-testid="local-progress-view">

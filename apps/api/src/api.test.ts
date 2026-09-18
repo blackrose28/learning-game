@@ -430,6 +430,110 @@ describe('Math Archer API Test Suite', () => {
           expect(data.stats?.accuracy).toBe(1);
           expect(data.currentSession).toBeDefined();
           expect(data.currentSession?.arrowsUsed).toBe(1);
+
+          // Verify extended hydration fields: sessions and attempts
+          const fullData = data as unknown as {
+            sessions?: unknown[];
+            attempts?: unknown[];
+            worldProgression?: unknown;
+            rewards?: unknown;
+          };
+          expect(fullData.sessions).toBeDefined();
+          expect(fullData.sessions?.length).toBe(1);
+          expect(fullData.attempts).toBeDefined();
+          expect(fullData.attempts?.length).toBe(1);
+        });
+      });
+
+      describe('PUT /api/progress/world & PUT /api/progress/rewards', () => {
+        it('updates and persists world progression for authenticated child', async () => {
+          const auth = await childAuth('world-player');
+          const putRes = await worker.fetch(
+            new Request('https://api.math-archer.local/api/progress/world', {
+              method: 'PUT',
+              headers: { 'Content-Type': 'application/json', ...auth },
+              body: JSON.stringify({
+                activeAreaId: 'fire_area',
+                completedSessionsCount: 2,
+                unlockedAreaIds: ['castle', 'fire_area'],
+              }),
+            }),
+            env
+          );
+          expect(putRes.status).toBe(200);
+          const putData = (await putRes.json()) as {
+            success: boolean;
+            worldProgression: {
+              activeAreaId: string;
+              completedSessionsCount: number;
+              unlockedAreaIds: string[];
+            };
+          };
+          expect(putData.success).toBe(true);
+          expect(putData.worldProgression.activeAreaId).toBe('fire_area');
+          expect(putData.worldProgression.completedSessionsCount).toBe(2);
+          expect(putData.worldProgression.unlockedAreaIds).toContain('fire_area');
+
+          // Verify GET /api/progress returns this updated world progression
+          const getRes = await worker.fetch(
+            new Request('https://api.math-archer.local/api/progress', {
+              headers: auth,
+            }),
+            env
+          );
+          expect(getRes.status).toBe(200);
+          const getData = (await getRes.json()) as {
+            worldProgression?: { activeAreaId: string; unlockedAreaIds: string[] };
+          };
+          expect(getData.worldProgression?.activeAreaId).toBe('fire_area');
+          expect(getData.worldProgression?.unlockedAreaIds).toContain('fire_area');
+        });
+
+        it('updates and persists player rewards for authenticated child', async () => {
+          const auth = await childAuth('rewards-player');
+          const putRes = await worker.fetch(
+            new Request('https://api.math-archer.local/api/progress/rewards', {
+              method: 'PUT',
+              headers: { 'Content-Type': 'application/json', ...auth },
+              body: JSON.stringify({
+                totalXp: 350,
+                currentStreak: 3,
+                unlockedCosmeticIds: ['bow_wooden', 'bow_recurve'],
+                equippedCosmetics: { bow: 'bow_recurve' },
+              }),
+            }),
+            env
+          );
+          expect(putRes.status).toBe(200);
+          const putData = (await putRes.json()) as {
+            success: boolean;
+            rewards: {
+              totalXp: number;
+              level: number;
+              currentStreak: number;
+              unlockedCosmeticIds: string[];
+              equippedCosmetics: { bow: string };
+            };
+          };
+          expect(putData.success).toBe(true);
+          expect(putData.rewards.totalXp).toBe(350);
+          expect(putData.rewards.currentStreak).toBe(3);
+          expect(putData.rewards.equippedCosmetics.bow).toBe('bow_recurve');
+          expect(putData.rewards.unlockedCosmeticIds).toContain('bow_recurve');
+
+          // Verify GET /api/progress returns the updated rewards
+          const getRes = await worker.fetch(
+            new Request('https://api.math-archer.local/api/progress', {
+              headers: auth,
+            }),
+            env
+          );
+          expect(getRes.status).toBe(200);
+          const getData = (await getRes.json()) as {
+            rewards?: { totalXp: number; equippedCosmetics: { bow: string } };
+          };
+          expect(getData.rewards?.totalXp).toBe(350);
+          expect(getData.rewards?.equippedCosmetics.bow).toBe('bow_recurve');
         });
       });
 

@@ -30,6 +30,11 @@ export function createTestD1Database(applyMigration = true): D1Database {
       const migration2 = fs.readFileSync(migration2Path, 'utf8');
       sqlite.exec(migration2);
     }
+    const migration3Path = path.resolve(__dirname, '../migrations/0003_world_and_rewards.sql');
+    if (fs.existsSync(migration3Path)) {
+      const migration3 = fs.readFileSync(migration3Path, 'utf8');
+      sqlite.exec(migration3);
+    }
   }
 
   const createPreparedStatement = (

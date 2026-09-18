@@ -27,6 +27,8 @@ import {
   verifyChildBelongsToParent,
   updateChildProfile,
   deleteChildProfile,
+  saveWorldProgressionToDb,
+  savePlayerRewardsToDb,
 } from './db';
 import {
   hashPassword,
@@ -755,6 +757,80 @@ export default {
         const date = url.searchParams.get('date') || new Date().toISOString().slice(0, 10);
         const progress = await getPlayerProgressFromDb(env.DB, targetPlayerId, date);
         return jsonResponse(progress, 200);
+      }
+
+      // PUT /api/progress/world
+      if (method === 'PUT' && pathname === '/api/progress/world') {
+        const auth = await getAuthContext(request, env);
+        if (!auth) {
+          return errorResponse(
+            'UNAUTHORIZED',
+            'Authentication token required to update world progression',
+            401
+          );
+        }
+
+        let body: Record<string, unknown>;
+        try {
+          body = (await request.json()) as Record<string, unknown>;
+        } catch {
+          return errorResponse('MALFORMED_JSON', 'Request body must be valid JSON', 400);
+        }
+
+        let targetPlayerId: string;
+        if (auth.role === 'child') {
+          targetPlayerId = auth.sub;
+        } else {
+          const playerId = body.playerId;
+          if (!playerId || typeof playerId !== 'string') {
+            return errorResponse('MISSING_PLAYER_ID', 'playerId is required', 400);
+          }
+          const childExists = await verifyChildBelongsToParent(env.DB, playerId, auth.sub);
+          if (!childExists) {
+            return errorResponse('NOT_FOUND', 'Child profile not found', 404);
+          }
+          targetPlayerId = playerId;
+        }
+
+        const worldProgression = await saveWorldProgressionToDb(env.DB, targetPlayerId, body);
+        return jsonResponse({ success: true, worldProgression }, 200);
+      }
+
+      // PUT /api/progress/rewards
+      if (method === 'PUT' && pathname === '/api/progress/rewards') {
+        const auth = await getAuthContext(request, env);
+        if (!auth) {
+          return errorResponse(
+            'UNAUTHORIZED',
+            'Authentication token required to update rewards',
+            401
+          );
+        }
+
+        let body: Record<string, unknown>;
+        try {
+          body = (await request.json()) as Record<string, unknown>;
+        } catch {
+          return errorResponse('MALFORMED_JSON', 'Request body must be valid JSON', 400);
+        }
+
+        let targetPlayerId: string;
+        if (auth.role === 'child') {
+          targetPlayerId = auth.sub;
+        } else {
+          const playerId = body.playerId;
+          if (!playerId || typeof playerId !== 'string') {
+            return errorResponse('MISSING_PLAYER_ID', 'playerId is required', 400);
+          }
+          const childExists = await verifyChildBelongsToParent(env.DB, playerId, auth.sub);
+          if (!childExists) {
+            return errorResponse('NOT_FOUND', 'Child profile not found', 404);
+          }
+          targetPlayerId = playerId;
+        }
+
+        const rewards = await savePlayerRewardsToDb(env.DB, targetPlayerId, body);
+        return jsonResponse({ success: true, rewards }, 200);
       }
 
       // 5. GET /api/recommendations
