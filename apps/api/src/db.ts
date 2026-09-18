@@ -475,6 +475,7 @@ export async function loadWorldProgressionFromDb(
     completedSessionsCount: row.completed_sessions_count,
     unlockedAreaIds,
     lastUnlockedAreaId,
+    updatedAt: row.updated_at,
   };
 }
 
@@ -494,7 +495,7 @@ export async function saveWorldProgressionToDb(
     computeUnlockedAreas(completedSessionsCount);
   const activeAreaId = (progression.activeAreaId ?? existing?.activeAreaId ?? 'castle') as WorldAreaId;
   const lastUnlockedAreaId = unlockedAreaIds[unlockedAreaIds.length - 1] ?? 'castle';
-  const now = new Date().toISOString();
+  const now = progression.updatedAt ?? new Date().toISOString();
 
   await db
     .prepare(
@@ -515,8 +516,10 @@ export async function saveWorldProgressionToDb(
     completedSessionsCount,
     unlockedAreaIds,
     lastUnlockedAreaId,
+    updatedAt: now,
   };
 }
+
 
 export async function loadPlayerRewardsFromDb(
   db: D1Database,
@@ -597,6 +600,7 @@ export async function loadPlayerRewardsFromDb(
     unlockedAchievementIds: unlockedAchievements,
     achievementProgress,
     tomorrowReward: getDefaultTomorrowReward(currentStreak),
+    updatedAt: row.updated_at,
   };
 }
 

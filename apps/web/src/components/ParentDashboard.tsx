@@ -3,16 +3,21 @@ import {
   loadParentDashboard,
   computeParentDashboardData,
   createSimulatedProfile,
+  getDefaultStorage,
   type ParentDashboardData,
   type Attempt,
   type DailySession,
+  type SessionStorageAdapter,
 } from '@math-archer/learning-engine';
 import { useSafeAuth } from '../context/AuthContext';
-import type { ChildPublicProfile } from '../api/client';
+import { hydratePlayerProgress } from '../sync';
+import type { ChildPublicProfile, MathArcherApiClient } from '../api/client';
 import './ParentDashboard.css';
 
-interface ParentDashboardProps {
+export interface ParentDashboardProps {
   playerId?: string;
+  apiClient?: MathArcherApiClient;
+  storage?: SessionStorageAdapter;
 }
 
 export const AVATAR_OPTIONS = [
@@ -206,12 +211,19 @@ function createRealisticSampleData(): ParentDashboardData {
   });
 }
 
-export const ParentDashboard: React.FC<ParentDashboardProps> = ({ playerId = 'player-local' }) => {
+export const ParentDashboard: React.FC<ParentDashboardProps> = ({
+  playerId = 'player-local',
+  apiClient,
+  storage,
+}) => {
   const authContext = useSafeAuth();
+  const activeApiClient = apiClient ?? authContext?.apiClient;
+  const storageAdapter = storage ?? getDefaultStorage();
 
   const [useSample, setUseSample] = useState<boolean>(false);
   const [data, setData] = useState<ParentDashboardData | null>(null);
   const [selectedChildId, setSelectedChildId] = useState<string>(playerId);
+  const [isHydrating, setIsHydrating] = useState<boolean>(false);
   const [showManageModal, setShowManageModal] = useState<boolean>(false);
   const [showAddChildModal, setShowAddChildModal] = useState<boolean>(false);
   const [editingChild, setEditingChild] = useState<ChildPublicProfile | null>(null);
@@ -243,18 +255,63 @@ export const ParentDashboard: React.FC<ParentDashboardProps> = ({ playerId = 'pl
   const effectivePlayerId = selectedChildId || authContext?.activeChild?.id || playerId;
   const selectedChildObj = authContext?.availableChildren.find((c) => c.id === effectivePlayerId);
 
+  const prevPlayerIdRef = React.useRef(playerId);
+  useEffect(() => {
+    if (playerId !== prevPlayerIdRef.current) {
+      prevPlayerIdRef.current = playerId;
+      setSelectedChildId(playerId);
+    }
+  }, [playerId]);
+
+  const currentChildRef = React.useRef(effectivePlayerId);
+  useEffect(() => {
+    currentChildRef.current = effectivePlayerId;
+  }, [effectivePlayerId]);
+
   const loadData = useCallback(() => {
     if (useSample) {
       setData(createRealisticSampleData());
     } else {
-      const liveData = loadParentDashboard(effectivePlayerId);
+      const liveData = loadParentDashboard(effectivePlayerId, storageAdapter);
       setData(liveData);
     }
-  }, [useSample, effectivePlayerId]);
+  }, [useSample, effectivePlayerId, storageAdapter]);
+
+  const triggerHydration = useCallback(
+    async (targetId: string) => {
+      const canHydrate = Boolean(
+        apiClient ||
+        (authContext && authContext.isAuthenticated) ||
+        activeApiClient?.getAuthToken()
+      );
+
+      if (!activeApiClient || !canHydrate || useSample) {
+        return;
+      }
+
+      setIsHydrating(true);
+      try {
+        const res = await hydratePlayerProgress(targetId, activeApiClient, storageAdapter);
+        if (res.success && currentChildRef.current === targetId && !useSample) {
+          setData(loadParentDashboard(targetId, storageAdapter));
+        }
+      } catch {
+        // Hydration errors handled gracefully without breaking UI
+      } finally {
+        if (currentChildRef.current === targetId) {
+          setIsHydrating(false);
+        }
+      }
+    },
+    [activeApiClient, apiClient, authContext, storageAdapter, useSample]
+  );
 
   useEffect(() => {
     loadData();
-  }, [loadData]);
+    if (!useSample) {
+      triggerHydration(effectivePlayerId);
+    }
+  }, [loadData, effectivePlayerId, triggerHydration, useSample]);
 
   const toggleSample = () => {
     setUseSample((prev) => !prev);
@@ -430,9 +487,16 @@ export const ParentDashboard: React.FC<ParentDashboardProps> = ({ playerId = 'pl
             type="button"
             className="btn-secondary"
             data-testid="refresh-dashboard-btn"
-            onClick={loadData}
+            disabled={isHydrating}
+            onClick={() => {
+              authContext?.refreshChildren();
+              loadData();
+              if (!useSample) {
+                triggerHydration(effectivePlayerId);
+              }
+            }}
           >
-            🔄 Refresh
+            {isHydrating ? '⏳ Syncing...' : '🔄 Refresh'}
           </button>
           {authContext && (
             <button
@@ -495,6 +559,26 @@ export const ParentDashboard: React.FC<ParentDashboardProps> = ({ playerId = 'pl
                 </button>
               );
             })}
+
+            {isHydrating && (
+              <span
+                data-testid="syncing-indicator"
+                style={{
+                  fontSize: 12,
+                  color: '#2563eb',
+                  fontWeight: 600,
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: 4,
+                  padding: '4px 10px',
+                  background: '#eff6ff',
+                  borderRadius: 12,
+                  border: '1px solid #bfdbfe',
+                }}
+              >
+                <span>⏳</span> Syncing cloud data...
+              </span>
+            )}
 
             {/* Quick Edit for current child */}
             {selectedChildObj && (

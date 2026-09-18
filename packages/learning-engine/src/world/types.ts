@@ -31,4 +31,6 @@ export interface WorldProgressionState {
   unlockedAreaIds: WorldAreaId[];
   activeAreaId: WorldAreaId;
   lastUnlockedAreaId: WorldAreaId | null;
+  updatedAt?: string;
 }
+

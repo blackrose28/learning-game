@@ -8,8 +8,10 @@ import {
   createEmptyProfile,
   loadWorldProgression,
   saveActiveArea,
+  getWorldActiveAreaKey,
   loadPlayerRewards,
   savePlayerRewards,
+  getRewardsStorageKey,
   calculateLevel,
   DEFAULT_EQUIPPED,
   getDefaultTomorrowReward,
@@ -19,6 +21,7 @@ import {
   type SkillProfile,
   type WorldProgressionState,
   type PlayerRewardsState,
+  type EquippedCosmetics,
   type SessionStorageAdapter,
   type WorldAreaId,
 } from '@math-archer/learning-engine';
@@ -161,22 +164,73 @@ export async function hydratePlayerProgress(
         localWorld.completedSessionsCount,
         serverWorld.completedSessionsCount
       );
-      const activeArea = (
-        combinedUnlocked.includes(serverWorld.activeAreaId)
+
+      const hasLocalActiveAreaInStorage = Boolean(storage.getItem(getWorldActiveAreaKey(playerId)));
+      const localTime = localWorld.updatedAt ? new Date(localWorld.updatedAt).getTime() : 0;
+      const serverTime = serverWorld.updatedAt ? new Date(serverWorld.updatedAt).getTime() : 0;
+
+      let activeArea: WorldAreaId = 'castle';
+      let finalUpdatedAt: string | undefined = undefined;
+      let shouldPushWorld = false;
+
+      if (!hasLocalActiveAreaInStorage) {
+        // Fresh device or empty local storage — adopt server selection
+        activeArea = combinedUnlocked.includes(serverWorld.activeAreaId)
           ? serverWorld.activeAreaId
-          : localWorld.activeAreaId
-      ) as WorldAreaId;
+          : 'castle';
+        finalUpdatedAt = serverWorld.updatedAt;
+      } else if (serverTime > localTime) {
+        // Server was updated more recently on another device
+        activeArea = combinedUnlocked.includes(serverWorld.activeAreaId)
+          ? serverWorld.activeAreaId
+          : (combinedUnlocked.includes(localWorld.activeAreaId) ? localWorld.activeAreaId : 'castle');
+        finalUpdatedAt = serverWorld.updatedAt;
+      } else if (localTime > serverTime) {
+        // Local was updated more recently on this device
+        activeArea = combinedUnlocked.includes(localWorld.activeAreaId)
+          ? localWorld.activeAreaId
+          : (combinedUnlocked.includes(serverWorld.activeAreaId) ? serverWorld.activeAreaId : 'castle');
+        finalUpdatedAt = localWorld.updatedAt;
+        shouldPushWorld = true;
+      } else {
+        // Timestamps equal or missing (legacy / initial):
+        // If local has chosen a non-castle unlocked realm while server is still default castle, preserve local
+        if (
+          localWorld.activeAreaId !== 'castle' &&
+          combinedUnlocked.includes(localWorld.activeAreaId) &&
+          serverWorld.activeAreaId === 'castle'
+        ) {
+          activeArea = localWorld.activeAreaId;
+          finalUpdatedAt = localWorld.updatedAt;
+          shouldPushWorld = true;
+        } else if (combinedUnlocked.includes(serverWorld.activeAreaId)) {
+          activeArea = serverWorld.activeAreaId;
+          finalUpdatedAt = serverWorld.updatedAt ?? localWorld.updatedAt;
+        } else if (combinedUnlocked.includes(localWorld.activeAreaId)) {
+          activeArea = localWorld.activeAreaId;
+          finalUpdatedAt = localWorld.updatedAt;
+          shouldPushWorld = true;
+        } else {
+          activeArea = 'castle';
+        }
+      }
 
-      finalWorld = saveActiveArea(playerId, activeArea, storage, completedSessions);
+      finalWorld = saveActiveArea(playerId, activeArea, storage, completedSessions, finalUpdatedAt);
 
-      // If local has more completed sessions or newly unlocked areas than the server, push update
+      // If local has more completed sessions, newly unlocked areas, or newer realm selection, push update
       if (
+        shouldPushWorld ||
         localWorld.completedSessionsCount > serverWorld.completedSessionsCount ||
-        localWorld.unlockedAreaIds.length > serverWorld.unlockedAreaIds.length
+        localWorld.unlockedAreaIds.length > serverWorld.unlockedAreaIds.length ||
+        finalWorld.activeAreaId !== serverWorld.activeAreaId
       ) {
         apiClient.updateWorldProgression(finalWorld, playerId).catch(() => {});
       }
-    } else if (localWorld.completedSessionsCount > 0 || localWorld.unlockedAreaIds.length > 1) {
+    } else if (
+      localWorld.completedSessionsCount > 0 ||
+      localWorld.unlockedAreaIds.length > 1 ||
+      localWorld.activeAreaId !== 'castle'
+    ) {
       apiClient.updateWorldProgression(localWorld, playerId).catch(() => {});
     }
 
@@ -193,21 +247,86 @@ export async function hydratePlayerProgress(
       const bestStreak = Math.max(localRewards.bestStreak, serverRewards.bestStreak, currentStreak);
 
       const unlockedCosmetics = Array.from(
-        new Set([...localRewards.unlockedCosmeticIds, ...serverRewards.unlockedCosmeticIds])
+        new Set([
+          ...(localRewards.unlockedCosmeticIds ?? []),
+          ...(serverRewards.unlockedCosmeticIds ?? []),
+        ])
       );
       const unlockedAchievements = Array.from(
-        new Set([...localRewards.unlockedAchievementIds, ...serverRewards.unlockedAchievementIds])
+        new Set([
+          ...(localRewards.unlockedAchievementIds ?? []),
+          ...(serverRewards.unlockedAchievementIds ?? []),
+        ])
       );
       const achievementProgress = {
-        ...localRewards.achievementProgress,
-        ...serverRewards.achievementProgress,
+        ...(localRewards.achievementProgress ?? {}),
+        ...(serverRewards.achievementProgress ?? {}),
       };
 
-      const equipped = {
-        ...DEFAULT_EQUIPPED,
-        ...localRewards.equippedCosmetics,
-        ...serverRewards.equippedCosmetics,
-      };
+      // Reconcile equipped cosmetics:
+      const hasLocalRewardsInStorage = Boolean(storage.getItem(getRewardsStorageKey(playerId)));
+      const localTime = localRewards.updatedAt ? new Date(localRewards.updatedAt).getTime() : 0;
+      const serverTime = serverRewards.updatedAt ? new Date(serverRewards.updatedAt).getTime() : 0;
+
+      let equipped: EquippedCosmetics = { ...DEFAULT_EQUIPPED };
+      let shouldPushEquipped = false;
+
+      if (!hasLocalRewardsInStorage) {
+        // Fresh device or empty local storage — server is the source of truth!
+        equipped = {
+          ...DEFAULT_EQUIPPED,
+          ...serverRewards.equippedCosmetics,
+        };
+      } else if (localTime > serverTime) {
+        // Local was modified more recently than server (e.g. user equipped robe locally)
+        equipped = {
+          ...DEFAULT_EQUIPPED,
+          ...serverRewards.equippedCosmetics,
+          ...localRewards.equippedCosmetics,
+        };
+        shouldPushEquipped = true;
+      } else if (serverTime > localTime) {
+        // Server was modified more recently on another device (e.g. Browser B pulling Browser A's robe)
+        equipped = {
+          ...DEFAULT_EQUIPPED,
+          ...localRewards.equippedCosmetics,
+          ...serverRewards.equippedCosmetics,
+        };
+      } else {
+        // Timestamps equal or missing (initial/legacy):
+        // If local has non-default equipped item while server has default, preserve local!
+        equipped = { ...DEFAULT_EQUIPPED };
+        const keys: (keyof EquippedCosmetics)[] = [
+          'outfit',
+          'bow',
+          'arrowEffect',
+          'castleBanner',
+          'castleStatue',
+          'castleGround',
+        ];
+        for (const k of keys) {
+          const loc = localRewards.equippedCosmetics?.[k];
+          const srv = serverRewards.equippedCosmetics?.[k];
+          const def = DEFAULT_EQUIPPED[k];
+          if (loc && loc !== def && (!srv || srv === def)) {
+            equipped[k] = loc;
+            shouldPushEquipped = true;
+          } else if (srv) {
+            equipped[k] = srv;
+          } else if (loc) {
+            equipped[k] = loc;
+          }
+        }
+      }
+
+      // Check if equipped items differ between merged and server:
+      const equippedDiffers = (
+        Object.keys(equipped) as (keyof EquippedCosmetics)[]
+      ).some((k) => equipped[k] !== serverRewards.equippedCosmetics?.[k]);
+
+      if (equippedDiffers) {
+        shouldPushEquipped = true;
+      }
 
       const mergedRewards: PlayerRewardsState = {
         ...localRewards,
@@ -225,6 +344,10 @@ export async function hydratePlayerProgress(
         unlockedAchievementIds: unlockedAchievements,
         achievementProgress,
         tomorrowReward: getDefaultTomorrowReward(currentStreak),
+        updatedAt:
+          localTime > serverTime
+            ? localRewards.updatedAt
+            : (serverRewards.updatedAt || localRewards.updatedAt || new Date().toISOString()),
       };
 
       savePlayerRewards(mergedRewards, storage);
@@ -232,11 +355,12 @@ export async function hydratePlayerProgress(
 
       if (
         localRewards.totalXp > serverRewards.totalXp ||
-        localRewards.unlockedCosmeticIds.length > serverRewards.unlockedCosmeticIds.length
+        localRewards.unlockedCosmeticIds.length > serverRewards.unlockedCosmeticIds.length ||
+        shouldPushEquipped
       ) {
         apiClient.updatePlayerRewards(mergedRewards, playerId).catch(() => {});
       }
-    } else if (localRewards.totalXp > 0) {
+    } else if (localRewards.totalXp > 0 || localRewards.updatedAt) {
       apiClient.updatePlayerRewards(localRewards, playerId).catch(() => {});
     }
 

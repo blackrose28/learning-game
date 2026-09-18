@@ -5,6 +5,10 @@ import {
   loadAttempts,
   loadWorldProgression,
   loadPlayerRewards,
+  savePlayerRewards,
+  equipCosmetic,
+  createDefaultRewardsState,
+  DEFAULT_EQUIPPED,
   loadAllSessions,
   saveDailySession,
   saveAttempt,
@@ -337,4 +341,197 @@ describe('Cloud Hydration Engine (hydratePlayerProgress)', () => {
     expect(remaining.length).toBe(1);
     expect(remaining[0].questionId).toBe('local-only-q');
   });
+
+  it('preserves local equipped robe when local equipped a custom unlocked item and pushes to server', async () => {
+    // Local user unlocked and equipped Ember Hearth Robe
+    let localRewards = createDefaultRewardsState(playerId);
+    localRewards.totalXp = 200;
+    localRewards.unlockedCosmeticIds.push('outfit_ember_crimson');
+    localRewards = equipCosmetic(localRewards, 'outfit', 'outfit_ember_crimson');
+    savePlayerRewards(localRewards, storage);
+
+    let pushedRewards: any = null;
+    const mockApiClient = new MathArcherApiClient({
+      fetchFn: async (url, init) => {
+        const u = url.toString();
+        if (u.includes('/api/progress/rewards') && init?.method === 'PUT') {
+          pushedRewards = JSON.parse(init.body as string);
+          return new Response(JSON.stringify({ success: true, rewards: pushedRewards }), {
+            status: 200,
+            headers: { 'Content-Type': 'application/json' },
+          });
+        }
+        if (u.includes('/api/progress')) {
+          return new Response(
+            JSON.stringify({
+              attempts: [],
+              sessions: [],
+              worldProgression: null,
+              rewards: {
+                totalXp: 200,
+                level: 2,
+                currentStreak: 1,
+                bestStreak: 1,
+                lastActiveDate: '2026-09-17',
+                unlockedCosmeticIds: ['outfit_classic_green', 'outfit_ember_crimson'],
+                equippedCosmetics: {
+                  ...DEFAULT_EQUIPPED,
+                  outfit: 'outfit_classic_green', // Server still has stock green robe
+                },
+                unlockedAchievementIds: [],
+                achievementProgress: {},
+              },
+            }),
+            { status: 200, headers: { 'Content-Type': 'application/json' } }
+          );
+        }
+        return new Response('{}', { status: 200 });
+      },
+    });
+
+    const res = await hydratePlayerProgress(playerId, mockApiClient, storage);
+    expect(res.success).toBe(true);
+
+    // Local storage should KEEP Ember Hearth Robe
+    const updatedLocal = loadPlayerRewards(playerId, storage);
+    expect(updatedLocal.equippedCosmetics.outfit).toBe('outfit_ember_crimson');
+
+    // And pushed update to server!
+    expect(pushedRewards).not.toBeNull();
+    expect(pushedRewards.equippedCosmetics.outfit).toBe('outfit_ember_crimson');
+  });
+
+  it('adopts server equipped robe on Device B when server is newer', async () => {
+    // Device B has fresh/older storage
+    let localRewards = createDefaultRewardsState(playerId);
+    localRewards.totalXp = 200;
+    localRewards.updatedAt = '2026-09-17T10:00:00.000Z';
+    savePlayerRewards(localRewards, storage);
+
+    const mockApiClient = new MathArcherApiClient({
+      fetchFn: async (url) => {
+        const u = url.toString();
+        if (u.includes('/api/progress')) {
+          return new Response(
+            JSON.stringify({
+              attempts: [],
+              sessions: [],
+              worldProgression: null,
+              rewards: {
+                totalXp: 200,
+                level: 2,
+                currentStreak: 1,
+                bestStreak: 1,
+                lastActiveDate: '2026-09-18',
+                unlockedCosmeticIds: ['outfit_classic_green', 'outfit_ember_crimson'],
+                equippedCosmetics: {
+                  ...DEFAULT_EQUIPPED,
+                  outfit: 'outfit_ember_crimson', // Server has newer robe from Device A
+                },
+                unlockedAchievementIds: [],
+                achievementProgress: {},
+                updatedAt: '2026-09-18T12:00:00.000Z', // Newer than local!
+              },
+            }),
+            { status: 200, headers: { 'Content-Type': 'application/json' } }
+          );
+        }
+        return new Response('{}', { status: 200 });
+      },
+    });
+
+    const res = await hydratePlayerProgress(playerId, mockApiClient, storage);
+    expect(res.success).toBe(true);
+
+    // Device B should now have the Ember Hearth Robe
+    const updatedLocal = loadPlayerRewards(playerId, storage);
+    expect(updatedLocal.equippedCosmetics.outfit).toBe('outfit_ember_crimson');
+  });
+
+  it('adopts server active realm on Device B when server is newer', async () => {
+    // Device B has local progress with older timestamp
+    saveActiveArea(playerId, 'castle', storage, 2, '2026-09-17T10:00:00.000Z');
+
+    const mockApiClient = new MathArcherApiClient({
+      fetchFn: async (url) => {
+        const u = url.toString();
+        if (u.includes('/api/progress')) {
+          return new Response(
+            JSON.stringify({
+              attempts: [],
+              sessions: [],
+              worldProgression: {
+                playerId,
+                completedSessionsCount: 2,
+                unlockedAreaIds: ['castle', 'fire_area', 'ice_area'],
+                activeAreaId: 'ice_area',
+                lastUnlockedAreaId: 'ice_area',
+                updatedAt: '2026-09-18T12:00:00.000Z',
+              },
+              rewards: null,
+            }),
+            { status: 200, headers: { 'Content-Type': 'application/json' } }
+          );
+        }
+        return new Response('{}', { status: 200 });
+      },
+    });
+
+    const res = await hydratePlayerProgress(playerId, mockApiClient, storage);
+    expect(res.success).toBe(true);
+
+    const localWorld = loadWorldProgression(playerId, storage);
+    expect(localWorld.activeAreaId).toBe('ice_area');
+    expect(localWorld.completedSessionsCount).toBe(2);
+  });
+
+  it('preserves local realm selection when local is newer and pushes to server', async () => {
+    // Local user selected Ice Kingdom more recently than the server
+    saveActiveArea(playerId, 'ice_area', storage, 2, '2026-09-18T15:00:00.000Z');
+
+    let pushedWorld: any = null;
+    const mockApiClient = new MathArcherApiClient({
+      fetchFn: async (url, init) => {
+        const u = url.toString();
+        if (u.includes('/api/progress/world') && init?.method === 'PUT') {
+          pushedWorld = JSON.parse(init.body as string);
+          return new Response(JSON.stringify({ success: true, worldProgression: pushedWorld }), {
+            status: 200,
+            headers: { 'Content-Type': 'application/json' },
+          });
+        }
+        if (u.includes('/api/progress')) {
+          return new Response(
+            JSON.stringify({
+              attempts: [],
+              sessions: [],
+              worldProgression: {
+                playerId,
+                completedSessionsCount: 2,
+                unlockedAreaIds: ['castle', 'fire_area', 'ice_area'],
+                activeAreaId: 'fire_area', // Server still has Fire Village from earlier
+                lastUnlockedAreaId: 'ice_area',
+                updatedAt: '2026-09-18T10:00:00.000Z', // Older than local
+              },
+              rewards: null,
+            }),
+            { status: 200, headers: { 'Content-Type': 'application/json' } }
+          );
+        }
+        return new Response('{}', { status: 200 });
+      },
+    });
+
+    const res = await hydratePlayerProgress(playerId, mockApiClient, storage);
+    expect(res.success).toBe(true);
+
+    // Local storage keeps Ice Kingdom
+    const localWorld = loadWorldProgression(playerId, storage);
+    expect(localWorld.activeAreaId).toBe('ice_area');
+
+    // And pushed update to server!
+    expect(pushedWorld).not.toBeNull();
+    expect(pushedWorld.activeAreaId).toBe('ice_area');
+  });
 });
+

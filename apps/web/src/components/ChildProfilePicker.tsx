@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import type { ChildPublicProfile } from '../api/client';
 import './ChildProfilePicker.css';
@@ -8,7 +8,7 @@ interface ChildProfilePickerProps {
   onSelect?: (child: ChildPublicProfile) => void;
 }
 
-const AVATAR_MAP: Record<string, string> = {
+export const AVATAR_MAP: Record<string, string> = {
   'archer-1': '🏹',
   'archer-2': '🎯',
   'archer-fire': '🔥',
@@ -18,10 +18,14 @@ const AVATAR_MAP: Record<string, string> = {
 };
 
 export const ChildProfilePicker: React.FC<ChildProfilePickerProps> = ({ onClose, onSelect }) => {
-  const { availableChildren, activeChild, loginAsChild, isLoading } = useAuth();
+  const { availableChildren, activeChild, loginAsChild, isLoading, refreshChildren } = useAuth();
   const [selectedChild, setSelectedChild] = useState<ChildPublicProfile | null>(activeChild);
   const [pin, setPin] = useState<string>('');
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+
+  useEffect(() => {
+    refreshChildren();
+  }, [refreshChildren]);
 
   const handleSelectCard = async (child: ChildPublicProfile) => {
     setSelectedChild(child);

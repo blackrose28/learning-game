@@ -11,31 +11,49 @@ import {
 import { GameScreen } from './components/GameScreen';
 import { ParentDashboard } from './components/ParentDashboard';
 import { ParentGate } from './components/ParentGate';
-import { ChildProfilePicker } from './components/ChildProfilePicker';
+import { ChildProfilePicker, AVATAR_MAP } from './components/ChildProfilePicker';
 import { InstallPrompt } from './components/InstallPrompt';
 import { WorldMap } from './components/WorldMap';
 import { RewardsScreen } from './components/RewardsScreen';
 import { AuthProvider, useAuth } from './context/AuthContext';
+import type { MathArcherApiClient } from './api/client';
 import { useGamepad, XboxButton } from './input/useGamepad';
 import { hydratePlayerProgress } from './sync';
+import { audioFx } from './audio/AudioFx';
 import './App.css';
 
 const APP_TABS = ['game', 'world', 'rewards', 'dashboard', 'history', 'curriculum'] as const;
 
 export const AppContent: React.FC = () => {
-  const { activeChild, isParentUnlocked, apiClient } = useAuth();
+  const { activeChild, isParentUnlocked, apiClient, authToken, isAuthenticated } = useAuth();
   const [activeTab, setActiveTab] = useState<
     'game' | 'world' | 'rewards' | 'dashboard' | 'history' | 'curriculum'
   >('game');
   const [progress, setProgress] = useState<LocalProgress>(() => loadLocalProgress());
   const [syncTick, setSyncTick] = useState<number>(0);
   const [showChildPicker, setShowChildPicker] = useState<boolean>(false);
+  const [isMuted, setIsMuted] = useState<boolean>(() => audioFx.getIsMuted());
+
+  // Keep mute state in sync with AudioFx
+  useEffect(() => {
+    return audioFx.subscribe((muted) => {
+      setIsMuted(muted);
+    });
+  }, []);
+
+  const handleToggleMute = () => {
+    audioFx.setMuted(!isMuted);
+  };
   const engineInfo = getEngineInfo();
   const curriculumLevels = getAllCurriculumLevels();
   const [sampleExpression] = useState({ left: 8, right: 7, op: 'add' as const });
 
-  // Startup and profile switch cloud hydration
+  // Startup, auth completion, and profile switch cloud hydration
   useEffect(() => {
+    if (!isAuthenticated) {
+      setProgress(loadLocalProgress(activeChild.id));
+      return;
+    }
     let isMounted = true;
     hydratePlayerProgress(activeChild.id, apiClient).then(() => {
       if (isMounted) {
@@ -46,7 +64,7 @@ export const AppContent: React.FC = () => {
     return () => {
       isMounted = false;
     };
-  }, [activeChild.id, apiClient]);
+  }, [activeChild.id, apiClient, authToken, isAuthenticated]);
 
   const handleSwitchTab = (
     tab: 'game' | 'world' | 'rewards' | 'dashboard' | 'history' | 'curriculum'
@@ -119,7 +137,9 @@ export const AppContent: React.FC = () => {
                 padding: '6px 14px',
               }}
             >
-              <span style={{ fontSize: 16 }}>🏹</span>
+              <span data-testid="current-player-avatar" style={{ fontSize: 16 }}>
+                {AVATAR_MAP[activeChild.avatar] || '🏹'}
+              </span>
               <span style={{ fontSize: 13, fontWeight: 700, color: '#166534' }}>
                 Playing as: <strong>{activeChild.name}</strong>
               </span>
@@ -159,6 +179,19 @@ export const AppContent: React.FC = () => {
                 <span className="controller-bumper-hints">[LB / RB Tabs]</span>
               </div>
             )}
+
+            {/* Audio Mute Toggle Button */}
+            <button
+              type="button"
+              data-testid="audio-mute-toggle"
+              className={`audio-toggle-btn ${isMuted ? 'muted' : 'unmuted'}`}
+              onClick={handleToggleMute}
+              aria-label={isMuted ? 'Unmute procedural audio' : 'Mute procedural audio'}
+              title={isMuted ? 'Sound is muted (Click to unmute)' : 'Sound is active (Click to mute)'}
+            >
+              <span aria-hidden="true" style={{ fontSize: 15 }}>{isMuted ? '🔇' : '🔊'}</span>
+              <span className="audio-toggle-label">{isMuted ? 'Muted' : 'Sound On'}</span>
+            </button>
           </div>
         </div>
 
@@ -222,20 +255,30 @@ export const AppContent: React.FC = () => {
         <WorldMap
           key={`${activeChild.id}_${syncTick}`}
           playerId={activeChild.id}
-          onSelectArea={() => handleSwitchTab('game')}
+          apiClient={apiClient}
+          onSelectArea={() => {
+            setSyncTick((t) => t + 1);
+            handleSwitchTab('game');
+          }}
           onBackToGame={() => handleSwitchTab('game')}
         />
       ) : activeTab === 'rewards' ? (
         <RewardsScreen
           key={`${activeChild.id}_${syncTick}`}
           playerId={activeChild.id}
+          apiClient={apiClient}
+          onRewardsChange={() => setSyncTick((t) => t + 1)}
           onBackToGame={() => handleSwitchTab('game')}
         />
       ) : activeTab === 'dashboard' ? (
         !isParentUnlocked ? (
           <ParentGate onCancel={() => handleSwitchTab('game')} />
         ) : (
-          <ParentDashboard key={`${activeChild.id}_${syncTick}`} playerId={activeChild.id} />
+          <ParentDashboard
+            key={`${activeChild.id}_${syncTick}`}
+            playerId={activeChild.id}
+            apiClient={apiClient}
+          />
         )
       ) : activeTab === 'history' ? (
         <section data-testid="local-progress-view">
@@ -626,9 +669,13 @@ export const AppContent: React.FC = () => {
   );
 };
 
-export const App: React.FC = () => {
+export interface AppProps {
+  apiClient?: MathArcherApiClient;
+}
+
+export const App: React.FC<AppProps> = ({ apiClient }) => {
   return (
-    <AuthProvider>
+    <AuthProvider apiClient={apiClient}>
       <AppContent />
     </AuthProvider>
   );

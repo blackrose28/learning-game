@@ -10,10 +10,13 @@ import {
 } from '@math-archer/learning-engine';
 import './WorldMap.css';
 import { useGamepad, XboxButton } from '../input/useGamepad';
+import type { MathArcherApiClient } from '../api/client';
+import { useSafeAuth } from '../context/AuthContext';
 
 export interface WorldMapProps {
   playerId?: string;
   storage?: SessionStorageAdapter;
+  apiClient?: MathArcherApiClient;
   onSelectArea?: (areaId: WorldAreaId) => void;
   onBackToGame?: () => void;
 }
@@ -21,9 +24,13 @@ export interface WorldMapProps {
 export const WorldMap: React.FC<WorldMapProps> = ({
   playerId = 'player-local',
   storage,
+  apiClient,
   onSelectArea,
   onBackToGame,
 }) => {
+  const auth = useSafeAuth();
+  const activeApiClient = apiClient ?? auth?.apiClient;
+
   const [progression, setProgression] = useState(() => loadWorldProgression(playerId, storage));
   const allAreas = getAllWorldAreas();
   const nextLockable = getNextLockableArea(progression.completedSessionsCount);
@@ -42,7 +49,9 @@ export const WorldMap: React.FC<WorldMapProps> = ({
     const updated = saveActiveArea(playerId, areaId, storage, progression.completedSessionsCount);
     setProgression(updated);
     onSelectArea?.(areaId);
+    activeApiClient?.updateWorldProgression(updated, playerId).catch(() => {});
   };
+
 
   const unlockedCount = progression.unlockedAreaIds.length;
   const totalCount = allAreas.length;

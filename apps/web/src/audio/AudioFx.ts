@@ -8,9 +8,31 @@
 
 import type { ElementType } from '@math-archer/learning-engine';
 
+export const AUDIO_MUTED_STORAGE_KEY = 'math_archer_audio_muted';
+
+export type AudioMuteListener = (isMuted: boolean) => void;
+
 class AudioManager {
   private audioCtx: AudioContext | null = null;
   private isMuted: boolean = false;
+  private listeners: Set<AudioMuteListener> = new Set();
+
+  constructor() {
+    this.initMuteFromStorage();
+  }
+
+  public initMuteFromStorage(): void {
+    if (typeof window !== 'undefined' && window.localStorage) {
+      try {
+        const stored = window.localStorage.getItem(AUDIO_MUTED_STORAGE_KEY);
+        if (stored !== null) {
+          this.isMuted = stored === 'true';
+        }
+      } catch {
+        // localStorage might be unavailable
+      }
+    }
+  }
 
   private getContext(): AudioContext | null {
     if (typeof window === 'undefined') return null;
@@ -37,10 +59,36 @@ class AudioManager {
 
   public setMuted(muted: boolean): void {
     this.isMuted = muted;
+    if (typeof window !== 'undefined' && window.localStorage) {
+      try {
+        window.localStorage.setItem(AUDIO_MUTED_STORAGE_KEY, String(muted));
+      } catch {
+        // ignore
+      }
+    }
+    this.notifyListeners();
   }
 
   public getIsMuted(): boolean {
     return this.isMuted;
+  }
+
+  public subscribe(listener: AudioMuteListener): () => void {
+    this.listeners.add(listener);
+    listener(this.isMuted);
+    return () => {
+      this.listeners.delete(listener);
+    };
+  }
+
+  private notifyListeners(): void {
+    for (const listener of this.listeners) {
+      try {
+        listener(this.isMuted);
+      } catch {
+        // ignore
+      }
+    }
   }
 
   /**

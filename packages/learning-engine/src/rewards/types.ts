@@ -77,6 +77,7 @@ export interface PlayerRewardsState {
   unlockedAchievementIds: string[];
   achievementProgress: Record<string, number>;
   tomorrowReward: TomorrowRewardPreview;
+  updatedAt?: string;
 }
 
 export interface XpAward {

@@ -148,6 +148,7 @@ export function createDefaultRewardsState(playerId: string = 'player-local'): Pl
     unlockedAchievementIds: [],
     achievementProgress: {},
     tomorrowReward: getDefaultTomorrowReward(0),
+    updatedAt: undefined,
   };
 }
 
@@ -221,6 +222,7 @@ export function loadPlayerRewards(
       unlockedAchievementIds: unlockedAchievements,
       achievementProgress: parsed.achievementProgress || {},
       tomorrowReward: getDefaultTomorrowReward(currentStreak),
+      updatedAt: parsed.updatedAt,
     };
   } catch {
     return defaultState;
@@ -235,7 +237,11 @@ export function savePlayerRewards(
   storage: SessionStorageAdapter = getDefaultStorage()
 ): void {
   const key = getRewardsStorageKey(state.playerId);
-  storage.setItem(key, JSON.stringify(state));
+  const stateToSave: PlayerRewardsState = {
+    ...state,
+    updatedAt: state.updatedAt || new Date().toISOString(),
+  };
+  storage.setItem(key, JSON.stringify(stateToSave));
 }
 
 export interface AwardAttemptOptions {
@@ -388,6 +394,7 @@ export function awardAttemptRewards(
     unlockedAchievementIds: Array.from(currentUnlockedAch),
     achievementProgress: updatedAchProgress,
     tomorrowReward: getDefaultTomorrowReward(currentState.currentStreak),
+    updatedAt: new Date().toISOString(),
   };
 
   return {
@@ -538,6 +545,7 @@ export function awardSessionCompleteRewards(
     ),
     unlockedAchievementIds: Array.from(currentUnlockedAch),
     tomorrowReward,
+    updatedAt: new Date().toISOString(),
   };
 
   return {
@@ -580,5 +588,6 @@ export function equipCosmetic(
   return {
     ...currentState,
     equippedCosmetics: updatedEquipped,
+    updatedAt: new Date().toISOString(),
   };
 }

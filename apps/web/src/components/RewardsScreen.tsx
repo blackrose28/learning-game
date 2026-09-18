@@ -15,18 +15,27 @@ import { ArcherGraphic } from './ArcherGraphic';
 import { RangeBackdrop } from './RangeBackdrop';
 import './RewardsScreen.css';
 import { useGamepad, XboxButton } from '../input/useGamepad';
+import type { MathArcherApiClient } from '../api/client';
+import { useSafeAuth } from '../context/AuthContext';
 
 export interface RewardsScreenProps {
   playerId?: string;
   storage?: SessionStorageAdapter;
+  apiClient?: MathArcherApiClient;
   onBackToGame?: () => void;
+  onRewardsChange?: (rewards: PlayerRewardsState) => void;
 }
 
 export const RewardsScreen: React.FC<RewardsScreenProps> = ({
   playerId = 'player-local',
   storage = getDefaultStorage(),
+  apiClient,
   onBackToGame,
+  onRewardsChange,
 }) => {
+  const auth = useSafeAuth();
+  const activeApiClient = apiClient ?? auth?.apiClient;
+
   const [rewardsState, setRewardsState] = useState<PlayerRewardsState>(() =>
     loadPlayerRewards(playerId, storage)
   );
@@ -57,6 +66,8 @@ export const RewardsScreen: React.FC<RewardsScreenProps> = ({
     const next = equipCosmetic(rewardsState, key, itemId);
     savePlayerRewards(next, storage);
     setRewardsState(next);
+    onRewardsChange?.(next);
+    activeApiClient?.updatePlayerRewards(next, playerId).catch(() => {});
   };
 
   const isEquipped = (item: CosmeticItem): boolean => {

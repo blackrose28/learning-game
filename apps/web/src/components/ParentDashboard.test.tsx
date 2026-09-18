@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach } from 'vitest';
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { render, screen, fireEvent, waitFor, act } from '@testing-library/react';
 import { ParentDashboard } from './ParentDashboard';
 import { AuthProvider } from '../context/AuthContext';
 import {
@@ -7,7 +7,9 @@ import {
   saveAttempt,
   saveProfile,
   createSimulatedProfile,
+  createEmptyProfile,
 } from '@math-archer/learning-engine';
+import { MathArcherApiClient } from '../api/client';
 
 beforeEach(() => {
   localStorage.clear();
@@ -513,6 +515,283 @@ describe('ParentDashboard Component (Task 5.2)', () => {
       // Close modal
       fireEvent.click(screen.getByTestId('close-change-pin-btn'));
       expect(screen.queryByTestId('change-parent-pin-modal')).not.toBeInTheDocument();
+    });
+  });
+
+  describe('Multi-Child On-Demand Cloud Hydration (Item 4)', () => {
+    it('triggers on-demand cloud hydration when switching children and updates metrics', async () => {
+      const requestedPlayerIds: string[] = [];
+      const today = new Date().toISOString().slice(0, 10);
+
+      const mockApiClient = new MathArcherApiClient({
+        fetchFn: async (url) => {
+          const u = new URL(url.toString(), 'https://api.math-archer.local');
+          const targetChildId = u.searchParams.get('playerId') || 'player-local';
+          requestedPlayerIds.push(targetChildId);
+
+          if (targetChildId === 'child_mia') {
+            return new Response(
+              JSON.stringify({
+                profile: createSimulatedProfile({
+                  playerId: 'child_mia',
+                  skills: {
+                    basic_addition: { level: 'mastered', accuracy: 0.9, attempts: 20 },
+                  },
+                }),
+                stats: { totalAttempts: 20, accuracy: 0.9, averageSpeedMs: 2100 },
+                currentSession: {
+                  id: 'mia-sess-today',
+                  playerId: 'child_mia',
+                  date: today,
+                  arrowsAllowed: 50,
+                  arrowsUsed: 40,
+                  hits: 36,
+                  status: 'in_progress',
+                  startedAt: `${today}T09:00:00.000Z`,
+                },
+                sessions: [
+                  {
+                    id: 'mia-sess-today',
+                    playerId: 'child_mia',
+                    date: today,
+                    arrowsAllowed: 50,
+                    arrowsUsed: 40,
+                    hits: 36,
+                    status: 'in_progress',
+                    startedAt: `${today}T09:00:00.000Z`,
+                  },
+                ],
+                attempts: Array.from({ length: 20 }, (_, i) => ({
+                  questionId: `mia_q_${i}`,
+                  operation: 'add' as const,
+                  left: 5,
+                  right: 4,
+                  answer: 9,
+                  selectedAnswer: 9,
+                  correct: true,
+                  responseTimeMs: 2100,
+                  skill: 'basic_addition',
+                  hintUsed: false,
+                  timestamp: `${today}T09:0${i < 10 ? '0' + i : i}:00.000Z`,
+                  playerId: 'child_mia',
+                })),
+                worldProgression: {
+                  unlockedAreaIds: ['castle', 'forest_area'],
+                  activeAreaId: 'forest_area',
+                  completedSessionsCount: 1,
+                },
+                rewards: {
+                  totalXp: 200,
+                  unlockedCosmeticIds: ['bow-wood'],
+                  equippedCosmetics: { bow: 'bow-wood' },
+                },
+              }),
+              { status: 200, headers: { 'Content-Type': 'application/json' } }
+            );
+          }
+
+          // Default fallback for Alex (player-local)
+          return new Response(
+            JSON.stringify({
+              profile: createEmptyProfile(targetChildId),
+              stats: { totalAttempts: 0, accuracy: 0, averageSpeedMs: 0 },
+              currentSession: null,
+              sessions: [],
+              attempts: [],
+            }),
+            { status: 200, headers: { 'Content-Type': 'application/json' } }
+          );
+        },
+      });
+
+      render(
+        <AuthProvider apiClient={mockApiClient}>
+          <ParentDashboard apiClient={mockApiClient} />
+        </AuthProvider>
+      );
+
+      // Initially viewing Alex (player-local), 0 arrows
+      expect(screen.getByTestId('today-arrows-metric')).toHaveTextContent('0 / 50');
+
+      // Click on Mia in child switcher bar
+      const miaButton = screen.getByTestId('select-child-btn-child_mia');
+      expect(miaButton).toBeInTheDocument();
+      fireEvent.click(miaButton);
+
+      // Verify that cloud hydration was triggered for Mia and metrics updated
+      await waitFor(() => {
+        expect(requestedPlayerIds).toContain('child_mia');
+        expect(screen.getByTestId('today-arrows-metric')).toHaveTextContent('40 / 50');
+        expect(screen.getByTestId('overall-accuracy-metric')).toHaveTextContent('100%');
+      });
+
+      // Sync indicator should be dismissed after completion
+      expect(screen.queryByTestId('syncing-indicator')).not.toBeInTheDocument();
+    });
+
+    it('allows manually triggering hydration via the Refresh button', async () => {
+      let callCount = 0;
+
+      const mockApiClient = new MathArcherApiClient({
+        fetchFn: async () => {
+          callCount++;
+          return new Response(
+            JSON.stringify({
+              profile: createEmptyProfile('player-local'),
+              stats: { totalAttempts: 0, accuracy: 0, averageSpeedMs: 0 },
+              currentSession: null,
+              sessions: [],
+              attempts: [],
+            }),
+            { status: 200, headers: { 'Content-Type': 'application/json' } }
+          );
+        },
+      });
+
+      render(
+        <AuthProvider apiClient={mockApiClient}>
+          <ParentDashboard apiClient={mockApiClient} />
+        </AuthProvider>
+      );
+
+      await waitFor(() => {
+        expect(callCount).toBeGreaterThanOrEqual(1);
+      });
+
+      const previousCount = callCount;
+      fireEvent.click(screen.getByTestId('refresh-dashboard-btn'));
+
+      await waitFor(() => {
+        expect(callCount).toBeGreaterThan(previousCount);
+      });
+    });
+
+    it('handles fast child switching without race condition overwrites', async () => {
+      const today = new Date().toISOString().slice(0, 10);
+      let resolveAlex: ((val: Response) => void) | null = null;
+
+      const mockApiClient = new MathArcherApiClient({
+        fetchFn: async (url) => {
+          const u = new URL(url.toString(), 'https://api.math-archer.local');
+          const targetChildId = u.searchParams.get('playerId') || 'player-local';
+
+          if (targetChildId === 'player-local') {
+            // Slow response for Alex
+            return new Promise<Response>((res) => {
+              resolveAlex = res;
+            });
+          }
+
+          // Immediate response for Mia
+          return new Response(
+            JSON.stringify({
+              profile: createSimulatedProfile({
+                playerId: 'child_mia',
+                skills: {
+                  basic_addition: { level: 'mastered', accuracy: 1.0, attempts: 5 },
+                },
+              }),
+              stats: { totalAttempts: 5, accuracy: 1.0, averageSpeedMs: 1500 },
+              currentSession: {
+                id: 'mia-sess',
+                playerId: 'child_mia',
+                date: today,
+                arrowsAllowed: 50,
+                arrowsUsed: 48,
+                hits: 48,
+                status: 'in_progress',
+                startedAt: `${today}T10:00:00.000Z`,
+              },
+              sessions: [],
+              attempts: [
+                {
+                  questionId: 'q1',
+                  operation: 'add',
+                  left: 2,
+                  right: 3,
+                  answer: 5,
+                  selectedAnswer: 5,
+                  correct: true,
+                  responseTimeMs: 1500,
+                  skill: 'basic_addition',
+                  hintUsed: false,
+                  timestamp: `${today}T10:00:00.000Z`,
+                  playerId: 'child_mia',
+                },
+              ],
+            }),
+            { status: 200, headers: { 'Content-Type': 'application/json' } }
+          );
+        },
+      });
+
+      render(
+        <AuthProvider apiClient={mockApiClient}>
+          <ParentDashboard apiClient={mockApiClient} />
+        </AuthProvider>
+      );
+
+      // Quickly switch to Mia while Alex is still waiting
+      fireEvent.click(screen.getByTestId('select-child-btn-child_mia'));
+
+      // Mia's data loads
+      await waitFor(() => {
+        expect(screen.getByTestId('today-arrows-metric')).toHaveTextContent('48 / 50');
+      });
+
+      // Now Alex's delayed response finishes with stale 10 / 50 data
+      if (resolveAlex) {
+        await act(async () => {
+          (resolveAlex as any)(
+            new Response(
+              JSON.stringify({
+                profile: createEmptyProfile('player-local'),
+                stats: { totalAttempts: 1, accuracy: 1.0, averageSpeedMs: 2000 },
+                currentSession: {
+                  id: 'alex-sess',
+                  playerId: 'player-local',
+                  date: today,
+                  arrowsAllowed: 50,
+                  arrowsUsed: 10,
+                  hits: 10,
+                  status: 'in_progress',
+                  startedAt: `${today}T08:00:00.000Z`,
+                },
+                sessions: [],
+                attempts: [],
+              }),
+              { status: 200, headers: { 'Content-Type': 'application/json' } }
+            )
+          );
+          await new Promise((r) => setTimeout(r, 50));
+        });
+      }
+
+      // Assert that Mia's 48 / 50 remains on screen and was NOT overwritten by Alex's delayed response
+      expect(screen.getByTestId('today-arrows-metric')).toHaveTextContent('48 / 50');
+    });
+
+    it('falls back gracefully to local storage if offline or network error occurs', async () => {
+      const mockApiClient = new MathArcherApiClient({
+        fetchFn: async () => {
+          throw new Error('Network offline');
+        },
+      });
+
+      render(
+        <AuthProvider apiClient={mockApiClient}>
+          <ParentDashboard apiClient={mockApiClient} />
+        </AuthProvider>
+      );
+
+      // Should render without throwing
+      expect(screen.getByTestId('parent-dashboard-view')).toBeInTheDocument();
+      expect(screen.getByTestId('today-arrows-metric')).toHaveTextContent('0 / 50');
+
+      // Sync indicator should be cleared when error is handled
+      await waitFor(() => {
+        expect(screen.queryByTestId('syncing-indicator')).not.toBeInTheDocument();
+      });
     });
   });
 });

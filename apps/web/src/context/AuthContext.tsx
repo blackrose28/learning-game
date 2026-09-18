@@ -5,6 +5,12 @@ import {
   type ChildPublicProfile,
   type ParentPublic,
 } from '../api/client';
+import {
+  loadQueuedPinChange,
+  enqueuePinChange,
+  clearQueuedPinChange,
+  flushQueuedPinChange,
+} from '../sync';
 
 export interface AuthContextValue {
   currentMode: 'child' | 'parent';
@@ -14,8 +20,12 @@ export interface AuthContextValue {
   isParentUnlocked: boolean;
   availableChildren: ChildPublicProfile[];
   apiClient: MathArcherApiClient;
+  authToken: string | null;
+  isAuthenticated: boolean;
   isLoading: boolean;
   error: string | null;
+  hasPendingPinSync?: boolean;
+  flushPinSyncQueue?: () => Promise<boolean>;
   loginAsChild: (childId: string, pin?: string) => Promise<boolean>;
   unlockParentWithPin: (pin: string) => Promise<boolean>;
   unlockParentWithCredentials: (email: string, password: string) => Promise<boolean>;
@@ -70,7 +80,8 @@ export const AuthProvider: React.FC<{
   const [activeChild, setActiveChild] = useState<ChildPublicProfile>(() => {
     try {
       const stored = localStorage.getItem('math_archer_active_child');
-      return stored ? JSON.parse(stored) : DEFAULT_CHILD;
+      const parsed = stored ? JSON.parse(stored) : null;
+      return parsed ?? DEFAULT_CHILD;
     } catch {
       return DEFAULT_CHILD;
     }
@@ -106,23 +117,98 @@ export const AuthProvider: React.FC<{
     },
   ]);
   const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [authToken, setAuthToken] = useState<string | null>(() => apiClient.getAuthToken());
+  const isAuthenticated = Boolean(authToken);
   const [error, setError] = useState<string | null>(null);
+  const [hasPendingPinSync, setHasPendingPinSync] = useState<boolean>(() =>
+    Boolean(loadQueuedPinChange())
+  );
 
-  // Load available child profiles on start
+  const flushPinSync = useCallback(async (): Promise<boolean> => {
+    const queued = loadQueuedPinChange();
+    if (!queued) {
+      setHasPendingPinSync(false);
+      return true;
+    }
+    const parentId = activeChild?.parentId || parentUser?.id;
+    const res = await flushQueuedPinChange(apiClient, { parentId });
+    if (res.success) {
+      setHasPendingPinSync(false);
+      return true;
+    }
+    return false;
+  }, [apiClient, activeChild?.parentId, parentUser?.id]);
+
+  // Helper to reconcile active child with latest child profiles
+  const reconcileActiveChild = useCallback((children: ChildPublicProfile[]) => {
+    if (!children || children.length === 0) return;
+    setActiveChild((prev) => {
+      const current = prev ?? DEFAULT_CHILD;
+      const matching = children.find((c) => c.id === current.id);
+      if (matching) {
+        if (
+          matching.name !== current.name ||
+          matching.avatar !== current.avatar ||
+          matching.grade !== current.grade ||
+          matching.hasPin !== current.hasPin ||
+          matching.parentId !== current.parentId
+        ) {
+          return matching;
+        }
+        return current;
+      }
+      // If the current child was deleted remotely (and is not the default local fallback profile)
+      if (current.id !== 'player-local') {
+        return children[0] ?? DEFAULT_CHILD;
+      }
+      return current;
+    });
+  }, []);
+
+  // Load available child profiles on start and keep them synchronized
   const refreshChildren = useCallback(async () => {
     try {
       const res = await apiClient.getChildProfiles();
       if (res.children && res.children.length > 0) {
         setAvailableChildren(res.children);
+        reconcileActiveChild(res.children);
       }
     } catch {
       // Fall back to stored or default children if offline / demo
     }
-  }, [apiClient]);
+  }, [apiClient, reconcileActiveChild]);
 
   useEffect(() => {
     refreshChildren();
-  }, [refreshChildren]);
+    flushPinSync();
+  }, [refreshChildren, flushPinSync]);
+
+  // Listen for online and focus events to automatically refresh child profiles across devices/tabs
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+
+    const handleSync = () => {
+      refreshChildren();
+      flushPinSync();
+    };
+
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
+        refreshChildren();
+        flushPinSync();
+      }
+    };
+
+    window.addEventListener('online', handleSync);
+    window.addEventListener('focus', handleSync);
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+
+    return () => {
+      window.removeEventListener('online', handleSync);
+      window.removeEventListener('focus', handleSync);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
+  }, [refreshChildren, flushPinSync]);
 
   // Persist active child changes
   useEffect(() => {
@@ -143,7 +229,10 @@ export const AuthProvider: React.FC<{
         apiClient
           .loginChild(activeChild.id, pinToTry)
           .then((res) => {
-            setActiveChild(res.child);
+            if (res && res.token && res.child) {
+              setAuthToken(res.token);
+              setActiveChild(res.child);
+            }
           })
           .catch(() => {
             // Offline or server unreachable; keep local profile seamlessly
@@ -158,6 +247,7 @@ export const AuthProvider: React.FC<{
       setError(null);
       try {
         const res = await apiClient.loginChild(childId, pin);
+        setAuthToken(res.token);
         setActiveChild(res.child);
         setCurrentMode('child');
         setIsParentUnlocked(false);
@@ -196,12 +286,16 @@ export const AuthProvider: React.FC<{
     async (pin: string): Promise<boolean> => {
       setIsLoading(true);
       setError(null);
+      const queued = loadQueuedPinChange();
       try {
         const parentId = activeChild.parentId || parentUser?.id;
-        const res = await apiClient.verifyParentPin(pin, parentId);
+        const pinToVerify =
+          queued && pin === queued.newPin && queued.currentPin ? queued.currentPin : pin;
+        const res = await apiClient.verifyParentPin(pinToVerify, parentId);
         if (res.valid) {
           if (res.token) {
             apiClient.setAuthToken(res.token);
+            setAuthToken(res.token);
           }
           setIsParentUnlocked(true);
           setCurrentMode('parent');
@@ -209,6 +303,15 @@ export const AuthProvider: React.FC<{
             setParentUser(res.parent);
           }
           setIsLoading(false);
+          refreshChildren();
+
+          if (queued && pin === queued.newPin) {
+            flushQueuedPinChange(apiClient, { parentId }).then((flushRes) => {
+              if (flushRes.success) {
+                setHasPendingPinSync(false);
+              }
+            });
+          }
           return true;
         }
         setError('Incorrect Parent PIN. Please try again.');
@@ -233,7 +336,7 @@ export const AuthProvider: React.FC<{
         return false;
       }
     },
-    [apiClient, activeChild.parentId, parentUser?.id, parentPin]
+    [apiClient, activeChild?.parentId, parentUser?.id, parentPin, refreshChildren]
   );
 
   const unlockParentWithCredentials = useCallback(
@@ -242,13 +345,16 @@ export const AuthProvider: React.FC<{
       setError(null);
       try {
         const res = await apiClient.loginParent({ email, password });
+        setAuthToken(res.token);
         setParentUser(res.parent);
         if (res.children) {
           setAvailableChildren(res.children);
+          reconcileActiveChild(res.children);
         }
         setIsParentUnlocked(true);
         setCurrentMode('parent');
         setIsLoading(false);
+        flushPinSync();
         return true;
       } catch (err: unknown) {
         const message = err instanceof Error ? err.message : 'Invalid parent credentials';
@@ -257,7 +363,7 @@ export const AuthProvider: React.FC<{
         return false;
       }
     },
-    [apiClient]
+    [apiClient, reconcileActiveChild, flushPinSync]
   );
 
   const registerParent = useCallback(
@@ -272,6 +378,7 @@ export const AuthProvider: React.FC<{
       try {
         const res = await apiClient.registerParent(data);
         setParentUser(res.parent);
+        setAuthToken(res.token);
         if (data.parentPin) {
           setParentPin(data.parentPin);
           try {
@@ -283,6 +390,7 @@ export const AuthProvider: React.FC<{
         setIsParentUnlocked(true);
         setCurrentMode('parent');
         setIsLoading(false);
+        flushPinSync();
       } catch (err: unknown) {
         const message = err instanceof Error ? err.message : 'Registration failed';
         setError(message);
@@ -290,7 +398,7 @@ export const AuthProvider: React.FC<{
         throw err;
       }
     },
-    [apiClient]
+    [apiClient, flushPinSync]
   );
 
   const changeParentPin = useCallback(
@@ -308,6 +416,8 @@ export const AuthProvider: React.FC<{
         } catch {
           // ignore
         }
+        clearQueuedPinChange();
+        setHasPendingPinSync(false);
         setIsLoading(false);
         return true;
       } catch (err: unknown) {
@@ -335,6 +445,8 @@ export const AuthProvider: React.FC<{
         } catch {
           // ignore
         }
+        enqueuePinChange({ newPin, currentPin: currentPin ?? parentPin });
+        setHasPendingPinSync(true);
         setParentUser((prev) => (prev ? { ...prev, hasPin: true } : prev));
         setIsLoading(false);
         return true;
@@ -347,15 +459,37 @@ export const AuthProvider: React.FC<{
     setIsParentUnlocked(false);
     setCurrentMode('child');
     apiClient.setAuthToken(null);
-  }, [apiClient]);
-
-  const switchToChildMode = useCallback((child?: ChildPublicProfile) => {
-    if (child) {
-      setActiveChild(child);
+    setAuthToken(null);
+    if (activeChild) {
+      const pinToTry =
+        activeChild.id === 'player-local' ? '1234' : !activeChild.hasPin ? undefined : undefined;
+      if (pinToTry !== undefined || !activeChild.hasPin) {
+        apiClient
+          .loginChild(activeChild.id, pinToTry)
+          .then((res) => {
+            setAuthToken(res.token);
+            setActiveChild(res.child);
+          })
+          .catch(() => {});
+      }
     }
-    setCurrentMode('child');
-    setIsParentUnlocked(false);
-  }, []);
+  }, [apiClient, activeChild]);
+
+  const switchToChildMode = useCallback(
+    (child?: ChildPublicProfile) => {
+      if (child) {
+        setActiveChild(child);
+      } else {
+        setActiveChild((prev) => {
+          const matching = availableChildren.find((c) => c.id === prev.id);
+          return matching ?? prev;
+        });
+      }
+      setCurrentMode('child');
+      setIsParentUnlocked(false);
+    },
+    [availableChildren]
+  );
 
   const addChild = useCallback(
     async (data: {
@@ -376,17 +510,17 @@ export const AuthProvider: React.FC<{
         const newChild: ChildPublicProfile = {
           id: `child_${Date.now()}`,
           name: data.name,
-          pin: data.pin,
           avatar: data.avatar || 'archer-1',
           grade: data.grade || '1st Grade',
           hasPin: Boolean(data.pin),
-        } as ChildPublicProfile;
+          parentId: parentUser?.id || 'parent_default',
+        };
         setAvailableChildren((prev) => [...prev, newChild]);
         setIsLoading(false);
         return newChild;
       }
     },
-    [apiClient]
+    [apiClient, parentUser?.id]
   );
 
   const updateChild = useCallback(
@@ -399,7 +533,7 @@ export const AuthProvider: React.FC<{
       try {
         const res = await apiClient.updateChildProfile(childId, data);
         setAvailableChildren((prev) => prev.map((c) => (c.id === childId ? res.child : c)));
-        setActiveChild((prev) => (prev.id === childId ? res.child : prev));
+        setActiveChild((prev) => (prev?.id === childId ? res.child : prev));
         setIsLoading(false);
         return res.child;
       } catch (err: unknown) {
@@ -409,25 +543,35 @@ export const AuthProvider: React.FC<{
           throw err;
         }
         // Local fallback
-        const existing = availableChildren.find((c) => c.id === childId);
-        if (existing) {
-          const updated: ChildPublicProfile = {
-            ...existing,
-            ...(data.name !== undefined ? { name: data.name } : {}),
-            ...(data.avatar !== undefined ? { avatar: data.avatar } : {}),
-            ...(data.grade !== undefined ? { grade: data.grade } : {}),
-            ...(data.pin !== undefined ? { hasPin: Boolean(data.pin) } : {}),
-          };
-          setAvailableChildren((prev) => prev.map((c) => (c.id === childId ? updated : c)));
-          setActiveChild((prev) => (prev.id === childId ? updated : prev));
-          setIsLoading(false);
-          return updated;
-        }
+        let updated: ChildPublicProfile | undefined;
+        setAvailableChildren((prev) =>
+          prev.map((c) => {
+            if (c.id === childId) {
+              updated = {
+                ...c,
+                ...data,
+                hasPin: data.pin !== undefined ? Boolean(data.pin) : c.hasPin,
+              };
+              return updated;
+            }
+            return c;
+          })
+        );
+        setActiveChild((prev) => (prev?.id === childId && updated ? updated : prev));
         setIsLoading(false);
-        throw new Error('Child not found');
+        return (
+          updated || {
+            id: childId,
+            name: data.name || 'Child',
+            avatar: data.avatar || 'archer-1',
+            grade: data.grade || '1st Grade',
+            hasPin: Boolean(data.pin),
+            parentId: parentUser?.id || 'parent_default',
+          }
+        );
       }
     },
-    [apiClient, availableChildren]
+    [apiClient, parentUser?.id]
   );
 
   const deleteChild = useCallback(
@@ -443,18 +587,20 @@ export const AuthProvider: React.FC<{
           throw err;
         }
       }
-      setAvailableChildren((prev) => prev.filter((c) => c.id !== childId));
-      setActiveChild((prev) => {
-        if (prev.id === childId) {
-          const remaining = availableChildren.filter((c) => c.id !== childId);
-          return remaining[0] ?? DEFAULT_CHILD;
-        }
-        return prev;
+      setAvailableChildren((prev) => {
+        const remaining = prev.filter((c) => c.id !== childId);
+        setActiveChild((curr) => {
+          if (curr?.id === childId) {
+            return remaining[0] ?? DEFAULT_CHILD;
+          }
+          return curr;
+        });
+        return remaining;
       });
       setIsLoading(false);
       return true;
     },
-    [apiClient, availableChildren]
+    [apiClient]
   );
 
   const value: AuthContextValue = {
@@ -465,8 +611,12 @@ export const AuthProvider: React.FC<{
     isParentUnlocked,
     availableChildren,
     apiClient,
+    authToken,
+    isAuthenticated,
     isLoading,
     error,
+    hasPendingPinSync,
+    flushPinSyncQueue: flushPinSync,
     loginAsChild,
     unlockParentWithPin,
     unlockParentWithCredentials,

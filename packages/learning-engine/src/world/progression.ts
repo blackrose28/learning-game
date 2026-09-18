@@ -113,10 +113,22 @@ export const WORLD_AREAS: readonly WorldArea[] = [
 const AREA_BY_ID = new Map<WorldAreaId, WorldArea>(WORLD_AREAS.map((a) => [a.id, a]));
 
 export const WORLD_ACTIVE_AREA_PREFIX = 'math_archer_active_area_';
+export const WORLD_ACTIVE_AREA_UPDATED_AT_PREFIX = 'math_archer_active_area_updated_at_';
+export const WORLD_COMPLETED_SESSIONS_PREFIX = 'math_archer_world_completed_sessions_';
 
 export function getWorldActiveAreaKey(playerId: string = 'player-local'): string {
   return `${WORLD_ACTIVE_AREA_PREFIX}${playerId}`;
 }
+
+export function getWorldActiveAreaUpdatedAtKey(playerId: string = 'player-local'): string {
+  return `${WORLD_ACTIVE_AREA_UPDATED_AT_PREFIX}${playerId}`;
+}
+
+export function getWorldCompletedSessionsKey(playerId: string = 'player-local'): string {
+  return `${WORLD_COMPLETED_SESSIONS_PREFIX}${playerId}`;
+}
+
+
 
 export function getAllWorldAreas(): readonly WorldArea[] {
   return WORLD_AREAS;
@@ -204,10 +216,14 @@ export function loadWorldProgression(
   storage: SessionStorageAdapter = getDefaultStorage(),
   explicitCompletedSessionsCount?: number
 ): WorldProgressionState {
+  const storedCountRaw = storage.getItem(getWorldCompletedSessionsKey(playerId));
+  const storedCount = storedCountRaw !== null ? parseInt(storedCountRaw, 10) : 0;
+  const sessionCountFromHistory = getCompletedSessionsCount(playerId, storage);
+
   const completedSessionsCount =
     explicitCompletedSessionsCount !== undefined
       ? explicitCompletedSessionsCount
-      : getCompletedSessionsCount(playerId, storage);
+      : Math.max(sessionCountFromHistory, Number.isFinite(storedCount) ? storedCount : 0);
 
   const unlockedAreaIds = computeUnlockedAreas(completedSessionsCount);
 
@@ -224,12 +240,16 @@ export function loadWorldProgression(
   // Find the last unlocked area
   const lastUnlockedAreaId = unlockedAreaIds[unlockedAreaIds.length - 1] ?? 'castle';
 
+  const updatedAtKey = getWorldActiveAreaUpdatedAtKey(playerId);
+  const rawUpdatedAt = storage.getItem(updatedAtKey) ?? undefined;
+
   return {
     playerId,
     completedSessionsCount,
     unlockedAreaIds,
     activeAreaId,
     lastUnlockedAreaId,
+    ...(rawUpdatedAt ? { updatedAt: rawUpdatedAt } : {}),
   };
 }
 
@@ -240,18 +260,35 @@ export function saveActiveArea(
   playerId: string = 'player-local',
   areaId: WorldAreaId,
   storage: SessionStorageAdapter = getDefaultStorage(),
-  explicitCompletedSessionsCount?: number
+  explicitCompletedSessionsCount?: number,
+  updatedAt?: string
 ): WorldProgressionState {
+  const sessionCountFromHistory = getCompletedSessionsCount(playerId, storage);
+  const existingStoredRaw = storage.getItem(getWorldCompletedSessionsKey(playerId));
+  const existingStored = existingStoredRaw !== null ? parseInt(existingStoredRaw, 10) : 0;
+  const baseCount = Math.max(
+    sessionCountFromHistory,
+    Number.isFinite(existingStored) ? existingStored : 0
+  );
+
   const completedCount =
     explicitCompletedSessionsCount !== undefined
       ? explicitCompletedSessionsCount
-      : getCompletedSessionsCount(playerId, storage);
+      : baseCount;
 
-  const unlocked = computeUnlockedAreas(completedCount);
+  const highestCount = Math.max(baseCount, completedCount);
+  storage.setItem(getWorldCompletedSessionsKey(playerId), String(highestCount));
+
+  const unlocked = computeUnlockedAreas(highestCount);
   const validAreaId = unlocked.includes(areaId) ? areaId : 'castle';
 
   const key = getWorldActiveAreaKey(playerId);
   storage.setItem(key, validAreaId);
 
-  return loadWorldProgression(playerId, storage, completedCount);
+  const finalUpdatedAt = updatedAt ?? new Date().toISOString();
+  storage.setItem(getWorldActiveAreaUpdatedAtKey(playerId), finalUpdatedAt);
+
+  return loadWorldProgression(playerId, storage, highestCount);
 }
+
+

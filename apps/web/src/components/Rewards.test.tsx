@@ -1,8 +1,9 @@
-import { describe, it, expect, beforeEach } from 'vitest';
+import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { render, screen, fireEvent, act } from '@testing-library/react';
 import { RewardsScreen } from './RewardsScreen';
 import { GameScreen } from './GameScreen';
 import { App } from '../App';
+import type { MathArcherApiClient } from '../api/client';
 import {
   type SessionStorageAdapter,
   savePlayerRewards,
@@ -118,6 +119,37 @@ describe('Task 9.4 — Rewards Integration Tests', () => {
       // Showcase archer graphic should now have data-bow="bow_ember_blaze"
       const archer = screen.getByTestId('rewards-showcase').querySelector('[data-testid="archer-graphic"]');
       expect(archer).toHaveAttribute('data-bow', 'bow_ember_blaze');
+    });
+
+    it('pushes real-time updates to apiClient when equipping items', () => {
+      const state = createDefaultRewardsState('player-1');
+      state.unlockedCosmeticIds.push('outfit_ember_crimson');
+      savePlayerRewards(state, storage);
+
+      const mockApiClient = {
+        updatePlayerRewards: vi.fn().mockResolvedValue({ success: true }),
+      } as unknown as MathArcherApiClient;
+
+      render(
+        <RewardsScreen
+          playerId="player-1"
+          storage={storage}
+          apiClient={mockApiClient}
+        />
+      );
+
+      // Equip Ember Hearth Robe
+      const equipBtn = screen.getByTestId('equip-outfit_ember_crimson');
+      fireEvent.click(equipBtn);
+
+      expect(mockApiClient.updatePlayerRewards).toHaveBeenCalledWith(
+        expect.objectContaining({
+          equippedCosmetics: expect.objectContaining({
+            outfit: 'outfit_ember_crimson',
+          }),
+        }),
+        'player-1'
+      );
     });
   });
 

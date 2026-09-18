@@ -4,6 +4,8 @@ import { WorldMap } from './WorldMap';
 import { RangeBackdrop } from './RangeBackdrop';
 import { GameScreen } from './GameScreen';
 import { saveDailySession, type Question } from '@math-archer/learning-engine';
+import { MathArcherApiClient } from '../api/client';
+
 
 const MOCK_QUESTION: Question = {
   id: 'q_test_world',
@@ -128,6 +130,48 @@ describe('Task 9.3 — World Progression', () => {
       expect(screen.getByTestId('realm-card-ice_area')).toHaveAttribute('data-unlocked', 'true');
       expect(screen.getByTestId('realm-card-wind_area')).toHaveAttribute('data-unlocked', 'true');
       expect(screen.getByTestId('realm-card-earth_area')).toHaveAttribute('data-unlocked', 'true');
+    });
+
+    it('pushes world progression to apiClient when selecting an unlocked realm in standalone WorldMap', async () => {
+      const today = new Date().toISOString().slice(0, 10);
+      saveDailySession({
+        id: 'session-1',
+        playerId: 'player-test',
+        date: today,
+        arrowsAllowed: 50,
+        arrowsUsed: 50,
+        hits: 45,
+        status: 'completed',
+        startedAt: `${today}T08:00:00.000Z`,
+      });
+
+      let updatedData: any = null;
+      let targetPlayerId: string | undefined = undefined;
+
+      const mockApiClient = new MathArcherApiClient({
+        fetchFn: async (url, init) => {
+          const u = url.toString();
+          if (u.includes('/api/progress/world') && init?.method === 'PUT') {
+            const body = JSON.parse(init.body as string);
+            updatedData = body;
+            targetPlayerId = body.playerId;
+            return new Response(JSON.stringify({ success: true, worldProgression: body }), {
+              status: 200,
+              headers: { 'Content-Type': 'application/json' },
+            });
+          }
+          return new Response('{}', { status: 200 });
+        },
+      });
+
+      render(<WorldMap playerId="player-test" apiClient={mockApiClient} />);
+
+      const travelBtn = screen.getByTestId('travel-btn-fire_area');
+      fireEvent.click(travelBtn);
+
+      expect(updatedData).not.toBeNull();
+      expect(updatedData.activeAreaId).toBe('fire_area');
+      expect(targetPlayerId).toBe('player-test');
     });
   });
 

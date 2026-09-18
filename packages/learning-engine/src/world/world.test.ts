@@ -147,5 +147,14 @@ describe('Task 9.3 — World Progression Engine', () => {
     // Subsequent load preserves ice_area
     const loaded = loadWorldProgression('player-test', mockStorage, 2);
     expect(loaded.activeAreaId).toBe('ice_area');
+    expect(loaded.updatedAt).toBeDefined();
+
+    // Supports explicit updatedAt timestamp
+    const customTimestamp = '2026-09-18T12:30:00.000Z';
+    const savedWithTime = saveActiveArea('player-test', 'ice_area', mockStorage, 2, customTimestamp);
+    expect(savedWithTime.updatedAt).toBe(customTimestamp);
+    const reloaded = loadWorldProgression('player-test', mockStorage, 2);
+    expect(reloaded.updatedAt).toBe(customTimestamp);
   });
 });
+
