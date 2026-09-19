@@ -79,6 +79,53 @@
   background: #dbeafe;
 }
 
+.btn-dev-rewards {
+  background: #fdf4ff;
+  border-color: #f0abfc;
+  color: #a21caf;
+  font-weight: 700;
+}
+
+.btn-dev-rewards:hover {
+  background: #fae8ff;
+  border-color: #e879f9;
+  color: #86198f;
+}
+
+.btn-dev-rewards:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.dev-feedback-toast {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  background: #fdf4ff;
+  border: 1px solid #f0abfc;
+  color: #86198f;
+  padding: 10px 16px;
+  border-radius: 8px;
+  margin-bottom: 20px;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.close-feedback-btn {
+  background: none;
+  border: none;
+  color: #a21caf;
+  cursor: pointer;
+  font-size: 14px;
+  padding: 2px 6px;
+  border-radius: 4px;
+}
+
+.close-feedback-btn:hover {
+  background: #fae8ff;
+}
+
 /* Quick Answer 6-Question Grid */
 .quick-questions-card {
   background: #f8fafc;

@@ -6,7 +6,6 @@ import { GameScreen } from './GameScreen';
 import { saveDailySession, type Question } from '@math-archer/learning-engine';
 import { MathArcherApiClient } from '../api/client';
 
-
 const MOCK_QUESTION: Question = {
   id: 'q_test_world',
   left: 8,
@@ -215,6 +214,60 @@ describe('Task 9.3 — World Progression', () => {
       expect(backdrop).toHaveAttribute('data-variant', 'compact');
       svg = container.querySelector('svg.range-backdrop-svg');
       expect(svg).toHaveAttribute('viewBox', '0 0 600 180');
+    });
+
+    it('renders equipped banners, statues, and ground decorations across non-castle realms', () => {
+      const { rerender } = render(
+        <RangeBackdrop
+          areaId="fire_area"
+          equippedBanner="castle_banner_dragon_fire"
+          equippedStatue="castle_statue_crystal_dragon"
+          equippedGround="castle_ground_obsidian_cobble"
+          variant="arena"
+        />
+      );
+      expect(screen.getByTestId('realm-encampment-banners')).toBeInTheDocument();
+      expect(screen.getByTestId('statue-crystal-dragon')).toBeInTheDocument();
+      expect(screen.getByTestId('ground-obsidian')).toBeInTheDocument();
+
+      rerender(
+        <RangeBackdrop
+          areaId="ice_area"
+          equippedBanner="castle_banner_pegasus"
+          equippedStatue="castle_statue_golden_archer"
+          equippedGround="castle_ground_starfall_mosaic"
+          variant="arena"
+        />
+      );
+      expect(screen.getByTestId('realm-encampment-banners')).toBeInTheDocument();
+      expect(screen.getByTestId('statue-golden-archer')).toBeInTheDocument();
+      expect(screen.getByTestId('ground-starfall')).toBeInTheDocument();
+
+      rerender(
+        <RangeBackdrop
+          areaId="wind_area"
+          equippedBanner="castle_banner_griffin"
+          equippedStatue="castle_statue_stone_gargoyle"
+          equippedGround="castle_ground_enchanted_meadow"
+          variant="compact"
+        />
+      );
+      expect(screen.getByTestId('realm-encampment-banners')).toBeInTheDocument();
+      expect(screen.getByTestId('statue-gargoyle')).toBeInTheDocument();
+      expect(screen.getByTestId('ground-enchanted')).toBeInTheDocument();
+
+      rerender(
+        <RangeBackdrop
+          areaId="earth_area"
+          equippedBanner="castle_banner_phoenix"
+          equippedStatue="castle_statue_phoenix_pillar"
+          equippedGround="castle_ground_champions_pedestal"
+          variant="compact"
+        />
+      );
+      expect(screen.getByTestId('realm-encampment-banners')).toBeInTheDocument();
+      expect(screen.getByTestId('statue-phoenix-pillar')).toBeInTheDocument();
+      expect(screen.getByTestId('ground-pedestal')).toBeInTheDocument();
     });
   });
 

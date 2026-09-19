@@ -9,6 +9,7 @@ import {
   awardAttemptRewards,
   awardSessionCompleteRewards,
   equipCosmetic,
+  unlockAllRewards,
   COSMETIC_ITEMS,
   ACHIEVEMENTS,
   LEVEL_THRESHOLDS,
@@ -340,6 +341,37 @@ describe('Task 9.4 — Rewards Engine', () => {
       });
 
       expect(result.newAchievements.some((a) => a.id === 'ach_perfect_session')).toBe(true);
+    });
+  });
+
+  describe('unlockAllRewards (Dev / QA helper)', () => {
+    it('unlocks all cosmetics, achievements, and sets max level in storage', () => {
+      const state = unlockAllRewards('dev-tester', storage);
+
+      // Verify all cosmetics are unlocked
+      expect(state.unlockedCosmeticIds.length).toBe(COSMETIC_ITEMS.length);
+      for (const cosmetic of COSMETIC_ITEMS) {
+        expect(state.unlockedCosmeticIds).toContain(cosmetic.id);
+      }
+
+      // Verify all achievements are unlocked
+      expect(state.unlockedAchievementIds.length).toBe(ACHIEVEMENTS.length);
+      for (const ach of ACHIEVEMENTS) {
+        expect(state.unlockedAchievementIds).toContain(ach.id);
+      }
+
+      // Verify level and XP are set to max level
+      const maxThreshold = LEVEL_THRESHOLDS[LEVEL_THRESHOLDS.length - 1];
+      expect(state.level).toBe(maxThreshold.level);
+      expect(state.totalXp).toBeGreaterThanOrEqual(maxThreshold.xpRequired);
+      expect(state.levelTitle).toBe(maxThreshold.title);
+      expect(state.levelProgressPct).toBe(100);
+
+      // Verify persistence to storage
+      const reloaded = loadPlayerRewards('dev-tester', storage);
+      expect(reloaded.unlockedCosmeticIds.length).toBe(COSMETIC_ITEMS.length);
+      expect(reloaded.unlockedAchievementIds.length).toBe(ACHIEVEMENTS.length);
+      expect(reloaded.level).toBe(maxThreshold.level);
     });
   });
 });

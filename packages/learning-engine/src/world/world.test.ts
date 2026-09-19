@@ -8,6 +8,7 @@ import {
   checkNewAreaUnlocked,
   loadWorldProgression,
   saveActiveArea,
+  unlockAllWorldAreas,
 } from './index';
 import type { SessionStorageAdapter } from '../session/types';
 
@@ -155,6 +156,21 @@ describe('Task 9.3 — World Progression Engine', () => {
     expect(savedWithTime.updatedAt).toBe(customTimestamp);
     const reloaded = loadWorldProgression('player-test', mockStorage, 2);
     expect(reloaded.updatedAt).toBe(customTimestamp);
+  });
+
+  it('unlockAllWorldAreas unlocks all 5 world areas in storage', () => {
+    const state = unlockAllWorldAreas('dev-player', mockStorage);
+    expect(state.unlockedAreaIds).toEqual([
+      'castle',
+      'fire_area',
+      'ice_area',
+      'wind_area',
+      'earth_area',
+    ]);
+    expect(state.completedSessionsCount).toBeGreaterThanOrEqual(10);
+
+    const reloaded = loadWorldProgression('dev-player', mockStorage);
+    expect(reloaded.unlockedAreaIds).toHaveLength(5);
   });
 });
 

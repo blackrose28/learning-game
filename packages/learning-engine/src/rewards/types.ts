@@ -1,4 +1,11 @@
+/**
+ * Categories of cosmetics available in the Royal Armory.
+ * Note: 'castle_decoration' represents Realm Decorations (heraldic banners, monuments/statues, and range ground),
+ * which customize the archer's tournament encampment across all world realms.
+ */
 export type CosmeticCategory = 'outfit' | 'bow' | 'arrow_effect' | 'castle_decoration';
+
+export type RealmDecorationSlot = 'banner' | 'statue' | 'ground';
 
 export type CosmeticRarity = 'common' | 'rare' | 'epic' | 'legendary' | 'mythic';
 
@@ -27,12 +34,7 @@ export interface CosmeticItem {
 }
 
 export type AchievementCategory =
-  | 'exploration'
-  | 'consistency'
-  | 'resilience'
-  | 'mastery'
-  | 'collection'
-  | 'milestone';
+  'exploration' | 'consistency' | 'resilience' | 'mastery' | 'collection' | 'milestone';
 
 export interface Achievement {
   id: string;
@@ -48,8 +50,11 @@ export interface EquippedCosmetics {
   outfit: string;
   bow: string;
   arrowEffect: string;
+  /** Realm banner standard (persisted as castleBanner for backwards compatibility) */
   castleBanner: string;
+  /** Realm monument / statue (persisted as castleStatue for backwards compatibility) */
   castleStatue: string;
+  /** Realm shooting ground / pavilion pavers (persisted as castleGround for backwards compatibility) */
   castleGround: string;
 }
 
@@ -105,4 +110,3 @@ export interface SessionCompletionRewardResult {
   levelUp: { oldLevel: number; newLevel: number; newTitle: string } | null;
   tomorrowReward: TomorrowRewardPreview;
 }
-

@@ -1,9 +1,4 @@
-import type {
-  CosmeticItem,
-  Achievement,
-  EquippedCosmetics,
-  TomorrowRewardPreview,
-} from './types';
+import type { CosmeticItem, Achievement, EquippedCosmetics, TomorrowRewardPreview } from './types';
 
 export interface LevelThreshold {
   level: number;
@@ -61,7 +56,8 @@ export const COSMETIC_ITEMS: readonly CosmeticItem[] = [
     id: 'outfit_classic_green',
     name: 'Forest Ranger Tunic',
     category: 'outfit',
-    description: 'The traditional emerald hood and tunic worn by kingdom scouts in Sherwood glades.',
+    description:
+      'The traditional emerald hood and tunic worn by kingdom scouts in Sherwood glades.',
     icon: '🏹',
     rarity: 'common',
     unlockType: 'default',
@@ -93,7 +89,8 @@ export const COSMETIC_ITEMS: readonly CosmeticItem[] = [
     id: 'outfit_frost_azure',
     name: 'Glacial Frost Cloak',
     category: 'outfit',
-    description: 'An insulated azure cloak decorated with crystalline ice feathers that catch the light.',
+    description:
+      'An insulated azure cloak decorated with crystalline ice feathers that catch the light.',
     icon: '❄️',
     rarity: 'rare',
     unlockType: 'streak_days',
@@ -125,7 +122,8 @@ export const COSMETIC_ITEMS: readonly CosmeticItem[] = [
     id: 'outfit_royal_gold',
     name: "Champion's Royal Cowl",
     category: 'outfit',
-    description: 'A shimmering royal gold cowl awarded only to marksmen of extraordinary dedication.',
+    description:
+      'A shimmering royal gold cowl awarded only to marksmen of extraordinary dedication.',
     icon: '👑',
     rarity: 'legendary',
     unlockType: 'xp_level',
@@ -141,7 +139,8 @@ export const COSMETIC_ITEMS: readonly CosmeticItem[] = [
     id: 'outfit_shadow_stalker',
     name: 'Shadow Stalker Tunic',
     category: 'outfit',
-    description: 'Silent night-woven tunic dyed deep midnight indigo, prized by stealth woodland scouts.',
+    description:
+      'Silent night-woven tunic dyed deep midnight indigo, prized by stealth woodland scouts.',
     icon: '🥷',
     rarity: 'rare',
     unlockType: 'xp_level',
@@ -189,7 +188,8 @@ export const COSMETIC_ITEMS: readonly CosmeticItem[] = [
     id: 'outfit_mystic_sage',
     name: 'Rune Sage Raiment',
     category: 'outfit',
-    description: 'Enchanted amethyst silk threaded with celestial runes that glow softly under starlight.',
+    description:
+      'Enchanted amethyst silk threaded with celestial runes that glow softly under starlight.',
     icon: '🔮',
     rarity: 'epic',
     unlockType: 'xp_level',
@@ -237,7 +237,8 @@ export const COSMETIC_ITEMS: readonly CosmeticItem[] = [
     id: 'outfit_celestial_aurora',
     name: 'Celestial Aurora Robe',
     category: 'outfit',
-    description: 'Shifting starlight threads woven with the green and violet shimmer of the northern lights.',
+    description:
+      'Shifting starlight threads woven with the green and violet shimmer of the northern lights.',
     icon: '🌌',
     rarity: 'legendary',
     unlockType: 'xp_level',
@@ -253,7 +254,8 @@ export const COSMETIC_ITEMS: readonly CosmeticItem[] = [
     id: 'outfit_dragon_slayer',
     name: 'Dragon Scale Cuirass',
     category: 'outfit',
-    description: 'Forged from unbreakable emerald dragon scales with gleaming dragon-bone pauldrons.',
+    description:
+      'Forged from unbreakable emerald dragon scales with gleaming dragon-bone pauldrons.',
     icon: '🐉',
     rarity: 'mythic',
     unlockType: 'xp_level',
@@ -269,7 +271,8 @@ export const COSMETIC_ITEMS: readonly CosmeticItem[] = [
     id: 'outfit_divine_archon',
     name: 'Divine Archon Regalia',
     category: 'outfit',
-    description: 'The supreme vestment of mathematics mastery, radiating celestial white and holy golden light.',
+    description:
+      'The supreme vestment of mathematics mastery, radiating celestial white and holy golden light.',
     icon: '✨',
     rarity: 'mythic',
     unlockType: 'xp_level',
@@ -305,7 +308,8 @@ export const COSMETIC_ITEMS: readonly CosmeticItem[] = [
     id: 'bow_ember_blaze',
     name: 'Sunfire Ember Bow',
     category: 'bow',
-    description: 'Charred ashwood limbs etched with glowing magma runes that radiate steady warmth.',
+    description:
+      'Charred ashwood limbs etched with glowing magma runes that radiate steady warmth.',
     icon: '🔥',
     rarity: 'rare',
     unlockType: 'sessions_count',
@@ -417,7 +421,8 @@ export const COSMETIC_ITEMS: readonly CosmeticItem[] = [
     id: 'bow_crystalline_prism',
     name: 'Prismatic Diamond Longbow',
     category: 'bow',
-    description: 'Faceted pure diamond bow that refracts bright sunlight into dazzling rainbow flashes.',
+    description:
+      'Faceted pure diamond bow that refracts bright sunlight into dazzling rainbow flashes.',
     icon: '💎',
     rarity: 'epic',
     unlockType: 'xp_level',
@@ -465,7 +470,8 @@ export const COSMETIC_ITEMS: readonly CosmeticItem[] = [
     id: 'bow_celestial_harp',
     name: 'Astral Starharp Bow',
     category: 'bow',
-    description: 'A poetic celestial instrument that rings harmonic chords when arrows are released.',
+    description:
+      'A poetic celestial instrument that rings harmonic chords when arrows are released.',
     icon: '🎵',
     rarity: 'legendary',
     unlockType: 'xp_level',
@@ -481,7 +487,8 @@ export const COSMETIC_ITEMS: readonly CosmeticItem[] = [
     id: 'bow_mythic_sovereign',
     name: 'Titan Sovereign Bow',
     category: 'bow',
-    description: 'Ancient aurum bow inscribed with mathematics titans, imbued with relentless velocity.',
+    description:
+      'Ancient aurum bow inscribed with mathematics titans, imbued with relentless velocity.',
     icon: '👑',
     rarity: 'mythic',
     unlockType: 'xp_level',
@@ -497,7 +504,8 @@ export const COSMETIC_ITEMS: readonly CosmeticItem[] = [
     id: 'bow_divine_infinity',
     name: 'Infinity Bow of Wisdom',
     category: 'bow',
-    description: 'Transcendent bow of eternal knowledge that fires arrows enveloped in holy cosmic light.',
+    description:
+      'Transcendent bow of eternal knowledge that fires arrows enveloped in holy cosmic light.',
     icon: '♾️',
     rarity: 'mythic',
     unlockType: 'xp_level',
@@ -547,7 +555,8 @@ export const COSMETIC_ITEMS: readonly CosmeticItem[] = [
     id: 'arrow_effect_sparkle_nova',
     name: 'Sparkle Nova Burst',
     category: 'arrow_effect',
-    description: 'Fires with brilliant celestial nova ripples that bloom when striking the bullseye.',
+    description:
+      'Fires with brilliant celestial nova ripples that bloom when striking the bullseye.',
     icon: '🌟',
     rarity: 'epic',
     unlockType: 'streak_days',
@@ -652,7 +661,8 @@ export const COSMETIC_ITEMS: readonly CosmeticItem[] = [
     id: 'arrow_effect_ice_shards',
     name: 'Glacial Needle Storm',
     category: 'arrow_effect',
-    description: 'Crackling ice crystals flake off the fletching and shatter into frosty frostwork.',
+    description:
+      'Crackling ice crystals flake off the fletching and shatter into frosty frostwork.',
     icon: '❄️',
     rarity: 'legendary',
     unlockType: 'xp_level',
@@ -697,7 +707,8 @@ export const COSMETIC_ITEMS: readonly CosmeticItem[] = [
     id: 'arrow_effect_phoenix_sparks',
     name: 'Phoenix Rebirth Radiance',
     category: 'arrow_effect',
-    description: 'Ascending golden and ruby phoenix sparks accompanied by harmonic celestial tones.',
+    description:
+      'Ascending golden and ruby phoenix sparks accompanied by harmonic celestial tones.',
     icon: '🪶',
     rarity: 'mythic',
     unlockType: 'xp_level',
@@ -712,7 +723,8 @@ export const COSMETIC_ITEMS: readonly CosmeticItem[] = [
     id: 'arrow_effect_celestial_supernova',
     name: 'Prismatic Supernova',
     category: 'arrow_effect',
-    description: 'Blinds the field with full-spectrum rainbow cosmic ripples that illuminate the courtyard.',
+    description:
+      'Blinds the field with full-spectrum rainbow cosmic ripples that illuminate the courtyard.',
     icon: '💫',
     rarity: 'mythic',
     unlockType: 'xp_level',
@@ -725,7 +737,7 @@ export const COSMETIC_ITEMS: readonly CosmeticItem[] = [
   },
 
   // ==========================================
-  // --- CASTLE DECORATIONS (21) ---
+  // --- REALM DECORATIONS (21) ---
   // ==========================================
   // --- Banners ---
   {
@@ -928,7 +940,8 @@ export const COSMETIC_ITEMS: readonly CosmeticItem[] = [
     id: 'castle_statue_celestial_archon',
     name: 'Archon of Mathematics Monument',
     category: 'castle_decoration',
-    description: 'Colossal heroic statue carved from starlight marble holding aloft the Bow of Truth.',
+    description:
+      'Colossal heroic statue carved from starlight marble holding aloft the Bow of Truth.',
     icon: '✨',
     rarity: 'mythic',
     unlockType: 'xp_level',
@@ -1019,7 +1032,8 @@ export const COSMETIC_ITEMS: readonly CosmeticItem[] = [
     id: 'castle_ground_royal_marble',
     name: 'Palatial Imperial Marble',
     category: 'castle_decoration',
-    description: 'Pristine polished white marble paving inlaid with gleaming gilded labyrinth spirals.',
+    description:
+      'Pristine polished white marble paving inlaid with gleaming gilded labyrinth spirals.',
     icon: '🏛️',
     rarity: 'legendary',
     unlockType: 'xp_level',
@@ -1034,7 +1048,8 @@ export const COSMETIC_ITEMS: readonly CosmeticItem[] = [
     id: 'castle_ground_starfall_mosaic',
     name: 'Cosmic Starfall Mosaic',
     category: 'castle_decoration',
-    description: 'Glistening lapis-lazuli and diamond ground mosaic mapping kingdom constellations.',
+    description:
+      'Glistening lapis-lazuli and diamond ground mosaic mapping kingdom constellations.',
     icon: '🌌',
     rarity: 'mythic',
     unlockType: 'xp_level',
@@ -1326,7 +1341,7 @@ export const ACHIEVEMENTS: readonly Achievement[] = [
   {
     id: 'ach_collector',
     title: 'Royal Wardrobe',
-    description: 'Unlock at least 4 custom cosmetics or castle decorations.',
+    description: 'Unlock at least 4 custom cosmetics or realm decorations.',
     icon: '💎',
     xpReward: 60,
     badgeColor: '#a855f7',

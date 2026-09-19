@@ -85,9 +85,10 @@ describe('Task 9.4 — Rewards Integration Tests', () => {
       expect(screen.getByTestId('tab-cat-effects')).toHaveClass('active');
       expect(screen.getByTestId('cosmetic-card-arrow_effect_classic')).toBeInTheDocument();
 
-      // Switch to Castle Decorations
+      // Switch to Realm Decorations
       fireEvent.click(screen.getByTestId('tab-cat-castle'));
       expect(screen.getByTestId('tab-cat-castle')).toHaveClass('active');
+      expect(screen.getByTestId('tab-cat-castle')).toHaveTextContent(/Realm Decorations/i);
       expect(screen.getByTestId('cosmetic-card-castle_banner_royal_lion')).toBeInTheDocument();
 
       // Switch to Trophy Wall
@@ -117,7 +118,9 @@ describe('Task 9.4 — Rewards Integration Tests', () => {
       expect(screen.getByTestId('status-equipped-bow_ember_blaze')).toBeInTheDocument();
 
       // Showcase archer graphic should now have data-bow="bow_ember_blaze"
-      const archer = screen.getByTestId('rewards-showcase').querySelector('[data-testid="archer-graphic"]');
+      const archer = screen
+        .getByTestId('rewards-showcase')
+        .querySelector('[data-testid="archer-graphic"]');
       expect(archer).toHaveAttribute('data-bow', 'bow_ember_blaze');
     });
 
@@ -130,13 +133,7 @@ describe('Task 9.4 — Rewards Integration Tests', () => {
         updatePlayerRewards: vi.fn().mockResolvedValue({ success: true }),
       } as unknown as MathArcherApiClient;
 
-      render(
-        <RewardsScreen
-          playerId="player-1"
-          storage={storage}
-          apiClient={mockApiClient}
-        />
-      );
+      render(<RewardsScreen playerId="player-1" storage={storage} apiClient={mockApiClient} />);
 
       // Equip Ember Hearth Robe
       const equipBtn = screen.getByTestId('equip-outfit_ember_crimson');
@@ -162,13 +159,7 @@ describe('Task 9.4 — Rewards Integration Tests', () => {
       state.currentStreak = 1;
       savePlayerRewards(state, storage);
 
-      render(
-        <GameScreen
-          playerId="player-1"
-          storage={storage}
-          autoAdvanceDelayMs={0}
-        />
-      );
+      render(<GameScreen playerId="player-1" storage={storage} autoAdvanceDelayMs={0} />);
 
       const levelBadge = screen.getByTestId('player-level-badge');
       expect(levelBadge).toBeInTheDocument();
@@ -193,13 +184,7 @@ describe('Task 9.4 — Rewards Integration Tests', () => {
       state.equippedCosmetics.castleBanner = 'castle_banner_dragon_fire';
       savePlayerRewards(state, storage);
 
-      render(
-        <GameScreen
-          playerId="player-1"
-          storage={storage}
-          autoAdvanceDelayMs={0}
-        />
-      );
+      render(<GameScreen playerId="player-1" storage={storage} autoAdvanceDelayMs={0} />);
 
       // Archer graphic reflects equipped outfit & bow
       const archer = screen.getByTestId('archer-graphic');
@@ -216,13 +201,7 @@ describe('Task 9.4 — Rewards Integration Tests', () => {
     });
 
     it('submitting an answer awards XP and displays floating XP pill', async () => {
-      render(
-        <GameScreen
-          playerId="player-1"
-          storage={storage}
-          autoAdvanceDelayMs={100}
-        />
-      );
+      render(<GameScreen playerId="player-1" storage={storage} autoAdvanceDelayMs={100} />);
 
       const buttons = screen.getAllByRole('button');
       const answerChoice = buttons.find((btn) => btn.getAttribute('data-value'));
@@ -240,12 +219,7 @@ describe('Task 9.4 — Rewards Integration Tests', () => {
 
     it('completing daily session displays Tomorrow Bounty Card motivating return tomorrow', async () => {
       render(
-        <GameScreen
-          playerId="player-1"
-          storage={storage}
-          maxArrows={1}
-          autoAdvanceDelayMs={0}
-        />
+        <GameScreen playerId="player-1" storage={storage} maxArrows={1} autoAdvanceDelayMs={0} />
       );
 
       const buttons = screen.getAllByRole('button');
@@ -260,9 +234,7 @@ describe('Task 9.4 — Rewards Integration Tests', () => {
 
       // Rewards summary
       expect(screen.getByTestId('session-rewards-summary')).toBeInTheDocument();
-      expect(screen.getByTestId('session-rewards-summary')).toHaveTextContent(
-        /\+100 XP Earned/i
-      );
+      expect(screen.getByTestId('session-rewards-summary')).toHaveTextContent(/\+100 XP Earned/i);
 
       // Tomorrow's Bounty Card
       const bountyCard = screen.getByTestId('tomorrow-bounty-card');
@@ -365,7 +337,9 @@ describe('Task 9.4 — Rewards Integration Tests', () => {
       fireEvent.click(screen.getByTestId('equip-outfit_divine_archon'));
       expect(screen.getByTestId('status-equipped-outfit_divine_archon')).toBeInTheDocument();
 
-      const archer = screen.getByTestId('rewards-showcase').querySelector('[data-testid="archer-graphic"]');
+      const archer = screen
+        .getByTestId('rewards-showcase')
+        .querySelector('[data-testid="archer-graphic"]');
       expect(archer).toHaveAttribute('data-outfit', 'outfit_divine_archon');
 
       // Switch to Bows and equip Infinity Bow
@@ -377,7 +351,9 @@ describe('Task 9.4 — Rewards Integration Tests', () => {
       fireEvent.click(screen.getByTestId('tab-cat-castle'));
       fireEvent.click(screen.getByTestId('equip-castle_ground_starfall_mosaic'));
 
-      const backdrop = screen.getByTestId('rewards-showcase').querySelector('[data-testid="range-backdrop"]');
+      const backdrop = screen
+        .getByTestId('rewards-showcase')
+        .querySelector('[data-testid="range-backdrop"]');
       expect(backdrop).toHaveAttribute('data-ground', 'castle_ground_starfall_mosaic');
     });
 
@@ -429,19 +405,27 @@ describe('Task 9.4 — Rewards Integration Tests', () => {
       expect(testBtn).toBeInTheDocument();
       fireEvent.click(testBtn);
 
-      const target = screen.getByTestId('rewards-showcase').querySelector('[data-testid="target-card"]');
+      const target = screen
+        .getByTestId('rewards-showcase')
+        .querySelector('[data-testid="target-card"]');
       expect(target).toHaveAttribute('data-hit-state', 'hit');
     });
 
     it('synchronizes equipped rewards bidirectionally between Royal Armory and Play screens', () => {
       const state = createDefaultRewardsState('player-local');
-      state.unlockedCosmeticIds.push('outfit_ember_crimson', 'bow_ember_blaze', 'arrow_effect_flame_embers');
+      state.unlockedCosmeticIds.push(
+        'outfit_ember_crimson',
+        'bow_ember_blaze',
+        'arrow_effect_flame_embers'
+      );
       savePlayerRewards(state);
 
       render(<App />);
 
       // Verify initial state on Play screen
-      const playArcher = screen.getByTestId('archer-character').querySelector('[data-testid="archer-graphic"]');
+      const playArcher = screen
+        .getByTestId('archer-character')
+        .querySelector('[data-testid="archer-graphic"]');
       expect(playArcher).toHaveAttribute('data-outfit', 'outfit_classic_green');
 
       // Navigate to Royal Armory
@@ -457,8 +441,40 @@ describe('Task 9.4 — Rewards Integration Tests', () => {
       expect(screen.getByTestId('archer-stage')).toBeInTheDocument();
 
       // Play screen immediately reflects the newly equipped outfit!
-      const updatedPlayArcher = screen.getByTestId('archer-character').querySelector('[data-testid="archer-graphic"]');
+      const updatedPlayArcher = screen
+        .getByTestId('archer-character')
+        .querySelector('[data-testid="archer-graphic"]');
       expect(updatedPlayArcher).toHaveAttribute('data-outfit', 'outfit_ember_crimson');
+    });
+
+    it('renders equipped decorations when inspecting non-castle realms in showcase', () => {
+      const state = createDefaultRewardsState('player-1');
+      state.unlockedCosmeticIds.push(
+        'castle_banner_dragon_fire',
+        'castle_statue_crystal_dragon',
+        'castle_ground_obsidian_cobble'
+      );
+      state.equippedCosmetics.castleBanner = 'castle_banner_dragon_fire';
+      state.equippedCosmetics.castleStatue = 'castle_statue_crystal_dragon';
+      state.equippedCosmetics.castleGround = 'castle_ground_obsidian_cobble';
+      savePlayerRewards(state, storage);
+
+      render(<RewardsScreen playerId="player-1" storage={storage} initialAreaId="fire_area" />);
+
+      const showcase = screen.getByTestId('rewards-showcase');
+      const backdrop = showcase.querySelector('[data-testid="range-backdrop"]');
+      expect(backdrop).toBeInTheDocument();
+      expect(backdrop).toHaveAttribute('data-area', 'fire_area');
+      expect(backdrop).toHaveAttribute('data-banner', 'castle_banner_dragon_fire');
+      expect(backdrop).toHaveAttribute('data-statue', 'castle_statue_crystal_dragon');
+      expect(backdrop).toHaveAttribute('data-ground', 'castle_ground_obsidian_cobble');
+
+      // Banner, statue, and ground SVG elements are rendered in the non-castle realm
+      expect(
+        showcase.querySelector('[data-testid="realm-encampment-banners"]')
+      ).toBeInTheDocument();
+      expect(showcase.querySelector('[data-testid="statue-crystal-dragon"]')).toBeInTheDocument();
+      expect(showcase.querySelector('[data-testid="ground-obsidian"]')).toBeInTheDocument();
     });
   });
 });

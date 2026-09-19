@@ -1,42 +1,59 @@
-/* WorldMap.css - Styles for Math Archer World Progression Map */
+/* WorldMap.css - Single-Screen Layout for Math Archer World Progression Map */
 
 .world-map-container {
   display: flex;
   flex-direction: column;
-  max-width: 900px;
+  width: 100%;
+  max-width: 1400px;
+  height: 100%;
+  flex: 1;
+  min-height: 0;
   margin: 0 auto;
-  padding: 24px 16px;
+  padding: 4px 10px 6px;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  user-select: none;
   box-sizing: border-box;
+  position: relative;
+  overflow: hidden;
 }
 
+/* Compact HUD Header */
 .world-map-header {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
   background: #ffffff;
   border: 1px solid #e2e8f0;
-  border-radius: 16px;
-  padding: 20px 24px;
-  margin-bottom: 24px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04);
+  border-radius: 12px;
+  padding: 4px 12px;
+  min-height: 42px;
+  box-sizing: border-box;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+  z-index: 5;
 }
 
-.world-map-header-top {
+.world-map-header-left {
   display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  gap: 16px;
-  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 8px;
+  flex-shrink: 0;
 }
 
 .world-map-title {
-  margin: 0 0 6px 0;
-  font-size: 24px;
+  margin: 0;
+  font-size: 15px;
   font-weight: 800;
-  color: #1e293b;
+  color: #0f172a;
+  white-space: nowrap;
 }
 
 .world-map-subtitle {
   margin: 0;
-  font-size: 14px;
+  font-size: 11px;
   color: #64748b;
+  white-space: nowrap;
 }
 
 .back-to-game-btn {
@@ -44,11 +61,13 @@
   color: #ffffff;
   border: none;
   border-radius: 8px;
-  padding: 10px 18px;
-  font-size: 14px;
+  padding: 5px 12px;
+  font-size: 12px;
   font-weight: 700;
   cursor: pointer;
-  transition: all 0.15s ease-in-out;
+  transition: all 0.15s ease;
+  white-space: nowrap;
+  flex-shrink: 0;
 }
 
 .back-to-game-btn:hover {
@@ -57,34 +76,38 @@
 }
 
 .back-to-game-btn:focus-visible {
-  outline: 3px solid #93c5fd;
-  outline-offset: 2px;
+  outline: 2px solid #93c5fd;
+  outline-offset: 1px;
 }
 
-/* Progression Overview Bar */
+/* Progression Overview Bar in Header */
 .world-progression-bar {
-  margin-top: 18px;
+  flex: 1 1 auto;
+  min-width: 180px;
+  max-width: 480px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
   background: #f8fafc;
   border: 1px solid #e2e8f0;
-  border-radius: 12px;
-  padding: 14px 16px;
+  border-radius: 8px;
+  padding: 3px 10px;
 }
 
 .world-progress-stat {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  font-size: 14px;
+  font-size: 11px;
   color: #334155;
-  margin-bottom: 8px;
+  font-weight: 600;
 }
 
 .world-progress-meter {
-  height: 10px;
+  height: 5px;
   background: #e2e8f0;
   border-radius: 9999px;
   overflow: hidden;
-  margin-bottom: 8px;
 }
 
 .world-progress-fill {
@@ -95,8 +118,11 @@
 }
 
 .world-next-unlock {
-  font-size: 13px;
+  font-size: 10px;
   color: #475569;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .all-unlocked-banner {
@@ -104,362 +130,51 @@
   font-weight: 700;
 }
 
-/* World Progression Vertical Path Layout */
-.world-map-schema-view,
-.world-progression-path {
+/* World Map Arena Layout (Dual-Column Matching Play Tab) */
+.world-map-arena {
   display: flex;
-  flex-direction: column;
-  align-items: center;
-  width: 100%;
-  max-width: 720px;
-  margin: 0 auto;
-  position: relative;
-}
-
-.progression-row {
-  display: flex;
-  width: 100%;
-  align-items: center;
-  gap: 16px;
-}
-
-.progression-step-indicator {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
+  flex-direction: row;
+  align-items: stretch;
   justify-content: center;
-  width: 72px;
-  flex-shrink: 0;
-  gap: 4px;
-}
-
-.step-circle {
-  width: 44px;
-  height: 44px;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-weight: 800;
-  font-size: 16px;
-  transition: all 0.2s ease-in-out;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
-}
-
-.step-circle.locked {
-  background: #f1f5f9;
-  border: 2px dashed #cbd5e1;
-  color: #94a3b8;
-}
-
-.step-circle.unlocked {
-  background: #dcfce7;
-  border: 2px solid #22c55e;
-  color: #15803d;
-}
-
-.step-circle.active {
-  background: #2563eb;
-  border: 2px solid #1d4ed8;
-  color: #ffffff;
-  box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.25);
-  transform: scale(1.08);
-}
-
-.step-label {
-  font-size: 11px;
-  font-weight: 700;
-  color: #64748b;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-}
-
-.progression-card-container {
+  gap: 12px;
+  width: 100%;
   flex: 1;
-  min-width: 0;
-}
-
-/* Progression Connector Line & Arrow */
-.progression-connector-line {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  width: 72px;
-  margin-right: auto;
-  padding: 6px 0;
+  min-height: 0;
+  overflow: hidden;
+  margin-top: 6px;
   box-sizing: border-box;
 }
 
-.connector-stem {
-  width: 3px;
-  height: 20px;
-  border-radius: 2px;
-}
-
-.progression-connector-line.unlocked .connector-stem {
-  background: #22c55e;
-}
-
-.progression-connector-line.locked .connector-stem {
-  background: repeating-linear-gradient(
-    to bottom,
-    #cbd5e1,
-    #cbd5e1 4px,
-    transparent 4px,
-    transparent 8px
-  );
-}
-
-.connector-arrow {
-  font-size: 10px;
-  line-height: 1;
-  margin-top: -2px;
-}
-
-.progression-connector-line.unlocked .connector-arrow {
-  color: #22c55e;
-}
-
-.progression-connector-line.locked .connector-arrow {
-  color: #94a3b8;
-}
-
-/* Realm Cards */
-.realm-card {
-  width: 100%;
-  background: #ffffff;
-  border-radius: 14px;
-  padding: 16px 18px;
+/* Left Column: Interactive Realm Inspection & Environment Stage */
+.world-map-stage-column {
+  flex: 1.15;
+  min-width: 0;
+  min-height: 0;
   display: flex;
   flex-direction: column;
-  gap: 10px;
-  transition: all 0.2s ease-in-out;
   position: relative;
+  border-radius: 16px;
+  border: 1px solid #e2e8f0;
+  background: #0f172a;
+  overflow: hidden;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
 }
 
-.realm-card.unlocked {
-  border: 2px solid #cbd5e1;
-}
-
-.realm-card.locked {
-  border: 2px dashed #cbd5e1;
-  background: #f8fafc;
-  opacity: 0.78;
-}
-
-.realm-card.active {
-  border: 2px solid #2563eb;
-  box-shadow:
-    0 0 0 3px rgba(37, 99, 235, 0.2),
-    0 8px 20px rgba(37, 99, 235, 0.12);
-}
-
-/* Area-specific accent borders when unlocked */
-.realm-card.area-castle.unlocked {
-  border-color: #93c5fd;
-  background: linear-gradient(180deg, #ffffff 0%, #f0f9ff 100%);
-}
-.realm-card.area-castle.active {
-  border-color: #2563eb;
-}
-
-.realm-card.area-fire_area.unlocked {
-  border-color: #fdba74;
-  background: linear-gradient(180deg, #ffffff 0%, #fff7ed 100%);
-}
-.realm-card.area-fire_area.active {
-  border-color: #ea580c;
-  box-shadow:
-    0 0 0 3px rgba(234, 88, 12, 0.25),
-    0 8px 20px rgba(234, 88, 12, 0.15);
-}
-
-.realm-card.area-ice_area.unlocked {
-  border-color: #7dd3fc;
-  background: linear-gradient(180deg, #ffffff 0%, #f0f9ff 100%);
-}
-.realm-card.area-ice_area.active {
-  border-color: #0284c7;
-  box-shadow:
-    0 0 0 3px rgba(2, 132, 199, 0.25),
-    0 8px 20px rgba(2, 132, 199, 0.15);
-}
-
-.realm-card.area-wind_area.unlocked {
-  border-color: #6ee7b7;
-  background: linear-gradient(180deg, #ffffff 0%, #ecfdf5 100%);
-}
-.realm-card.area-wind_area.active {
-  border-color: #059669;
-  box-shadow:
-    0 0 0 3px rgba(5, 150, 105, 0.25),
-    0 8px 20px rgba(5, 150, 105, 0.15);
-}
-
-.realm-card.area-earth_area.unlocked {
-  border-color: #fde047;
-  background: linear-gradient(180deg, #ffffff 0%, #fefce8 100%);
-}
-.realm-card.area-earth_area.active {
-  border-color: #d97706;
-  box-shadow:
-    0 0 0 3px rgba(217, 119, 6, 0.25),
-    0 8px 20px rgba(217, 119, 6, 0.15);
-}
-
-/* Realm Card Header */
-.realm-card-header {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-
-.realm-card-icon {
-  font-size: 32px;
-  line-height: 1;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.realm-card-title-box {
-  flex: 1;
-}
-
-.realm-card-name {
-  margin: 0;
-  font-size: 17px;
-  font-weight: 700;
-  color: #0f172a;
-}
-
-.realm-card-tag {
-  font-size: 12px;
-  color: #64748b;
-  font-weight: 500;
-}
-
-/* Status Badges */
-.realm-status-badge {
-  font-size: 11px;
-  font-weight: 700;
-  padding: 4px 8px;
-  border-radius: 9999px;
-  white-space: nowrap;
-}
-
-.badge-active {
-  background: #dbeafe;
-  color: #1d4ed8;
-  border: 1px solid #bfdbfe;
-}
-
-.badge-unlocked {
-  background: #dcfce7;
-  color: #166534;
-  border: 1px solid #bbf7d0;
-}
-
-.badge-locked {
-  background: #f1f5f9;
-  color: #64748b;
-  border: 1px solid #e2e8f0;
-}
-
-/* Card Content */
-.realm-card-description {
-  margin: 0;
-  font-size: 13px;
-  color: #475569;
-  line-height: 1.45;
-}
-
-.realm-pedagogy-chip {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  background: rgba(0, 0, 0, 0.03);
-  padding: 4px 10px;
-  border-radius: 6px;
-  font-size: 12px;
-  color: #334155;
-  font-weight: 600;
-}
-
-.realm-card-footer {
-  margin-top: 4px;
-}
-
-.realm-unlock-requirement {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  font-size: 12px;
-  color: #64748b;
-  background: #f1f5f9;
-  padding: 8px 12px;
-  border-radius: 6px;
-  text-align: center;
-}
-
-.req-label strong {
-  color: #b91c1c;
-}
-
-.req-progress {
-  font-size: 11px;
-  color: #94a3b8;
-}
-
-.travel-area-btn {
+.world-map-stage-column .stage-backdrop-container {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
   width: 100%;
-  background: #1e293b;
-  color: #ffffff;
-  border: none;
-  border-radius: 8px;
-  padding: 9px 14px;
-  font-size: 13px;
-  font-weight: 700;
-  cursor: pointer;
-  transition: all 0.15s ease-in-out;
-}
-
-.travel-area-btn:hover:not(:disabled) {
-  background: #0f172a;
-  transform: translateY(-1px);
-}
-
-.travel-area-btn.current {
-  background: #f1f5f9;
-  color: #64748b;
-  cursor: default;
-  border: 1px solid #e2e8f0;
-}
-
-.travel-area-btn:focus-visible {
-  outline: 3px solid #60a5fa;
-  outline-offset: 2px;
-}
-
-/* Backdrop Range Styles */
-.range-backdrop-container {
-  width: 100%;
-  border-radius: 12px;
+  height: 100%;
+  margin: 0;
   overflow: hidden;
-  position: relative;
-  margin-bottom: 12px;
-  border: 1px solid #cbd5e1;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+  z-index: 0;
+  pointer-events: none;
 }
 
-.range-backdrop-svg {
-  width: 100%;
-  height: 100px;
-  display: block;
-}
-
-.range-backdrop-container.variant-arena {
+.world-map-stage-column .stage-backdrop-container .range-backdrop-container {
   width: 100%;
   height: 100%;
   margin: 0;
@@ -468,29 +183,589 @@
   box-shadow: none;
 }
 
-.range-backdrop-container.variant-arena .range-backdrop-svg {
+.world-map-stage-column .stage-backdrop-container .range-backdrop-svg {
   width: 100%;
   height: 100%;
   display: block;
 }
 
-.realm-banner-overlay {
-  position: absolute;
-  top: 8px;
-  left: 10px;
-  background: rgba(15, 23, 42, 0.7);
-  backdrop-filter: blur(4px);
+.stage-overlay-content {
+  position: relative;
+  z-index: 2;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 14px 16px;
+  box-sizing: border-box;
+  pointer-events: auto;
+}
+
+.stage-realm-top-banner {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+  background: rgba(15, 23, 42, 0.82);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 12px;
+  padding: 8px 14px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.stage-realm-header-info {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.stage-realm-icon {
+  font-size: 26px;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
+}
+
+.stage-realm-title {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 800;
   color: #ffffff;
+  letter-spacing: -0.01em;
+}
+
+.stage-realm-tag {
+  font-size: 11px;
+  color: #cbd5e1;
+  font-weight: 600;
+}
+
+.stage-realm-status-pill {
+  flex-shrink: 0;
+}
+
+.stage-status-badge {
+  padding: 3px 8px;
+  border-radius: 9999px;
+  font-size: 11px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.stage-status-badge.badge-active {
+  background: #fef08a;
+  color: #854d0e;
+  border: 1px solid #facc15;
+}
+
+.stage-status-badge.badge-unlocked {
+  background: #dcfce7;
+  color: #166534;
+  border: 1px solid #86efac;
+}
+
+.stage-status-badge.badge-locked {
+  background: #f1f5f9;
+  color: #64748b;
+  border: 1px solid #cbd5e1;
+}
+
+.stage-realm-bottom-card {
+  background: rgba(15, 23, 42, 0.86);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 14px;
+  padding: 12px 16px;
+  color: #ffffff;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-width: 560px;
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.2);
+}
+
+.stage-realm-desc {
+  margin: 0;
+  font-size: 12.5px;
+  line-height: 1.4;
+  color: #e2e8f0;
+}
+
+.stage-pedagogy-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(255, 255, 255, 0.12);
+  border: 1px solid rgba(255, 255, 255, 0.2);
   padding: 3px 10px;
   border-radius: 9999px;
   font-size: 11px;
+  font-weight: 700;
+  color: #fde047;
+  width: fit-content;
+}
+
+.stage-action-row {
+  margin-top: 4px;
+  display: flex;
+  align-items: center;
+}
+
+.stage-active-indicator {
+  font-size: 12px;
+  font-weight: 700;
+  color: #86efac;
+  background: rgba(34, 197, 94, 0.15);
+  border: 1px solid rgba(34, 197, 94, 0.3);
+  padding: 6px 12px;
+  border-radius: 8px;
+  width: 100%;
+  text-align: center;
+  box-sizing: border-box;
+}
+
+.stage-travel-btn {
+  width: 100%;
+  background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+  color: #ffffff;
+  border: none;
+  border-radius: 8px;
+  padding: 8px 16px;
+  font-size: 13px;
+  font-weight: 800;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.4);
+}
+
+.stage-travel-btn:hover {
+  background: linear-gradient(135deg, #1d4ed8 0%, #1e40af 100%);
+  transform: translateY(-1px);
+}
+
+.stage-locked-requirement {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  font-size: 11px;
+  color: #fca5a5;
+  background: rgba(239, 68, 68, 0.15);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  padding: 6px 10px;
+  border-radius: 8px;
+  width: 100%;
+  box-sizing: border-box;
+  text-align: center;
+}
+
+.locked-session-count {
+  font-size: 10px;
+  color: #fecaca;
+}
+
+/* Right Column: World Progression Path Track */
+.world-map-path-column {
+  flex: 0.85;
+  max-width: 480px;
+  min-width: 290px;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 16px;
+  padding: 8px 10px;
+  box-sizing: border-box;
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+}
+
+.path-column-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 2px 6px 6px;
+  border-bottom: 1px solid #f1f5f9;
+  margin-bottom: 4px;
+  flex-shrink: 0;
+}
+
+.path-column-title {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 800;
+  color: #0f172a;
+}
+
+.path-column-hint {
+  font-size: 10px;
+  color: #64748b;
   font-weight: 600;
+}
+
+.world-map-schema-view,
+.world-progression-path {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding-right: 2px;
+  scrollbar-width: thin;
+  scrollbar-color: #cbd5e1 transparent;
+}
+
+.world-progression-path::-webkit-scrollbar {
+  width: 4px;
+}
+
+.world-progression-path::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 4px;
+}
+
+.progression-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  border-radius: 12px;
+  padding: 2px;
+  box-sizing: border-box;
+  transition: all 0.12s ease;
+  cursor: pointer;
+}
+
+.progression-row:hover,
+.progression-row.is-inspected {
+  background: #f8fafc;
+}
+
+.progression-step-indicator {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 42px;
+  flex-shrink: 0;
+  gap: 2px;
+}
+
+.step-circle {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 800;
+  font-size: 12px;
+  transition: all 0.15s ease;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+}
+
+.step-circle.locked {
+  background: #f1f5f9;
+  border: 1.5px solid #cbd5e1;
+  color: #94a3b8;
+}
+
+.step-circle.unlocked {
+  background: #dcfce7;
+  border: 1.5px solid #22c55e;
+  color: #15803d;
+}
+
+.step-circle.active {
+  background: #fef08a;
+  border: 1.5px solid #eab308;
+  color: #854d0e;
+  box-shadow: 0 0 0 2px rgba(234, 179, 8, 0.3);
+}
+
+.step-label {
+  font-size: 9px;
+  font-weight: 700;
+  color: #94a3b8;
+  text-transform: uppercase;
+}
+
+.progression-card-container {
+  flex: 1;
+  min-width: 0;
+}
+
+.progression-connector-line {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-left: 20px;
+  height: 12px;
+  gap: 0;
+}
+
+.connector-stem {
+  width: 2px;
+  height: 6px;
+  background: #cbd5e1;
+}
+
+.connector-arrow {
+  font-size: 8px;
+  line-height: 6px;
+  color: #94a3b8;
+}
+
+.progression-connector-line.unlocked .connector-stem {
+  background: #86efac;
+}
+
+.progression-connector-line.unlocked .connector-arrow {
+  color: #22c55e;
+}
+
+/* Compact Realm Cards inside Progression Path */
+.realm-card {
+  background: #ffffff;
+  border: 1.5px solid #e2e8f0;
+  border-radius: 10px;
+  padding: 8px 10px;
+  box-sizing: border-box;
+  transition: all 0.15s ease;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.realm-card:hover,
+.realm-card.inspected {
+  border-color: #93c5fd;
+  box-shadow: 0 2px 6px rgba(59, 130, 246, 0.08);
+}
+
+.realm-card.active {
+  border-color: #3b82f6;
+  background: #f0fdf4;
+}
+
+.realm-card.locked {
+  background: #f8fafc;
+  opacity: 0.85;
+}
+
+.realm-card-header {
   display: flex;
   align-items: center;
   gap: 6px;
 }
 
-.realm-title {
-  color: #cbd5e1;
-  font-weight: 400;
+.realm-card-icon {
+  font-size: 16px;
+  flex-shrink: 0;
+}
+
+.realm-card-title-box {
+  flex: 1;
+  min-width: 0;
+}
+
+.realm-card-name {
+  margin: 0;
+  font-size: 12px;
+  font-weight: 800;
+  color: #1e293b;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.realm-card-tag {
+  font-size: 10px;
+  color: #64748b;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: block;
+}
+
+.realm-badge-container {
+  flex-shrink: 0;
+}
+
+.realm-status-badge {
+  font-size: 9px;
+  font-weight: 700;
+  padding: 2px 6px;
+  border-radius: 9999px;
+  white-space: nowrap;
+}
+
+.realm-status-badge.badge-active {
+  background: #fef08a;
+  color: #854d0e;
+  border: 1px solid #facc15;
+}
+
+.realm-status-badge.badge-unlocked {
+  background: #dcfce7;
+  color: #166534;
+  border: 1px solid #86efac;
+}
+
+.realm-status-badge.badge-locked {
+  background: #f1f5f9;
+  color: #64748b;
+  border: 1px solid #cbd5e1;
+}
+
+.realm-card-description {
+  margin: 0;
+  font-size: 11px;
+  line-height: 1.3;
+  color: #475569;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.realm-pedagogy-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: #f1f5f9;
+  border-radius: 4px;
+  padding: 2px 6px;
+  font-size: 10px;
+  color: #334155;
+  width: fit-content;
+}
+
+.pedagogy-icon {
+  font-size: 10px;
+}
+
+.pedagogy-text {
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.realm-card-footer {
+  margin-top: 2px;
+  display: flex;
+  align-items: center;
+}
+
+.realm-unlock-requirement {
+  font-size: 10px;
+  color: #dc2626;
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  padding: 3px 6px;
+  border-radius: 4px;
+  width: 100%;
+}
+
+.travel-area-btn {
+  width: 100%;
+  padding: 4px 10px;
+  border-radius: 6px;
+  font-size: 11px;
+  font-weight: 700;
+  cursor: pointer;
+  border: 1px solid #2563eb;
+  background: #eff6ff;
+  color: #1d4ed8;
+  transition: all 0.12s ease;
+}
+
+.travel-area-btn:hover:not(:disabled) {
+  background: #2563eb;
+  color: #ffffff;
+}
+
+.travel-area-btn.current,
+.travel-area-btn:disabled {
+  background: #f0fdf4;
+  color: #166534;
+  border-color: #86efac;
+  cursor: default;
+}
+
+/* Responsive Rules for Mobile / Portrait */
+@media (max-width: 768px), (orientation: portrait) {
+  .world-map-container {
+    padding: 3px 6px 4px;
+  }
+
+  .world-map-header {
+    padding: 3px 8px;
+    gap: 6px;
+    min-height: 38px;
+  }
+
+  .world-map-title {
+    font-size: 13px;
+  }
+
+  .world-map-subtitle {
+    display: none;
+  }
+
+  .world-progression-bar {
+    min-width: 140px;
+    padding: 2px 6px;
+  }
+
+  .back-to-game-btn {
+    padding: 4px 8px;
+    font-size: 11px;
+  }
+
+  .world-map-arena {
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .world-map-stage-column {
+    flex: 0.85;
+    min-height: 160px;
+  }
+
+  .stage-overlay-content {
+    padding: 8px 10px;
+  }
+
+  .stage-realm-top-banner {
+    padding: 4px 10px;
+  }
+
+  .stage-realm-title {
+    font-size: 14px;
+  }
+
+  .stage-realm-desc {
+    display: none;
+  }
+
+  .stage-realm-bottom-card {
+    padding: 8px 10px;
+    gap: 4px;
+  }
+
+  .stage-travel-btn {
+    padding: 6px 12px;
+    font-size: 12px;
+  }
+
+  .world-map-path-column {
+    flex: 1.15;
+    max-width: 100%;
+    min-width: 0;
+  }
 }

@@ -4,6 +4,8 @@ import {
   computeParentDashboardData,
   createSimulatedProfile,
   getDefaultStorage,
+  unlockAllRewards,
+  unlockAllWorldAreas,
   type ParentDashboardData,
   type Attempt,
   type DailySession,
@@ -18,6 +20,7 @@ export interface ParentDashboardProps {
   playerId?: string;
   apiClient?: MathArcherApiClient;
   storage?: SessionStorageAdapter;
+  showDevTools?: boolean;
 }
 
 export const AVATAR_OPTIONS = [
@@ -215,7 +218,9 @@ export const ParentDashboard: React.FC<ParentDashboardProps> = ({
   playerId = 'player-local',
   apiClient,
   storage,
+  showDevTools,
 }) => {
+  const isDev = showDevTools ?? Boolean(import.meta.env?.DEV);
   const authContext = useSafeAuth();
   const activeApiClient = apiClient ?? authContext?.apiClient;
   const storageAdapter = storage ?? getDefaultStorage();
@@ -224,6 +229,8 @@ export const ParentDashboard: React.FC<ParentDashboardProps> = ({
   const [data, setData] = useState<ParentDashboardData | null>(null);
   const [selectedChildId, setSelectedChildId] = useState<string>(playerId);
   const [isHydrating, setIsHydrating] = useState<boolean>(false);
+  const [isEnablingRewards, setIsEnablingRewards] = useState<boolean>(false);
+  const [devActionFeedback, setDevActionFeedback] = useState<string | null>(null);
   const [showManageModal, setShowManageModal] = useState<boolean>(false);
   const [showAddChildModal, setShowAddChildModal] = useState<boolean>(false);
   const [editingChild, setEditingChild] = useState<ChildPublicProfile | null>(null);
@@ -254,6 +261,35 @@ export const ParentDashboard: React.FC<ParentDashboardProps> = ({
 
   const effectivePlayerId = selectedChildId || authContext?.activeChild?.id || playerId;
   const selectedChildObj = authContext?.availableChildren.find((c) => c.id === effectivePlayerId);
+
+  const handleEnableAllRewards = async () => {
+    setIsEnablingRewards(true);
+    setDevActionFeedback(null);
+    try {
+      const updatedRewards = unlockAllRewards(effectivePlayerId, storageAdapter);
+      unlockAllWorldAreas(effectivePlayerId, storageAdapter);
+
+      if (activeApiClient) {
+        try {
+          await activeApiClient.updatePlayerRewards(updatedRewards, effectivePlayerId);
+        } catch {
+          // Gracefully fallback if offline
+        }
+      }
+
+      const childName = selectedChildObj?.name || 'child profile';
+      setDevActionFeedback(`🎁 All rewards, cosmetics & world realms unlocked for ${childName}!`);
+      setTimeout(() => {
+        setDevActionFeedback(null);
+      }, 5000);
+    } catch (err: unknown) {
+      setDevActionFeedback(
+        err instanceof Error ? `Failed: ${err.message}` : 'Failed to enable rewards'
+      );
+    } finally {
+      setIsEnablingRewards(false);
+    }
+  };
 
   const prevPlayerIdRef = React.useRef(playerId);
   useEffect(() => {
@@ -475,6 +511,18 @@ export const ParentDashboard: React.FC<ParentDashboardProps> = ({
           </p>
         </div>
         <div className="dashboard-actions">
+          {isDev && (
+            <button
+              type="button"
+              className="btn-secondary btn-dev-rewards"
+              data-testid="enable-all-rewards-btn"
+              onClick={handleEnableAllRewards}
+              disabled={isEnablingRewards}
+              title="Dev Mode: Unlock all cosmetics, achievements, world realms, and max level"
+            >
+              {isEnablingRewards ? '⏳ Unlocking...' : '🎁 Enable All Rewards'}
+            </button>
+          )}
           <button
             type="button"
             className={`btn-secondary ${useSample ? 'btn-sample' : ''}`}
@@ -511,6 +559,27 @@ export const ParentDashboard: React.FC<ParentDashboardProps> = ({
           )}
         </div>
       </header>
+
+      {/* Dev Action Feedback Toast */}
+      {devActionFeedback && (
+        <div
+          className="dev-feedback-toast"
+          data-testid="dev-action-feedback"
+          role="status"
+          aria-live="polite"
+        >
+          <span>{devActionFeedback}</span>
+          <button
+            type="button"
+            className="close-feedback-btn"
+            data-testid="close-dev-feedback-btn"
+            onClick={() => setDevActionFeedback(null)}
+            aria-label="Dismiss notification"
+          >
+            ✕
+          </button>
+        </div>
+      )}
 
       {/* Child Profile Switcher & Tenant Info */}
       {authContext && authContext.availableChildren && authContext.availableChildren.length > 0 && (

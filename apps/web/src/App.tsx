@@ -428,31 +428,31 @@ export const AppContent: React.FC = () => {
         </div>
       </aside>
 
-      {/* Screen Render: Game Screen is fixed 100vh; non-game views are scrollable */}
+      {/* Screen Render: Primary Game Views (Play, World Map, Royal Armory) are single-screen 100vh; secondary views are scrollable */}
       {activeTab === 'game' ? (
         <GameScreen key={`${activeChild.id}_${syncTick}`} playerId={activeChild.id} />
+      ) : activeTab === 'world' ? (
+        <WorldMap
+          key={`${activeChild.id}_${syncTick}`}
+          playerId={activeChild.id}
+          apiClient={apiClient}
+          onSelectArea={() => {
+            setSyncTick((t) => t + 1);
+            handleSwitchTab('game');
+          }}
+          onBackToGame={() => handleSwitchTab('game')}
+        />
+      ) : activeTab === 'rewards' ? (
+        <RewardsScreen
+          key={activeChild.id}
+          playerId={activeChild.id}
+          apiClient={apiClient}
+          onRewardsChange={() => setSyncTick((t) => t + 1)}
+          onBackToGame={() => handleSwitchTab('game')}
+        />
       ) : (
         <div className="app-scrollable-content">
-          {activeTab === 'world' ? (
-            <WorldMap
-              key={`${activeChild.id}_${syncTick}`}
-              playerId={activeChild.id}
-              apiClient={apiClient}
-              onSelectArea={() => {
-                setSyncTick((t) => t + 1);
-                handleSwitchTab('game');
-              }}
-              onBackToGame={() => handleSwitchTab('game')}
-            />
-          ) : activeTab === 'rewards' ? (
-            <RewardsScreen
-              key={activeChild.id}
-              playerId={activeChild.id}
-              apiClient={apiClient}
-              onRewardsChange={() => setSyncTick((t) => t + 1)}
-              onBackToGame={() => handleSwitchTab('game')}
-            />
-          ) : activeTab === 'dashboard' ? (
+          {activeTab === 'dashboard' ? (
             !isParentUnlocked ? (
               <ParentGate onCancel={() => handleSwitchTab('game')} />
             ) : (

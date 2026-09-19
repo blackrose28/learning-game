@@ -15,6 +15,7 @@ import {
   LEVEL_THRESHOLDS,
   DEFAULT_EQUIPPED,
   COSMETIC_ITEMS,
+  ACHIEVEMENTS,
   ACHIEVEMENT_BY_ID,
   COSMETIC_BY_ID,
   getDefaultTomorrowReward,
@@ -664,4 +665,53 @@ export function equipCosmetic(
     equippedCosmetics: updatedEquipped,
     updatedAt: new Date().toISOString(),
   };
+}
+
+/**
+ * Unlocks all cosmetics, achievements, and sets player to max level for testing/dev environments.
+ */
+export function unlockAllRewards(
+  playerId: string = 'player-local',
+  storage: SessionStorageAdapter = getDefaultStorage()
+): PlayerRewardsState {
+  const current = loadPlayerRewards(playerId, storage);
+  const allCosmeticIds = COSMETIC_ITEMS.map((c) => c.id);
+  const allAchievementIds = ACHIEVEMENTS.map((a) => a.id);
+  const maxThreshold = LEVEL_THRESHOLDS[LEVEL_THRESHOLDS.length - 1];
+  const maxXp = maxThreshold.xpRequired;
+  const levelInfo = calculateLevel(maxXp);
+
+  const updatedProgress: Record<string, number> = {
+    ...current.achievementProgress,
+    arrows_shot: Math.max(current.achievementProgress.arrows_shot || 0, 1000),
+    hits: Math.max(current.achievementProgress.hits || 0, 500),
+    comeback_hits: Math.max(current.achievementProgress.comeback_hits || 0, 15),
+    make10_count: Math.max(current.achievementProgress.make10_count || 0, 10),
+    doubles_count: Math.max(current.achievementProgress.doubles_count || 0, 10),
+    elem_fire: 1,
+    elem_ice: 1,
+    elem_wind: 1,
+    elem_earth: 1,
+  };
+
+  const updatedState: PlayerRewardsState = {
+    ...current,
+    totalXp: Math.max(current.totalXp, maxXp),
+    level: Math.max(current.level, levelInfo.level),
+    currentLevelXp: maxXp,
+    nextLevelXp: maxXp,
+    levelProgressPct: 100,
+    levelTitle: levelInfo.title,
+    currentStreak: Math.max(current.currentStreak, 30),
+    bestStreak: Math.max(current.bestStreak, 30),
+    lastActiveDate: current.lastActiveDate || new Date().toISOString().slice(0, 10),
+    unlockedCosmeticIds: allCosmeticIds,
+    unlockedAchievementIds: allAchievementIds,
+    achievementProgress: updatedProgress,
+    tomorrowReward: getDefaultTomorrowReward(Math.max(current.currentStreak, 30), levelInfo.level),
+    updatedAt: new Date().toISOString(),
+  };
+
+  savePlayerRewards(updatedState, storage);
+  return updatedState;
 }

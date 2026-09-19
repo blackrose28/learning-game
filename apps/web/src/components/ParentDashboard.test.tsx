@@ -8,6 +8,10 @@ import {
   saveProfile,
   createSimulatedProfile,
   createEmptyProfile,
+  loadPlayerRewards,
+  loadWorldProgression,
+  COSMETIC_ITEMS,
+  ACHIEVEMENTS,
 } from '@math-archer/learning-engine';
 import { MathArcherApiClient } from '../api/client';
 
@@ -792,6 +796,85 @@ describe('ParentDashboard Component (Task 5.2)', () => {
       await waitFor(() => {
         expect(screen.queryByTestId('syncing-indicator')).not.toBeInTheDocument();
       });
+    });
+  });
+
+  describe('Dev Mode: Enable All Rewards', () => {
+    it('renders the Enable All Rewards button when showDevTools={true} (or dev env)', () => {
+      render(<ParentDashboard playerId="player-local" showDevTools={true} />);
+      const btn = screen.getByTestId('enable-all-rewards-btn');
+      expect(btn).toBeInTheDocument();
+      expect(btn).toHaveTextContent('Enable All Rewards');
+    });
+
+    it('hides the Enable All Rewards button when showDevTools={false}', () => {
+      render(<ParentDashboard playerId="player-local" showDevTools={false} />);
+      expect(screen.queryByTestId('enable-all-rewards-btn')).not.toBeInTheDocument();
+    });
+
+    it('clicking Enable All Rewards unlocks all cosmetics, achievements, and world areas', async () => {
+      const playerId = 'child-reward-test';
+      render(<ParentDashboard playerId={playerId} showDevTools={true} />);
+
+      const btn = screen.getByTestId('enable-all-rewards-btn');
+      await act(async () => {
+        fireEvent.click(btn);
+      });
+
+      // Feedback toast appears
+      expect(screen.getByTestId('dev-action-feedback')).toBeInTheDocument();
+      expect(screen.getByTestId('dev-action-feedback')).toHaveTextContent(
+        'All rewards, cosmetics & world realms unlocked'
+      );
+
+      // Verify in storage
+      const rewards = loadPlayerRewards(playerId);
+      expect(rewards.unlockedCosmeticIds.length).toBe(COSMETIC_ITEMS.length);
+      expect(rewards.unlockedAchievementIds.length).toBe(ACHIEVEMENTS.length);
+      expect(rewards.level).toBe(30);
+      expect(rewards.totalXp).toBeGreaterThanOrEqual(45000);
+
+      const world = loadWorldProgression(playerId);
+      expect(world.unlockedAreaIds).toHaveLength(5);
+    });
+
+    it('syncs unlocked rewards to apiClient when apiClient is provided', async () => {
+      const playerId = 'child-cloud-rewards';
+      let pushedPayload: unknown = null;
+
+      const mockApiClient = new MathArcherApiClient({
+        fetchFn: async (url, init) => {
+          if (String(url).includes('/api/progress/rewards') && init?.method === 'PUT') {
+            pushedPayload = JSON.parse(init.body as string);
+            return new Response(
+              JSON.stringify({ success: true, rewards: pushedPayload }),
+              { status: 200, headers: { 'Content-Type': 'application/json' } }
+            );
+          }
+          return new Response(JSON.stringify({}), {
+            status: 200,
+            headers: { 'Content-Type': 'application/json' },
+          });
+        },
+      });
+
+      render(
+        <ParentDashboard
+          playerId={playerId}
+          apiClient={mockApiClient}
+          showDevTools={true}
+        />
+      );
+
+      const btn = screen.getByTestId('enable-all-rewards-btn');
+      await act(async () => {
+        fireEvent.click(btn);
+      });
+
+      expect(pushedPayload).toBeDefined();
+      const payload = pushedPayload as { unlockedCosmeticIds: string[]; level: number };
+      expect(payload.unlockedCosmeticIds.length).toBe(COSMETIC_ITEMS.length);
+      expect(payload.level).toBe(30);
     });
   });
 });

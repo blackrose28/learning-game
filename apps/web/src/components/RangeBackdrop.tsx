@@ -9,6 +9,485 @@ export interface RangeBackdropProps {
   variant?: 'arena' | 'compact';
 }
 
+/**
+ * Renders the tournament standards / banners flanking the arena.
+ */
+const renderBackdropBanners = (
+  bannerLeft: string,
+  bannerRight: string,
+  isCompact: boolean,
+  poleColor: string = '#334155'
+) => {
+  return isCompact ? (
+    <g className="realm-encampment-banners" data-testid="realm-encampment-banners">
+      <line x1="90" y1="70" x2="90" y2="45" stroke={poleColor} strokeWidth="2" />
+      <polygon points="90,45 115,54 90,63" fill={bannerLeft} />
+      <line x1="510" y1="70" x2="510" y2="45" stroke={poleColor} strokeWidth="2" />
+      <polygon points="510,45 535,54 510,63" fill={bannerRight} />
+    </g>
+  ) : (
+    <g className="realm-encampment-banners" data-testid="realm-encampment-banners">
+      {/* Left Standard Banner */}
+      <line x1="82" y1="50" x2="82" y2="15" stroke={poleColor} strokeWidth="2.5" />
+      <polygon points="82,15 125,28 82,40" fill={bannerLeft} />
+      <rect x="66" y="98" width="32" height="65" fill={bannerLeft} rx="2" opacity="0.9" />
+      <polygon points="66,163 82,176 98,163" fill={bannerLeft} opacity="0.9" />
+
+      {/* Right Standard Banner */}
+      <line x1="518" y1="50" x2="518" y2="15" stroke={poleColor} strokeWidth="2.5" />
+      <polygon points="518,15 561,28 518,40" fill={bannerRight} />
+      <rect x="502" y="98" width="32" height="65" fill={bannerRight} rx="2" opacity="0.9" />
+      <polygon points="502,163 518,176 534,163" fill={bannerRight} opacity="0.9" />
+    </g>
+  );
+};
+
+/**
+ * Renders an architectural promontory / dais underneath central statues.
+ */
+const renderCenterPromontory = (
+  equippedStatue: string,
+  isCompact: boolean,
+  fill: string,
+  stroke: string
+) => {
+  if (
+    equippedStatue === 'castle_statue_none' ||
+    equippedStatue === 'castle_statue_stone_gargoyle' ||
+    equippedStatue === 'castle_statue_griffin'
+  ) {
+    return null;
+  }
+  return isCompact ? (
+    <rect
+      x="275"
+      y="115"
+      width="50"
+      height="6"
+      rx="2"
+      fill={fill}
+      stroke={stroke}
+      strokeWidth="1"
+    />
+  ) : (
+    <rect
+      x="270"
+      y="115"
+      width="60"
+      height="10"
+      rx="2"
+      fill={fill}
+      stroke={stroke}
+      strokeWidth="1.5"
+    />
+  );
+};
+
+/**
+ * Renders the archer's equipped monument statue across all world realms.
+ */
+const renderBackdropStatues = (equippedStatue: string, isCompact: boolean) => {
+  if (isCompact) {
+    return (
+      <>
+        {equippedStatue === 'castle_statue_stone_gargoyle' && (
+          <g className="castle-gargoyle-statues" data-testid="statue-gargoyle">
+            <path
+              d="M 50 68 C 45 60 48 52 56 50 C 62 50 66 56 64 68 Z"
+              fill="#475569"
+              stroke="#334155"
+              strokeWidth="1"
+            />
+            <polygon points="46,54 40,48 48,50" fill="#334155" />
+            <path
+              d="M 544 68 C 540 60 542 52 550 50 C 556 50 560 56 558 68 Z"
+              fill="#475569"
+              stroke="#334155"
+              strokeWidth="1"
+            />
+            <polygon points="562,54 568,48 560,50" fill="#334155" />
+          </g>
+        )}
+
+        {equippedStatue === 'castle_statue_griffin' && (
+          <g className="castle-griffin-statues" data-testid="statue-griffin">
+            <circle cx="56" cy="54" r="5" fill="#64748b" />
+            <polygon points="53,52 45,46 51,56" fill="#334155" />
+            <path d="M 52 58 L 62 58 L 60 68 L 50 68 Z" fill="#475569" />
+            <circle cx="544" cy="54" r="5" fill="#64748b" />
+            <polygon points="547,52 555,46 549,56" fill="#334155" />
+            <path d="M 540 58 L 550 58 L 548 68 L 538 68 Z" fill="#475569" />
+          </g>
+        )}
+
+        {equippedStatue === 'castle_statue_crystal_dragon' && (
+          <g className="castle-crystal-dragon-statue" data-testid="statue-crystal-dragon">
+            <rect x="285" y="65" width="30" height="50" rx="3" fill="#cffafe" stroke="#06b6d4" />
+            <polygon points="300,44 290,56 310,56" fill="#22d3ee" stroke="#0891b2" />
+            <circle cx="300" cy="58" r="7" fill="#67e8f9" stroke="#0891b2" />
+            <polygon points="292,54 280,48 290,60" fill="#a5f3fc" />
+            <polygon points="308,54 320,48 310,60" fill="#a5f3fc" />
+          </g>
+        )}
+
+        {equippedStatue === 'castle_statue_golden_archer' && (
+          <g className="castle-golden-archer-statue" data-testid="statue-golden-archer">
+            <rect x="285" y="65" width="30" height="50" rx="3" fill="#cbd5e1" stroke="#64748b" />
+            <path d="M 285 65 Q 300 48 315 65 Z" fill="#94a3b8" />
+            <circle cx="300" cy="54" r="5" fill="#f59e0b" stroke="#d97706" strokeWidth="1" />
+            <path d="M 296 59 L 304 59 L 306 74 L 294 74 Z" fill="#fbbf24" stroke="#d97706" />
+            <line x1="304" y1="59" x2="312" y2="52" stroke="#b45309" strokeWidth="2" />
+          </g>
+        )}
+
+        {equippedStatue === 'castle_statue_phoenix_pillar' && (
+          <g className="castle-phoenix-pillar-statue" data-testid="statue-phoenix-pillar">
+            <rect x="290" y="60" width="20" height="55" fill="#fed7aa" stroke="#f97316" rx="2" />
+            <circle cx="300" cy="50" r="6" fill="#ea580c" stroke="#c2410c" />
+            <polygon points="294,48 280,42 290,54" fill="#fb923c" />
+            <polygon points="306,48 320,42 310,54" fill="#fb923c" />
+          </g>
+        )}
+
+        {equippedStatue === 'castle_statue_celestial_archon' && (
+          <g className="castle-celestial-archon-statue" data-testid="statue-celestial-archon">
+            <rect
+              x="282"
+              y="60"
+              width="36"
+              height="55"
+              rx="4"
+              fill="#f8fafc"
+              stroke="#fbbf24"
+              strokeWidth="2"
+            />
+            <circle cx="300" cy="48" r="8" fill="#fef08a" stroke="#ca8a04" strokeWidth="1.5" />
+            <circle
+              cx="300"
+              cy="48"
+              r="12"
+              fill="none"
+              stroke="#f59e0b"
+              strokeWidth="1"
+              strokeDasharray="3 2"
+            />
+            <line x1="310" y1="42" x2="322" y2="34" stroke="#38bdf8" strokeWidth="2" />
+          </g>
+        )}
+      </>
+    );
+  }
+
+  // Full Arena Mode (500h)
+  return (
+    <>
+      {equippedStatue === 'castle_statue_stone_gargoyle' && (
+        <g className="castle-gargoyle-statues" data-testid="statue-gargoyle">
+          <path
+            d="M 45 48 C 40 40 43 32 51 30 C 57 30 61 36 59 48 Z"
+            fill="#475569"
+            stroke="#334155"
+            strokeWidth="1.2"
+          />
+          <polygon points="41,34 35,28 43,30" fill="#334155" />
+          <path
+            d="M 545 48 C 541 40 543 32 551 30 C 557 30 561 36 559 48 Z"
+            fill="#475569"
+            stroke="#334155"
+            strokeWidth="1.2"
+          />
+          <polygon points="563,34 569,28 561,30" fill="#334155" />
+        </g>
+      )}
+
+      {equippedStatue === 'castle_statue_griffin' && (
+        <g className="castle-griffin-statues" data-testid="statue-griffin">
+          <circle cx="48" cy="36" r="6" fill="#64748b" />
+          <polygon points="45,34 37,28 43,38" fill="#334155" />
+          <path d="M 44 40 L 54 40 L 52 50 L 42 50 Z" fill="#475569" />
+          <circle cx="552" cy="36" r="6" fill="#64748b" />
+          <polygon points="555,34 563,28 557,38" fill="#334155" />
+          <path d="M 548 40 L 558 40 L 556 50 L 546 50 Z" fill="#475569" />
+        </g>
+      )}
+
+      {equippedStatue === 'castle_statue_crystal_dragon' && (
+        <g className="castle-crystal-dragon-statue" data-testid="statue-crystal-dragon">
+          <rect
+            x="282"
+            y="60"
+            width="36"
+            height="55"
+            rx="4"
+            fill="#cffafe"
+            stroke="#06b6d4"
+            strokeWidth="1.5"
+          />
+          <polygon points="300,38 288,52 312,52" fill="#22d3ee" stroke="#0891b2" />
+          <circle cx="300" cy="54" r="8" fill="#67e8f9" stroke="#0891b2" />
+          <polygon points="290,50 276,44 288,58" fill="#a5f3fc" />
+          <polygon points="310,50 324,44 312,58" fill="#a5f3fc" />
+        </g>
+      )}
+
+      {equippedStatue === 'castle_statue_golden_archer' && (
+        <g className="castle-golden-archer-statue" data-testid="statue-golden-archer">
+          <rect x="282" y="60" width="36" height="55" rx="4" fill="#cbd5e1" stroke="#64748b" />
+          <path d="M 282 60 Q 300 42 318 60 Z" fill="#94a3b8" />
+          <circle cx="300" cy="48" r="6.5" fill="#f59e0b" stroke="#d97706" strokeWidth="1" />
+          <path d="M 295 54 L 305 54 L 307 72 L 293 72 Z" fill="#fbbf24" stroke="#d97706" />
+          <line x1="305" y1="54" x2="315" y2="46" stroke="#b45309" strokeWidth="2.5" />
+        </g>
+      )}
+
+      {equippedStatue === 'castle_statue_phoenix_pillar' && (
+        <g className="castle-phoenix-pillar-statue" data-testid="statue-phoenix-pillar">
+          <rect
+            x="288"
+            y="55"
+            width="24"
+            height="60"
+            fill="#fed7aa"
+            stroke="#f97316"
+            rx="2"
+            strokeWidth="1.5"
+          />
+          <circle cx="300" cy="44" r="7" fill="#ea580c" stroke="#c2410c" />
+          <polygon points="293,42 278,35 289,48" fill="#fb923c" />
+          <polygon points="307,42 322,35 311,48" fill="#fb923c" />
+        </g>
+      )}
+
+      {equippedStatue === 'castle_statue_celestial_archon' && (
+        <g className="castle-celestial-archon-statue" data-testid="statue-celestial-archon">
+          <rect
+            x="280"
+            y="55"
+            width="40"
+            height="60"
+            rx="4"
+            fill="#f8fafc"
+            stroke="#fbbf24"
+            strokeWidth="2"
+          />
+          <circle cx="300" cy="42" r="9" fill="#fef08a" stroke="#ca8a04" strokeWidth="1.5" />
+          <circle
+            cx="300"
+            cy="42"
+            r="14"
+            fill="none"
+            stroke="#f59e0b"
+            strokeWidth="1.5"
+            strokeDasharray="4 2"
+          />
+          <line x1="312" y1="36" x2="326" y2="28" stroke="#38bdf8" strokeWidth="2.5" />
+        </g>
+      )}
+    </>
+  );
+};
+
+/**
+ * Renders the tournament platform / ground transformation across all world realms.
+ */
+const renderBackdropGround = (equippedGround: string, isCompact: boolean) => {
+  if (isCompact) {
+    return (
+      <>
+        {equippedGround === 'castle_ground_flowerbed' && (
+          <g className="castle-rose-flowerbed" data-testid="ground-flowerbed">
+            <circle cx="60" cy="140" r="5" fill="#e11d48" />
+            <circle cx="65" cy="138" r="4" fill="#fb7185" />
+            <circle cx="150" cy="140" r="5.5" fill="#e11d48" />
+            <circle cx="156" cy="137" r="4" fill="#fb7185" />
+            <circle cx="440" cy="140" r="5" fill="#e11d48" />
+            <circle cx="446" cy="138" r="4" fill="#fb7185" />
+            <circle cx="530" cy="140" r="5.5" fill="#e11d48" />
+            <circle cx="536" cy="137" r="4" fill="#fb7185" />
+          </g>
+        )}
+
+        {equippedGround === 'castle_ground_champions_pedestal' && (
+          <g className="castle-champions-plinth" data-testid="ground-pedestal">
+            <rect x="270" y="138" width="60" height="12" rx="2" fill="#e2e8f0" stroke="#94a3b8" />
+            <circle cx="300" cy="144" r="4.5" fill="#f59e0b" stroke="#b45309" strokeWidth="1" />
+            <circle cx="300" cy="144" r="2" fill="#ef4444" />
+          </g>
+        )}
+
+        {equippedGround === 'castle_ground_obsidian_cobble' && (
+          <g className="castle-obsidian-ground" data-testid="ground-obsidian">
+            <rect x="0" y="135" width="600" height="45" fill="#1e293b" opacity="0.9" />
+            <line x1="0" y1="135" x2="600" y2="135" stroke="#f97316" strokeWidth="2" />
+            <line x1="100" y1="135" x2="100" y2="180" stroke="#334155" strokeWidth="1" />
+            <line x1="200" y1="135" x2="200" y2="180" stroke="#334155" strokeWidth="1" />
+            <line x1="300" y1="135" x2="300" y2="180" stroke="#334155" strokeWidth="1" />
+            <line x1="400" y1="135" x2="400" y2="180" stroke="#334155" strokeWidth="1" />
+            <line x1="500" y1="135" x2="500" y2="180" stroke="#334155" strokeWidth="1" />
+          </g>
+        )}
+
+        {equippedGround === 'castle_ground_enchanted_meadow' && (
+          <g className="castle-enchanted-ground" data-testid="ground-enchanted">
+            <rect x="0" y="135" width="600" height="45" fill="#0f172a" opacity="0.9" />
+            <line x1="0" y1="135" x2="600" y2="135" stroke="#a855f7" strokeWidth="2" />
+            <circle cx="80" cy="142" r="4" fill="#c084fc" />
+            <circle cx="180" cy="144" r="4.5" fill="#38bdf8" />
+            <circle cx="280" cy="141" r="3.5" fill="#f472b6" />
+            <circle cx="380" cy="145" r="4.5" fill="#c084fc" />
+            <circle cx="480" cy="142" r="4" fill="#38bdf8" />
+          </g>
+        )}
+
+        {equippedGround === 'castle_ground_royal_marble' && (
+          <g className="castle-royal-marble-ground" data-testid="ground-marble">
+            <rect x="0" y="135" width="600" height="45" fill="#f8fafc" opacity="0.9" />
+            <line x1="0" y1="135" x2="600" y2="135" stroke="#ca8a04" strokeWidth="2.5" />
+            <line
+              x1="0"
+              y1="155"
+              x2="600"
+              y2="155"
+              stroke="#e2e8f0"
+              strokeWidth="1.5"
+              strokeDasharray="10 5"
+            />
+          </g>
+        )}
+
+        {equippedGround === 'castle_ground_starfall_mosaic' && (
+          <g className="castle-starfall-mosaic-ground" data-testid="ground-starfall">
+            <rect x="0" y="135" width="600" height="45" fill="#020617" opacity="0.9" />
+            <line x1="0" y1="135" x2="600" y2="135" stroke="#38bdf8" strokeWidth="2" />
+            <polygon points="120,140 123,148 115,143 125,143 117,148" fill="#fef08a" />
+            <polygon points="300,142 303,150 295,145 305,145 297,150" fill="#e0e7ff" />
+            <polygon points="480,140 483,148 475,143 485,143 477,148" fill="#fef08a" />
+          </g>
+        )}
+      </>
+    );
+  }
+
+  // Full Arena Mode (500h)
+  return (
+    <>
+      {equippedGround === 'castle_ground_flowerbed' && (
+        <g className="castle-rose-flowerbed" data-testid="ground-flowerbed">
+          <circle cx="60" cy="410" r="7" fill="#e11d48" />
+          <circle cx="66" cy="406" r="5" fill="#fb7185" />
+          <circle cx="150" cy="415" r="8" fill="#e11d48" />
+          <circle cx="158" cy="410" r="6" fill="#fb7185" />
+          <circle cx="280" cy="420" r="7" fill="#e11d48" />
+          <circle cx="287" cy="415" r="5" fill="#fb7185" />
+          <circle cx="440" cy="415" r="8" fill="#e11d48" />
+          <circle cx="448" cy="410" r="6" fill="#fb7185" />
+          <circle cx="530" cy="410" r="7" fill="#e11d48" />
+          <circle cx="538" cy="406" r="5" fill="#fb7185" />
+        </g>
+      )}
+
+      {equippedGround === 'castle_ground_champions_pedestal' && (
+        <g className="castle-champions-plinth" data-testid="ground-pedestal">
+          <rect
+            x="230"
+            y="405"
+            width="140"
+            height="30"
+            rx="4"
+            fill="#e2e8f0"
+            stroke="#94a3b8"
+            strokeWidth="2"
+          />
+          <circle cx="300" cy="420" r="8" fill="#f59e0b" stroke="#b45309" strokeWidth="1.5" />
+          <circle cx="300" cy="420" r="4" fill="#ef4444" />
+        </g>
+      )}
+
+      {equippedGround === 'castle_ground_obsidian_cobble' && (
+        <g className="castle-obsidian-ground" data-testid="ground-obsidian">
+          <rect x="0" y="380" width="600" height="120" fill="#1e293b" opacity="0.9" />
+          <line x1="0" y1="380" x2="600" y2="380" stroke="#f97316" strokeWidth="3" />
+          <line
+            x1="0"
+            y1="420"
+            x2="600"
+            y2="420"
+            stroke="#f97316"
+            strokeWidth="1.5"
+            opacity="0.6"
+          />
+          <line
+            x1="0"
+            y1="460"
+            x2="600"
+            y2="460"
+            stroke="#f97316"
+            strokeWidth="1.5"
+            opacity="0.6"
+          />
+          <line x1="100" y1="380" x2="100" y2="500" stroke="#334155" strokeWidth="1.5" />
+          <line x1="200" y1="380" x2="200" y2="500" stroke="#334155" strokeWidth="1.5" />
+          <line x1="300" y1="380" x2="300" y2="500" stroke="#334155" strokeWidth="1.5" />
+          <line x1="400" y1="380" x2="400" y2="500" stroke="#334155" strokeWidth="1.5" />
+          <line x1="500" y1="380" x2="500" y2="500" stroke="#334155" strokeWidth="1.5" />
+        </g>
+      )}
+
+      {equippedGround === 'castle_ground_enchanted_meadow' && (
+        <g className="castle-enchanted-ground" data-testid="ground-enchanted">
+          <rect x="0" y="380" width="600" height="120" fill="#0f172a" opacity="0.9" />
+          <line x1="0" y1="380" x2="600" y2="380" stroke="#a855f7" strokeWidth="3" />
+          <circle cx="80" cy="410" r="6" fill="#c084fc" />
+          <circle cx="180" cy="425" r="7" fill="#38bdf8" />
+          <circle cx="280" cy="415" r="5" fill="#f472b6" />
+          <circle cx="380" cy="430" r="7" fill="#c084fc" />
+          <circle cx="480" cy="415" r="6" fill="#38bdf8" />
+          <circle cx="130" cy="450" r="5" fill="#38bdf8" />
+          <circle cx="330" cy="460" r="6" fill="#c084fc" />
+          <circle cx="530" cy="455" r="5.5" fill="#f472b6" />
+        </g>
+      )}
+
+      {equippedGround === 'castle_ground_royal_marble' && (
+        <g className="castle-royal-marble-ground" data-testid="ground-marble">
+          <rect x="0" y="380" width="600" height="120" fill="#f8fafc" opacity="0.9" />
+          <line x1="0" y1="380" x2="600" y2="380" stroke="#ca8a04" strokeWidth="3.5" />
+          <line
+            x1="0"
+            y1="420"
+            x2="600"
+            y2="420"
+            stroke="#e2e8f0"
+            strokeWidth="2"
+            strokeDasharray="15 8"
+          />
+          <line
+            x1="0"
+            y1="460"
+            x2="600"
+            y2="460"
+            stroke="#e2e8f0"
+            strokeWidth="2"
+            strokeDasharray="15 8"
+          />
+        </g>
+      )}
+
+      {equippedGround === 'castle_ground_starfall_mosaic' && (
+        <g className="castle-starfall-mosaic-ground" data-testid="ground-starfall">
+          <rect x="0" y="380" width="600" height="120" fill="#020617" opacity="0.9" />
+          <line x1="0" y1="380" x2="600" y2="380" stroke="#38bdf8" strokeWidth="3" />
+          <polygon points="120,410 125,424 112,416 128,416 115,424" fill="#fef08a" />
+          <polygon points="300,415 305,429 292,421 308,421 295,429" fill="#e0e7ff" />
+          <polygon points="480,410 485,424 472,416 488,416 475,424" fill="#fef08a" />
+          <polygon points="210,450 215,464 202,456 218,456 205,464" fill="#38bdf8" />
+          <polygon points="390,450 395,464 382,456 398,456 385,464" fill="#fef08a" />
+        </g>
+      )}
+    </>
+  );
+};
+
 export const RangeBackdrop: React.FC<RangeBackdropProps> = ({
   areaId,
   equippedBanner = 'castle_banner_royal_lion',
@@ -100,79 +579,10 @@ export const RangeBackdrop: React.FC<RangeBackdropProps> = ({
               />
 
               {/* Statues on Towers */}
-              {equippedStatue === 'castle_statue_stone_gargoyle' && (
-                <g className="castle-gargoyle-statues" data-testid="statue-gargoyle">
-                  <path
-                    d="M 50 68 C 45 60 48 52 56 50 C 62 50 66 56 64 68 Z"
-                    fill="#475569"
-                    stroke="#334155"
-                    strokeWidth="1"
-                  />
-                  <polygon points="46,54 40,48 48,50" fill="#334155" />
-                  <path
-                    d="M 544 68 C 540 60 542 52 550 50 C 556 50 560 56 558 68 Z"
-                    fill="#475569"
-                    stroke="#334155"
-                    strokeWidth="1"
-                  />
-                  <polygon points="562,54 568,48 560,50" fill="#334155" />
-                </g>
-              )}
-
-              {equippedStatue === 'castle_statue_griffin' && (
-                <g className="castle-griffin-statues" data-testid="statue-griffin">
-                  <circle cx="56" cy="54" r="5" fill="#64748b" />
-                  <polygon points="53,52 45,46 51,56" fill="#334155" />
-                  <path d="M 52 58 L 62 58 L 60 68 L 50 68 Z" fill="#475569" />
-                  <circle cx="544" cy="54" r="5" fill="#64748b" />
-                  <polygon points="547,52 555,46 549,56" fill="#334155" />
-                  <path d="M 540 58 L 550 58 L 548 68 L 538 68 Z" fill="#475569" />
-                </g>
-              )}
-
-              {equippedStatue === 'castle_statue_crystal_dragon' && (
-                <g className="castle-crystal-dragon-statue" data-testid="statue-crystal-dragon">
-                  <rect x="285" y="65" width="30" height="50" rx="3" fill="#cffafe" stroke="#06b6d4" />
-                  <polygon points="300,44 290,56 310,56" fill="#22d3ee" stroke="#0891b2" />
-                  <circle cx="300" cy="58" r="7" fill="#67e8f9" stroke="#0891b2" />
-                  <polygon points="292,54 280,48 290,60" fill="#a5f3fc" />
-                  <polygon points="308,54 320,48 310,60" fill="#a5f3fc" />
-                </g>
-              )}
-
-              {equippedStatue === 'castle_statue_golden_archer' && (
-                <g className="castle-golden-archer-statue" data-testid="statue-golden-archer">
-                  <rect x="285" y="65" width="30" height="50" rx="3" fill="#cbd5e1" stroke="#64748b" />
-                  <path d="M 285 65 Q 300 48 315 65 Z" fill="#94a3b8" />
-                  <circle cx="300" cy="54" r="5" fill="#f59e0b" stroke="#d97706" strokeWidth="1" />
-                  <path d="M 296 59 L 304 59 L 306 74 L 294 74 Z" fill="#fbbf24" stroke="#d97706" />
-                  <line x1="304" y1="59" x2="312" y2="52" stroke="#b45309" strokeWidth="2" />
-                </g>
-              )}
-
-              {equippedStatue === 'castle_statue_phoenix_pillar' && (
-                <g className="castle-phoenix-pillar-statue" data-testid="statue-phoenix-pillar">
-                  <rect x="290" y="60" width="20" height="55" fill="#fed7aa" stroke="#f97316" rx="2" />
-                  <circle cx="300" cy="50" r="6" fill="#ea580c" stroke="#c2410c" />
-                  <polygon points="294,48 280,42 290,54" fill="#fb923c" />
-                  <polygon points="306,48 320,42 310,54" fill="#fb923c" />
-                </g>
-              )}
-
-              {equippedStatue === 'castle_statue_celestial_archon' && (
-                <g className="castle-celestial-archon-statue" data-testid="statue-celestial-archon">
-                  <rect x="282" y="60" width="36" height="55" rx="4" fill="#f8fafc" stroke="#fbbf24" strokeWidth="2" />
-                  <circle cx="300" cy="48" r="8" fill="#fef08a" stroke="#ca8a04" strokeWidth="1.5" />
-                  <circle cx="300" cy="48" r="12" fill="none" stroke="#f59e0b" strokeWidth="1" strokeDasharray="3 2" />
-                  <line x1="310" y1="42" x2="322" y2="34" stroke="#38bdf8" strokeWidth="2" />
-                </g>
-              )}
+              {renderBackdropStatues(equippedStatue, true)}
 
               {/* Banners & Pennants */}
-              <line x1="90" y1="70" x2="90" y2="45" stroke="#334155" strokeWidth="2" />
-              <polygon points="90,45 115,54 90,63" fill={bannerLeft} />
-              <line x1="510" y1="70" x2="510" y2="45" stroke="#334155" strokeWidth="2" />
-              <polygon points="510,45 535,54 510,63" fill={bannerRight} />
+              {renderBackdropBanners(bannerLeft, bannerRight, true, '#334155')}
 
               {/* Stone Wall */}
               <rect x="0" y="115" width="600" height="25" fill="#64748b" opacity="0.4" />
@@ -182,71 +592,10 @@ export const RangeBackdrop: React.FC<RangeBackdropProps> = ({
               <line x1="0" y1="135" x2="600" y2="135" stroke="#22c55e" strokeWidth="2" />
 
               {/* Ground Decorations */}
-              {equippedGround === 'castle_ground_flowerbed' && (
-                <g className="castle-rose-flowerbed" data-testid="ground-flowerbed">
-                  <circle cx="60" cy="140" r="5" fill="#e11d48" />
-                  <circle cx="65" cy="138" r="4" fill="#fb7185" />
-                  <circle cx="150" cy="140" r="5.5" fill="#e11d48" />
-                  <circle cx="156" cy="137" r="4" fill="#fb7185" />
-                  <circle cx="440" cy="140" r="5" fill="#e11d48" />
-                  <circle cx="446" cy="138" r="4" fill="#fb7185" />
-                  <circle cx="530" cy="140" r="5.5" fill="#e11d48" />
-                  <circle cx="536" cy="137" r="4" fill="#fb7185" />
-                </g>
-              )}
-
-              {equippedGround === 'castle_ground_champions_pedestal' && (
-                <g className="castle-champions-plinth" data-testid="ground-pedestal">
-                  <rect x="270" y="138" width="60" height="12" rx="2" fill="#e2e8f0" stroke="#94a3b8" />
-                  <circle cx="300" cy="144" r="4.5" fill="#f59e0b" stroke="#b45309" strokeWidth="1" />
-                  <circle cx="300" cy="144" r="2" fill="#ef4444" />
-                </g>
-              )}
-
-              {equippedGround === 'castle_ground_obsidian_cobble' && (
-                <g className="castle-obsidian-ground" data-testid="ground-obsidian">
-                  <rect x="0" y="135" width="600" height="45" fill="#1e293b" />
-                  <line x1="0" y1="135" x2="600" y2="135" stroke="#f97316" strokeWidth="2" />
-                  <line x1="100" y1="135" x2="100" y2="180" stroke="#334155" strokeWidth="1" />
-                  <line x1="200" y1="135" x2="200" y2="180" stroke="#334155" strokeWidth="1" />
-                  <line x1="300" y1="135" x2="300" y2="180" stroke="#334155" strokeWidth="1" />
-                  <line x1="400" y1="135" x2="400" y2="180" stroke="#334155" strokeWidth="1" />
-                  <line x1="500" y1="135" x2="500" y2="180" stroke="#334155" strokeWidth="1" />
-                </g>
-              )}
-
-              {equippedGround === 'castle_ground_enchanted_meadow' && (
-                <g className="castle-enchanted-ground" data-testid="ground-enchanted">
-                  <rect x="0" y="135" width="600" height="45" fill="#0f172a" />
-                  <line x1="0" y1="135" x2="600" y2="135" stroke="#a855f7" strokeWidth="2" />
-                  <circle cx="80" cy="142" r="4" fill="#c084fc" />
-                  <circle cx="180" cy="144" r="4.5" fill="#38bdf8" />
-                  <circle cx="280" cy="141" r="3.5" fill="#f472b6" />
-                  <circle cx="380" cy="145" r="4.5" fill="#c084fc" />
-                  <circle cx="480" cy="142" r="4" fill="#38bdf8" />
-                </g>
-              )}
-
-              {equippedGround === 'castle_ground_royal_marble' && (
-                <g className="castle-royal-marble-ground" data-testid="ground-marble">
-                  <rect x="0" y="135" width="600" height="45" fill="#f8fafc" />
-                  <line x1="0" y1="135" x2="600" y2="135" stroke="#ca8a04" strokeWidth="2.5" />
-                  <line x1="0" y1="155" x2="600" y2="155" stroke="#e2e8f0" strokeWidth="1.5" strokeDasharray="10 5" />
-                </g>
-              )}
-
-              {equippedGround === 'castle_ground_starfall_mosaic' && (
-                <g className="castle-starfall-mosaic-ground" data-testid="ground-starfall">
-                  <rect x="0" y="135" width="600" height="45" fill="#020617" />
-                  <line x1="0" y1="135" x2="600" y2="135" stroke="#38bdf8" strokeWidth="2" />
-                  <polygon points="120,140 123,148 115,143 125,143 117,148" fill="#fef08a" />
-                  <polygon points="300,142 303,150 295,145 305,145 297,150" fill="#e0e7ff" />
-                  <polygon points="480,140 483,148 475,143 485,143 477,148" fill="#fef08a" />
-                </g>
-              )}
+              {renderBackdropGround(equippedGround, true)}
             </>
           ) : (
-            /* FULL ARENA MODE (500h) - Spans entire GameScreen view */
+            /* FULL ARENA MODE (500h) */
             <>
               {/* Sky spanning the view */}
               <rect x="0" y="0" width="600" height="500" fill="url(#castle-sky)" />
@@ -264,7 +613,14 @@ export const RangeBackdrop: React.FC<RangeBackdropProps> = ({
               />
 
               {/* Distant Connecting Castle Wall & Battlements across center */}
-              <rect x="100" y="240" width="400" height="140" fill="url(#castle-wall)" opacity="0.35" />
+              <rect
+                x="100"
+                y="240"
+                width="400"
+                height="140"
+                fill="url(#castle-wall)"
+                opacity="0.35"
+              />
               <path
                 d="M 120 240 L 120 225 L 140 225 L 140 240 L 170 240 L 170 225 L 190 225 L 190 240 L 220 240 L 220 225 L 240 225 L 240 240 L 360 240 L 360 225 L 380 225 L 380 240 L 410 240 L 410 225 L 430 225 L 430 240 L 460 240 L 460 225 L 480 225 L 480 240 Z"
                 fill="url(#castle-wall)"
@@ -292,86 +648,10 @@ export const RangeBackdrop: React.FC<RangeBackdropProps> = ({
               <rect x="514" y="220" width="14" height="42" rx="4" fill="#334155" />
 
               {/* Banners & Pennants flanking the Arena */}
-              {/* Left Tower Banner */}
-              <line x1="82" y1="50" x2="82" y2="15" stroke="#334155" strokeWidth="2.5" />
-              <polygon points="82,15 125,28 82,40" fill={bannerLeft} />
-              <rect x="66" y="98" width="32" height="65" fill={bannerLeft} rx="2" opacity="0.9" />
-              <polygon points="66,163 82,176 98,163" fill={bannerLeft} opacity="0.9" />
+              {renderBackdropBanners(bannerLeft, bannerRight, false, '#334155')}
 
-              {/* Right Tower Banner */}
-              <line x1="518" y1="50" x2="518" y2="15" stroke="#334155" strokeWidth="2.5" />
-              <polygon points="518,15 561,28 518,40" fill={bannerRight} />
-              <rect x="502" y="98" width="32" height="65" fill={bannerRight} rx="2" opacity="0.9" />
-              <polygon points="502,163 518,176 534,163" fill={bannerRight} opacity="0.9" />
-
-              {/* Statues on Towers */}
-              {equippedStatue === 'castle_statue_stone_gargoyle' && (
-                <g className="castle-gargoyle-statues" data-testid="statue-gargoyle">
-                  <path
-                    d="M 45 48 C 40 40 43 32 51 30 C 57 30 61 36 59 48 Z"
-                    fill="#475569"
-                    stroke="#334155"
-                    strokeWidth="1.2"
-                  />
-                  <polygon points="41,34 35,28 43,30" fill="#334155" />
-                  <path
-                    d="M 545 48 C 541 40 543 32 551 30 C 557 30 561 36 559 48 Z"
-                    fill="#475569"
-                    stroke="#334155"
-                    strokeWidth="1.2"
-                  />
-                  <polygon points="563,34 569,28 561,30" fill="#334155" />
-                </g>
-              )}
-
-              {equippedStatue === 'castle_statue_griffin' && (
-                <g className="castle-griffin-statues" data-testid="statue-griffin">
-                  <circle cx="48" cy="36" r="6" fill="#64748b" />
-                  <polygon points="45,34 37,28 43,38" fill="#334155" />
-                  <path d="M 44 40 L 54 40 L 52 50 L 42 50 Z" fill="#475569" />
-                  <circle cx="552" cy="36" r="6" fill="#64748b" />
-                  <polygon points="555,34 563,28 557,38" fill="#334155" />
-                  <path d="M 548 40 L 558 40 L 556 50 L 546 50 Z" fill="#475569" />
-                </g>
-              )}
-
-              {equippedStatue === 'castle_statue_crystal_dragon' && (
-                <g className="castle-crystal-dragon-statue" data-testid="statue-crystal-dragon">
-                  <rect x="282" y="60" width="36" height="55" rx="4" fill="#cffafe" stroke="#06b6d4" strokeWidth="1.5" />
-                  <polygon points="300,38 288,52 312,52" fill="#22d3ee" stroke="#0891b2" />
-                  <circle cx="300" cy="54" r="8" fill="#67e8f9" stroke="#0891b2" />
-                  <polygon points="290,50 276,44 288,58" fill="#a5f3fc" />
-                  <polygon points="310,50 324,44 312,58" fill="#a5f3fc" />
-                </g>
-              )}
-
-              {equippedStatue === 'castle_statue_golden_archer' && (
-                <g className="castle-golden-archer-statue" data-testid="statue-golden-archer">
-                  <rect x="282" y="60" width="36" height="55" rx="4" fill="#cbd5e1" stroke="#64748b" />
-                  <path d="M 282 60 Q 300 42 318 60 Z" fill="#94a3b8" />
-                  <circle cx="300" cy="48" r="6.5" fill="#f59e0b" stroke="#d97706" strokeWidth="1" />
-                  <path d="M 295 54 L 305 54 L 307 72 L 293 72 Z" fill="#fbbf24" stroke="#d97706" />
-                  <line x1="305" y1="54" x2="315" y2="46" stroke="#b45309" strokeWidth="2.5" />
-                </g>
-              )}
-
-              {equippedStatue === 'castle_statue_phoenix_pillar' && (
-                <g className="castle-phoenix-pillar-statue" data-testid="statue-phoenix-pillar">
-                  <rect x="288" y="55" width="24" height="60" fill="#fed7aa" stroke="#f97316" rx="2" strokeWidth="1.5" />
-                  <circle cx="300" cy="44" r="7" fill="#ea580c" stroke="#c2410c" />
-                  <polygon points="293,42 278,35 289,48" fill="#fb923c" />
-                  <polygon points="307,42 322,35 311,48" fill="#fb923c" />
-                </g>
-              )}
-
-              {equippedStatue === 'castle_statue_celestial_archon' && (
-                <g className="castle-celestial-archon-statue" data-testid="statue-celestial-archon">
-                  <rect x="280" y="55" width="40" height="60" rx="4" fill="#f8fafc" stroke="#fbbf24" strokeWidth="2" />
-                  <circle cx="300" cy="42" r="9" fill="#fef08a" stroke="#ca8a04" strokeWidth="1.5" />
-                  <circle cx="300" cy="42" r="14" fill="none" stroke="#f59e0b" strokeWidth="1.5" strokeDasharray="4 2" />
-                  <line x1="312" y1="36" x2="326" y2="28" stroke="#38bdf8" strokeWidth="2.5" />
-                </g>
-              )}
+              {/* Statues on Towers / Battlements */}
+              {renderBackdropStatues(equippedStatue, false)}
 
               {/* Stone Wall Trim */}
               <rect x="0" y="355" width="600" height="25" fill="#64748b" opacity="0.4" />
@@ -381,78 +661,7 @@ export const RangeBackdrop: React.FC<RangeBackdropProps> = ({
               <line x1="0" y1="380" x2="600" y2="380" stroke="#22c55e" strokeWidth="3" />
 
               {/* Ground Decorations spanning the ground */}
-              {equippedGround === 'castle_ground_flowerbed' && (
-                <g className="castle-rose-flowerbed" data-testid="ground-flowerbed">
-                  <circle cx="60" cy="410" r="7" fill="#e11d48" />
-                  <circle cx="66" cy="406" r="5" fill="#fb7185" />
-                  <circle cx="150" cy="415" r="8" fill="#e11d48" />
-                  <circle cx="158" cy="410" r="6" fill="#fb7185" />
-                  <circle cx="280" cy="420" r="7" fill="#e11d48" />
-                  <circle cx="287" cy="415" r="5" fill="#fb7185" />
-                  <circle cx="440" cy="415" r="8" fill="#e11d48" />
-                  <circle cx="448" cy="410" r="6" fill="#fb7185" />
-                  <circle cx="530" cy="410" r="7" fill="#e11d48" />
-                  <circle cx="538" cy="406" r="5" fill="#fb7185" />
-                </g>
-              )}
-
-              {equippedGround === 'castle_ground_champions_pedestal' && (
-                <g className="castle-champions-plinth" data-testid="ground-pedestal">
-                  <rect x="230" y="405" width="140" height="30" rx="4" fill="#e2e8f0" stroke="#94a3b8" strokeWidth="2" />
-                  <circle cx="300" cy="420" r="8" fill="#f59e0b" stroke="#b45309" strokeWidth="1.5" />
-                  <circle cx="300" cy="420" r="4" fill="#ef4444" />
-                </g>
-              )}
-
-              {equippedGround === 'castle_ground_obsidian_cobble' && (
-                <g className="castle-obsidian-ground" data-testid="ground-obsidian">
-                  <rect x="0" y="380" width="600" height="120" fill="#1e293b" />
-                  <line x1="0" y1="380" x2="600" y2="380" stroke="#f97316" strokeWidth="3" />
-                  <line x1="0" y1="420" x2="600" y2="420" stroke="#f97316" strokeWidth="1.5" opacity="0.6" />
-                  <line x1="0" y1="460" x2="600" y2="460" stroke="#f97316" strokeWidth="1.5" opacity="0.6" />
-                  <line x1="100" y1="380" x2="100" y2="500" stroke="#334155" strokeWidth="1.5" />
-                  <line x1="200" y1="380" x2="200" y2="500" stroke="#334155" strokeWidth="1.5" />
-                  <line x1="300" y1="380" x2="300" y2="500" stroke="#334155" strokeWidth="1.5" />
-                  <line x1="400" y1="380" x2="400" y2="500" stroke="#334155" strokeWidth="1.5" />
-                  <line x1="500" y1="380" x2="500" y2="500" stroke="#334155" strokeWidth="1.5" />
-                </g>
-              )}
-
-              {equippedGround === 'castle_ground_enchanted_meadow' && (
-                <g className="castle-enchanted-ground" data-testid="ground-enchanted">
-                  <rect x="0" y="380" width="600" height="120" fill="#0f172a" />
-                  <line x1="0" y1="380" x2="600" y2="380" stroke="#a855f7" strokeWidth="3" />
-                  <circle cx="80" cy="410" r="6" fill="#c084fc" />
-                  <circle cx="180" cy="425" r="7" fill="#38bdf8" />
-                  <circle cx="280" cy="415" r="5" fill="#f472b6" />
-                  <circle cx="380" cy="430" r="7" fill="#c084fc" />
-                  <circle cx="480" cy="415" r="6" fill="#38bdf8" />
-                  <circle cx="130" cy="450" r="5" fill="#38bdf8" />
-                  <circle cx="330" cy="460" r="6" fill="#c084fc" />
-                  <circle cx="530" cy="455" r="5.5" fill="#f472b6" />
-                </g>
-              )}
-
-              {equippedGround === 'castle_ground_royal_marble' && (
-                <g className="castle-royal-marble-ground" data-testid="ground-marble">
-                  <rect x="0" y="380" width="600" height="120" fill="#f8fafc" />
-                  <line x1="0" y1="380" x2="600" y2="380" stroke="#ca8a04" strokeWidth="3.5" />
-                  <line x1="0" y1="420" x2="600" y2="420" stroke="#e2e8f0" strokeWidth="2" strokeDasharray="15 8" />
-                  <line x1="0" y1="460" x2="600" y2="460" stroke="#e2e8f0" strokeWidth="2" strokeDasharray="15 8" />
-                </g>
-              )}
-
-              {equippedGround === 'castle_ground_starfall_mosaic' && (
-                <g className="castle-starfall-mosaic-ground" data-testid="ground-starfall">
-                  <rect x="0" y="380" width="600" height="120" fill="#020617" />
-                  <line x1="0" y1="380" x2="600" y2="380" stroke="#38bdf8" strokeWidth="3" />
-                  <polygon points="120,410 125,424 112,416 128,416 115,424" fill="#fef08a" />
-                  <polygon points="300,415 305,429 292,421 308,421 295,429" fill="#e0e7ff" />
-                  <polygon points="480,410 485,424 472,416 488,416 475,424" fill="#fef08a" />
-                  <polygon points="210,450 215,464 202,456 218,456 205,464" fill="#38bdf8" />
-                  <polygon points="390,450 395,464 382,456 398,456 385,464" fill="#fef08a" />
-                </g>
-              )}
+              {renderBackdropGround(equippedGround, false)}
             </>
           )}
         </svg>
@@ -497,6 +706,15 @@ export const RangeBackdrop: React.FC<RangeBackdropProps> = ({
               <circle cx="270" cy="40" r="3" fill="#fef08a" opacity="0.9" />
               <circle cx="390" cy="70" r="2" fill="#f97316" opacity="0.8" />
               <circle cx="480" cy="50" r="2.5" fill="#fef08a" opacity="0.75" />
+
+              {/* Promontory & Statues */}
+              {renderCenterPromontory(equippedStatue, true, '#431407', '#ea580c')}
+              {renderBackdropStatues(equippedStatue, true)}
+
+              {/* Flanking Standards */}
+              {renderBackdropBanners(bannerLeft, bannerRight, true, '#292524')}
+
+              {/* Ground & Lava Veins */}
               <rect x="0" y="130" width="600" height="50" fill="#290d05" />
               <path
                 d="M 0 145 Q 150 140 300 146 T 600 144"
@@ -504,6 +722,9 @@ export const RangeBackdrop: React.FC<RangeBackdropProps> = ({
                 strokeWidth="3"
                 fill="none"
               />
+
+              {/* Tournament Platform Customization */}
+              {renderBackdropGround(equippedGround, true)}
             </>
           ) : (
             <>
@@ -532,6 +753,13 @@ export const RangeBackdrop: React.FC<RangeBackdropProps> = ({
               <circle cx="90" cy="260" r="2.5" fill="#fef08a" opacity="0.75" />
               <circle cx="510" cy="240" r="3" fill="#f97316" opacity="0.85" />
 
+              {/* Basalt Promontory & Monument Statues */}
+              {renderCenterPromontory(equippedStatue, false, '#431407', '#ea580c')}
+              {renderBackdropStatues(equippedStatue, false)}
+
+              {/* Flanking Standards */}
+              {renderBackdropBanners(bannerLeft, bannerRight, false, '#292524')}
+
               {/* Lava crack ground (y: 380 to 500) */}
               <rect x="0" y="380" width="600" height="120" fill="#290d05" />
               <path
@@ -547,6 +775,9 @@ export const RangeBackdrop: React.FC<RangeBackdropProps> = ({
                 fill="none"
                 opacity="0.8"
               />
+
+              {/* Tournament Platform Customization */}
+              {renderBackdropGround(equippedGround, false)}
             </>
           )}
         </svg>
@@ -591,11 +822,22 @@ export const RangeBackdrop: React.FC<RangeBackdropProps> = ({
               <circle cx="340" cy="35" r="2" fill="#ffffff" opacity="0.95" />
               <circle cx="430" cy="65" r="2.5" fill="#ffffff" opacity="0.85" />
               <circle cx="560" cy="40" r="2" fill="#ffffff" opacity="0.8" />
+
+              {/* Glacial Promontory & Statues */}
+              {renderCenterPromontory(equippedStatue, true, '#e0f2fe', '#38bdf8')}
+              {renderBackdropStatues(equippedStatue, true)}
+
+              {/* Flanking Standards */}
+              {renderBackdropBanners(bannerLeft, bannerRight, true, '#94a3b8')}
+
               <path
                 d="M 0 130 Q 150 120 300 130 T 600 128 L 600 180 L 0 180 Z"
                 fill="url(#snow-ground)"
               />
               <line x1="0" y1="130" x2="600" y2="130" stroke="#e2e8f0" strokeWidth="2" />
+
+              {/* Tournament Platform Customization */}
+              {renderBackdropGround(equippedGround, true)}
             </>
           ) : (
             <>
@@ -622,12 +864,22 @@ export const RangeBackdrop: React.FC<RangeBackdropProps> = ({
               <circle cx="90" cy="240" r="2.5" fill="#ffffff" opacity="0.75" />
               <circle cx="510" cy="220" r="3" fill="#ffffff" opacity="0.85" />
 
+              {/* Glacial Promontory & Statues */}
+              {renderCenterPromontory(equippedStatue, false, '#e0f2fe', '#38bdf8')}
+              {renderBackdropStatues(equippedStatue, false)}
+
+              {/* Flanking Standards */}
+              {renderBackdropBanners(bannerLeft, bannerRight, false, '#94a3b8')}
+
               {/* Snow field Ground (y: 380 to 500) */}
               <path
                 d="M 0 380 Q 150 365 300 380 T 600 375 L 600 500 L 0 500 Z"
                 fill="url(#snow-ground)"
               />
               <line x1="0" y1="380" x2="600" y2="380" stroke="#e2e8f0" strokeWidth="3" />
+
+              {/* Tournament Platform Customization */}
+              {renderBackdropGround(equippedGround, false)}
             </>
           )}
         </svg>
@@ -680,8 +932,19 @@ export const RangeBackdrop: React.FC<RangeBackdropProps> = ({
               <rect x="480" y="70" width="16" height="60" fill="url(#temple-pillars)" rx="2" />
               <rect x="520" y="70" width="16" height="60" fill="url(#temple-pillars)" rx="2" />
               <rect x="472" y="66" width="72" height="8" fill="#115e59" rx="2" />
+
+              {/* Sky Temple Dais & Statues */}
+              {renderCenterPromontory(equippedStatue, true, '#115e59', '#2dd4bf')}
+              {renderBackdropStatues(equippedStatue, true)}
+
+              {/* Flanking Standards */}
+              {renderBackdropBanners(bannerLeft, bannerRight, true, '#0d9488')}
+
               <rect x="0" y="130" width="600" height="50" fill="#134e4a" />
               <rect x="0" y="130" width="600" height="6" fill="#2dd4bf" />
+
+              {/* Tournament Platform Customization */}
+              {renderBackdropGround(equippedGround, true)}
             </>
           ) : (
             <>
@@ -723,15 +986,20 @@ export const RangeBackdrop: React.FC<RangeBackdropProps> = ({
               />
 
               {/* Sky Temple Colonnade Pillars flanking the Arena */}
-              {/* Left Colonnade */}
               <rect x="40" y="130" width="22" height="250" fill="url(#temple-pillars)" rx="3" />
               <rect x="80" y="130" width="22" height="250" fill="url(#temple-pillars)" rx="3" />
               <rect x="30" y="120" width="82" height="14" fill="#115e59" rx="3" />
 
-              {/* Right Colonnade */}
               <rect x="500" y="130" width="22" height="250" fill="url(#temple-pillars)" rx="3" />
               <rect x="540" y="130" width="22" height="250" fill="url(#temple-pillars)" rx="3" />
               <rect x="490" y="120" width="82" height="14" fill="#115e59" rx="3" />
+
+              {/* Sky Temple Dais & Statues */}
+              {renderCenterPromontory(equippedStatue, false, '#115e59', '#2dd4bf')}
+              {renderBackdropStatues(equippedStatue, false)}
+
+              {/* Flanking Standards */}
+              {renderBackdropBanners(bannerLeft, bannerRight, false, '#0d9488')}
 
               {/* High altitude stone terrace (y: 380 to 500) */}
               <rect x="0" y="380" width="600" height="120" fill="#134e4a" />
@@ -741,6 +1009,9 @@ export const RangeBackdrop: React.FC<RangeBackdropProps> = ({
               <line x1="300" y1="390" x2="300" y2="500" stroke="#0f766e" strokeWidth="2" />
               <line x1="400" y1="390" x2="400" y2="500" stroke="#0f766e" strokeWidth="2" />
               <line x1="500" y1="390" x2="500" y2="500" stroke="#0f766e" strokeWidth="2" />
+
+              {/* Tournament Platform Customization */}
+              {renderBackdropGround(equippedGround, false)}
             </>
           )}
         </svg>
@@ -796,8 +1067,19 @@ export const RangeBackdrop: React.FC<RangeBackdropProps> = ({
                 transform="rotate(3 510 85)"
                 rx="3"
               />
+
+              {/* Granite Altar Dais & Statues */}
+              {renderCenterPromontory(equippedStatue, true, '#78350f', '#b45309')}
+              {renderBackdropStatues(equippedStatue, true)}
+
+              {/* Flanking Standards */}
+              {renderBackdropBanners(bannerLeft, bannerRight, true, '#78350f')}
+
               <rect x="0" y="130" width="600" height="50" fill="#451a03" />
               <line x1="0" y1="130" x2="600" y2="130" stroke="#b45309" strokeWidth="3" />
+
+              {/* Tournament Platform Customization */}
+              {renderBackdropGround(equippedGround, true)}
             </>
           ) : (
             <>
@@ -847,11 +1129,37 @@ export const RangeBackdrop: React.FC<RangeBackdropProps> = ({
                 rx="4"
               />
 
+              {/* Granite Altar Dais & Statues */}
+              {renderCenterPromontory(equippedStatue, false, '#78350f', '#b45309')}
+              {renderBackdropStatues(equippedStatue, false)}
+
+              {/* Flanking Standards */}
+              {renderBackdropBanners(bannerLeft, bannerRight, false, '#78350f')}
+
               {/* Rocky canyon bedrock ground (y: 380 to 500) */}
               <rect x="0" y="380" width="600" height="120" fill="#451a03" />
               <line x1="0" y1="380" x2="600" y2="380" stroke="#b45309" strokeWidth="4" />
-              <line x1="0" y1="420" x2="600" y2="420" stroke="#78350f" strokeWidth="2" strokeDasharray="20 10" />
-              <line x1="0" y1="460" x2="600" y2="460" stroke="#78350f" strokeWidth="2" strokeDasharray="20 10" />
+              <line
+                x1="0"
+                y1="420"
+                x2="600"
+                y2="420"
+                stroke="#78350f"
+                strokeWidth="2"
+                strokeDasharray="20 10"
+              />
+              <line
+                x1="0"
+                y1="460"
+                x2="600"
+                y2="460"
+                stroke="#78350f"
+                strokeWidth="2"
+                strokeDasharray="20 10"
+              />
+
+              {/* Tournament Platform Customization */}
+              {renderBackdropGround(equippedGround, false)}
             </>
           )}
         </svg>

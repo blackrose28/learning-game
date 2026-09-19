@@ -291,4 +291,18 @@ export function saveActiveArea(
   return loadWorldProgression(playerId, storage, highestCount);
 }
 
+/**
+ * Unlocks all world areas by ensuring completed sessions count is at least 10 for testing/dev environments.
+ */
+export function unlockAllWorldAreas(
+  playerId: string = 'player-local',
+  storage: SessionStorageAdapter = getDefaultStorage()
+): WorldProgressionState {
+  const allAreas = getAllWorldAreas();
+  const maxRequired = Math.max(...allAreas.map((a) => a.sessionsRequired));
+  const targetSessions = Math.max(10, maxRequired);
+  storage.setItem(getWorldCompletedSessionsKey(playerId), String(targetSessions));
+  return loadWorldProgression(playerId, storage, targetSessions);
+}
+
 
