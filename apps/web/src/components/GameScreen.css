@@ -84,17 +84,34 @@
 }
 
 .game-range-column .range-backdrop-container {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
   width: 100%;
-  margin-bottom: 4px;
-  border-radius: 10px;
+  height: 100%;
+  margin: 0;
+  border-radius: inherit;
+  border: none;
+  box-shadow: none;
   overflow: hidden;
-  flex-shrink: 0;
+  z-index: 0;
+  pointer-events: none;
 }
 
 .game-range-column .range-backdrop-svg {
   width: 100%;
-  height: clamp(36px, 6.5vh, 65px);
+  height: 100%;
   display: block;
+}
+
+.game-range-column .realm-banner-overlay {
+  position: absolute;
+  top: 10px;
+  left: 12px;
+  z-index: 3;
+  pointer-events: auto;
 }
 
 /* Right Column: Quiver 2x2 Arrows, Progress & Presets */
@@ -125,6 +142,8 @@
   width: 100%;
   flex-shrink: 0;
   margin-top: 2px;
+  position: relative;
+  z-index: 2;
 }
 
 .range-meta-row .help-action-bar {
@@ -133,8 +152,12 @@
 
 .range-meta-row .adaptation-info-bar {
   margin-bottom: 0;
-  padding: 2px 6px;
-  border-radius: 6px;
+  padding: 3px 8px;
+  border-radius: 9999px;
+  background: rgba(255, 255, 255, 0.88);
+  backdrop-filter: blur(6px);
+  border: 1px solid rgba(226, 232, 240, 0.85);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.06);
   width: auto;
   max-width: 100%;
 }
@@ -147,6 +170,7 @@
   align-items: center;
   margin-bottom: 4px;
   position: relative;
+  z-index: 2;
   flex-shrink: 0;
 }
 
@@ -269,28 +293,36 @@
 }
 
 .game-title-badge {
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 1.2px;
-  color: #64748b;
+  color: #1e293b;
+  background: rgba(255, 255, 255, 0.88);
+  backdrop-filter: blur(4px);
+  padding: 2px 10px;
+  border-radius: 9999px;
+  border: 1px solid rgba(226, 232, 240, 0.8);
   margin-top: 4px;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.05);
 }
 
 /* Archery Target Presentation (Task 9.1) */
 .target-card {
   width: 100%;
   max-width: 440px;
-  background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.96) 0%, rgba(248, 250, 252, 0.94) 100%);
+  backdrop-filter: blur(8px);
   border: 2px solid #e2e8f0;
   border-radius: 18px;
   padding: 6px 14px 10px 14px;
   text-align: center;
   box-shadow:
-    0 4px 12px rgba(0, 0, 0, 0.05),
-    0 2px 4px rgba(0, 0, 0, 0.03);
+    0 4px 16px rgba(0, 0, 0, 0.08),
+    0 2px 4px rgba(0, 0, 0, 0.04);
   margin-bottom: 4px;
   position: relative;
+  z-index: 2;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -479,12 +511,32 @@
   transform: translate(-50%, -50%);
   pointer-events: none;
   z-index: 15;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  text-align: center;
 }
 
 .hit-stars {
   font-size: 28px;
   display: block;
   animation: hit-stars-pop 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+}
+
+.hit-effect-badge {
+  display: inline-block;
+  font-size: 0.85rem;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  padding: 3px 10px;
+  background: rgba(15, 23, 42, 0.9);
+  border-radius: 9999px;
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.35);
+  animation: hit-stars-pop 0.35s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+  white-space: nowrap;
 }
 
 .hit-ring-burst {
@@ -494,9 +546,34 @@
   width: 50px;
   height: 50px;
   border-radius: 50%;
-  border: 3px solid var(--color-correct);
+  border: 3px solid var(--effect-primary, var(--color-correct));
+  box-shadow: 0 0 16px var(--effect-glow, rgba(34, 197, 94, 0.4));
   transform: translate(-50%, -50%);
   animation: ring-burst 0.4s ease-out forwards;
+}
+
+.hit-sparkle-burst {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 90px;
+  height: 90px;
+  transform: translate(-50%, -50%);
+  border-radius: 50%;
+  opacity: 0.85;
+  pointer-events: none;
+  animation: sparkle-burst-pulse 0.45s ease-out forwards;
+}
+
+@keyframes sparkle-burst-pulse {
+  0% {
+    transform: translate(-50%, -50%) scale(0.2);
+    opacity: 1;
+  }
+  100% {
+    transform: translate(-50%, -50%) scale(1.6);
+    opacity: 0;
+  }
 }
 
 .target-miss-effect {
@@ -530,6 +607,89 @@
 .flying-arrow.phase-impact {
   opacity: 0;
   transition: opacity 0.1s ease-out;
+}
+
+.flying-arrow-trail {
+  position: absolute;
+  top: -24px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 6px;
+  height: 44px;
+  border-radius: 9999px;
+  background: linear-gradient(to top, currentColor 0%, transparent 100%);
+  opacity: 0.8;
+  filter: drop-shadow(0 0 6px currentColor);
+  pointer-events: none;
+  animation: arrow-trail-pulse 0.22s ease-out infinite alternate;
+}
+
+@keyframes arrow-trail-pulse {
+  0% {
+    opacity: 0.5;
+    height: 36px;
+  }
+  100% {
+    opacity: 0.95;
+    height: 52px;
+  }
+}
+
+.flying-arrow-trail[data-effect='arrow_effect_stardust'] {
+  background: linear-gradient(to top, #818cf8 0%, #c7d2fe 50%, transparent 100%);
+  box-shadow: 0 0 10px #c7d2fe, 0 0 18px #818cf8;
+}
+.flying-arrow-trail[data-effect='arrow_effect_sparkle_nova'] {
+  background: linear-gradient(to top, #ec4899 0%, #fbcfe8 60%, transparent 100%);
+  box-shadow: 0 0 12px #ec4899, 0 0 20px #fbcfe8;
+}
+.flying-arrow-trail[data-effect='arrow_effect_flame_embers'] {
+  background: linear-gradient(to top, #f97316 0%, #ea580c 40%, transparent 100%);
+  box-shadow: 0 0 12px #f97316, 0 0 22px #fed7aa;
+}
+.flying-arrow-trail[data-effect='arrow_effect_rainbow'] {
+  background: linear-gradient(to top, #ef4444, #f97316, #eab308, #22c55e, #06b6d4, #a855f7, transparent);
+  box-shadow: 0 0 14px #a855f7;
+  width: 8px;
+}
+.flying-arrow-trail[data-effect='arrow_effect_thunder_strike'] {
+  background: linear-gradient(to top, #0ea5e9 0%, #7dd3fc 70%, transparent 100%);
+  box-shadow: 0 0 12px #7dd3fc, 0 0 20px #0ea5e9;
+}
+.flying-arrow-trail[data-effect='arrow_effect_shadow_void'] {
+  background: linear-gradient(to top, #7c3aed 0%, #3b0764 70%, transparent 100%);
+  box-shadow: 0 0 12px #c4b5fd, 0 0 22px #7c3aed;
+}
+.flying-arrow-trail[data-effect='arrow_effect_golden_sunbeam'] {
+  background: linear-gradient(to top, #eab308 0%, #fef08a 60%, transparent 100%);
+  box-shadow: 0 0 14px #fef08a, 0 0 24px #eab308;
+  width: 8px;
+}
+.flying-arrow-trail[data-effect='arrow_effect_sakura_petals'] {
+  background: linear-gradient(to top, #f472b6 0%, #fce7f3 70%, transparent 100%);
+  box-shadow: 0 0 10px #fce7f3, 0 0 18px #f472b6;
+}
+.flying-arrow-trail[data-effect='arrow_effect_ice_shards'] {
+  background: linear-gradient(to top, #38bdf8 0%, #e0f2fe 70%, transparent 100%);
+  box-shadow: 0 0 12px #e0f2fe, 0 0 20px #0284c7;
+}
+.flying-arrow-trail[data-effect='arrow_effect_dragon_fire'] {
+  background: linear-gradient(to top, #dc2626 0%, #f97316 60%, transparent 100%);
+  box-shadow: 0 0 14px #dc2626, 0 0 24px #f97316;
+  width: 8px;
+}
+.flying-arrow-trail[data-effect='arrow_effect_comet_trail'] {
+  background: linear-gradient(to top, #06b6d4 0%, #a5f3fc 60%, transparent 100%);
+  box-shadow: 0 0 14px #a5f3fc, 0 0 22px #06b6d4;
+}
+.flying-arrow-trail[data-effect='arrow_effect_phoenix_sparks'] {
+  background: linear-gradient(to top, #f59e0b 0%, #ef4444 60%, transparent 100%);
+  box-shadow: 0 0 14px #ef4444, 0 0 22px #f59e0b;
+}
+.flying-arrow-trail[data-effect='arrow_effect_celestial_supernova'] {
+  background: linear-gradient(to top, #ec4899 0%, #38bdf8 50%, #a855f7 80%, transparent 100%);
+  box-shadow: 0 0 16px #38bdf8, 0 0 26px #ec4899;
+  width: 8px;
 }
 
 .flying-arrow-body {
@@ -752,15 +912,27 @@
   gap: 6px;
   transition: opacity 0.2s ease;
   flex-shrink: 0;
+  position: relative;
+  z-index: 2;
 }
 
 .feedback-banner.correct {
   color: var(--color-correct);
+  background: rgba(255, 255, 255, 0.94);
+  border: 1px solid rgba(34, 197, 94, 0.35);
+  padding: 2px 14px;
+  border-radius: 9999px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
   animation: pop-in 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 }
 
 .feedback-banner.wrong {
   color: var(--color-wrong);
+  background: rgba(255, 255, 255, 0.94);
+  border: 1px solid rgba(239, 68, 68, 0.35);
+  padding: 2px 14px;
+  border-radius: 9999px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
   animation: shake 0.4s ease-in-out;
 }
 
@@ -1306,11 +1478,15 @@ body.controller-active :focus-visible,
   }
 
   .game-range-column .range-backdrop-container {
-    margin-bottom: 2px;
-    height: clamp(22px, 3.8vh, 38px);
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    margin: 0;
   }
 
   .game-range-column .range-backdrop-svg {
+    width: 100%;
     height: 100%;
   }
 
@@ -1474,7 +1650,11 @@ body.controller-active :focus-visible,
   }
 
   .game-range-column .range-backdrop-container {
-    display: none;
+    display: block;
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
   }
 
   .archer-stage,
@@ -1576,7 +1756,11 @@ body.controller-active :focus-visible,
   }
 
   .game-range-column .range-backdrop-container {
-    display: none;
+    display: block;
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
   }
 
   .archer-stage,
@@ -1686,11 +1870,16 @@ body.controller-active :focus-visible,
   }
 
   .game-range-column .range-backdrop-container {
-    margin-bottom: 6px;
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    margin: 0;
   }
 
   .game-range-column .range-backdrop-svg {
-    height: clamp(40px, 6vh, 65px);
+    width: 100%;
+    height: 100%;
   }
 
   .archer-graphic-container {
@@ -2950,7 +3139,11 @@ body.controller-active :focus-visible,
     padding: 1px 5px !important;
   }
   .game-range-column .range-backdrop-container {
-    display: none !important;
+    display: block !important;
+    position: absolute !important;
+    inset: 0 !important;
+    width: 100% !important;
+    height: 100% !important;
   }
   .game-title-badge {
     display: none !important;

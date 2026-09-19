@@ -247,6 +247,7 @@ export function savePlayerRewards(
 export interface AwardAttemptOptions {
   isCorrect: boolean;
   isMake10?: boolean;
+  isDoubles?: boolean;
   element?: ElementType;
   wasMissPreceding?: boolean;
   consecutiveHits?: number;
@@ -313,22 +314,54 @@ export function awardAttemptRewards(
   // Achievement 1: First Flight
   tryUnlockAch('ach_first_arrow');
 
-  // Achievement: Resilience
+  // Track lifetime arrows shot
+  updatedAchProgress['arrows_shot'] = (updatedAchProgress['arrows_shot'] || 0) + 1;
+  const totalArrows = updatedAchProgress['arrows_shot'];
+  if (totalArrows >= 100) tryUnlockAch('ach_arrows_100');
+  if (totalArrows >= 500) tryUnlockAch('ach_arrows_500');
+  if (totalArrows >= 1000) tryUnlockAch('ach_arrows_1000');
+
+  // Track correct hits
+  if (options.isCorrect) {
+    updatedAchProgress['hits'] = (updatedAchProgress['hits'] || 0) + 1;
+    const totalHits = updatedAchProgress['hits'];
+    if (totalHits >= 100) tryUnlockAch('ach_hits_100');
+    if (totalHits >= 500) tryUnlockAch('ach_hits_500');
+  }
+
+  // Consecutive Hits Streaks
+  const consecutive = options.consecutiveHits ?? (options.isCorrect ? 1 : 0);
+  if (consecutive >= 5) tryUnlockAch('ach_streak_5');
+  if (consecutive >= 10) tryUnlockAch('ach_streak_10');
+  if (consecutive >= 20) tryUnlockAch('ach_streak_20');
+
+  // Resilience: trying again after miss
   if (options.isCorrect && options.wasMissPreceding) {
     tryUnlockAch('ach_resilience');
+    updatedAchProgress['comeback_hits'] = (updatedAchProgress['comeback_hits'] || 0) + 1;
+    const comebacks = updatedAchProgress['comeback_hits'];
+    if (comebacks >= 5) tryUnlockAch('ach_resilience_5');
+    if (comebacks >= 15) tryUnlockAch('ach_resilience_15');
   }
 
-  // Achievement: Make-10 Ten-Maker
+  // Make-10 Strategy
   if (options.isCorrect && options.isMake10) {
     tryUnlockAch('ach_make_10_master');
+    updatedAchProgress['make10_count'] = (updatedAchProgress['make10_count'] || 0) + 1;
+    if (updatedAchProgress['make10_count'] >= 10) {
+      tryUnlockAch('ach_make_10_veteran');
+    }
   }
 
-  // Achievement: Bullseye Focus (5 consecutive hits)
-  if ((options.consecutiveHits ?? 0) >= 5) {
-    tryUnlockAch('ach_streak_5');
+  // Doubles Facts Strategy
+  if (options.isCorrect && options.isDoubles) {
+    updatedAchProgress['doubles_count'] = (updatedAchProgress['doubles_count'] || 0) + 1;
+    if (updatedAchProgress['doubles_count'] >= 10) {
+      tryUnlockAch('ach_doubles_expert');
+    }
   }
 
-  // Achievement: Elemental Adept (all 4 elements shot)
+  // Elemental Adept (all 4 elements shot)
   if (options.element) {
     const elemKey = `elem_${options.element}`;
     updatedAchProgress[elemKey] = 1;
@@ -346,6 +379,11 @@ export function awardAttemptRewards(
   const totalAttemptXp = xpAwards.reduce((sum, award) => sum + award.amount, 0);
   const newTotalXp = currentState.totalXp + totalAttemptXp;
   const newLevelInfo = calculateLevel(newTotalXp);
+
+  // Level milestones
+  if (newLevelInfo.level >= 10) tryUnlockAch('ach_level_10');
+  if (newLevelInfo.level >= 20) tryUnlockAch('ach_level_20');
+  if (newLevelInfo.level >= 30) tryUnlockAch('ach_level_30');
 
   const levelUp =
     newLevelInfo.level > currentState.level
@@ -375,9 +413,15 @@ export function awardAttemptRewards(
     }
   }
 
-  // Achievement: Royal Wardrobe (4 or more custom unlocks)
+  // Collection milestones
   if (allUnlockedCosmetics.length >= 4) {
     tryUnlockAch('ach_collector');
+  }
+  if (allUnlockedCosmetics.length >= 12) {
+    tryUnlockAch('ach_wardrobe_12');
+  }
+  if (allUnlockedCosmetics.length >= 25) {
+    tryUnlockAch('ach_wardrobe_25');
   }
 
   const nextState: PlayerRewardsState = {
@@ -393,7 +437,7 @@ export function awardAttemptRewards(
     ),
     unlockedAchievementIds: Array.from(currentUnlockedAch),
     achievementProgress: updatedAchProgress,
-    tomorrowReward: getDefaultTomorrowReward(currentState.currentStreak),
+    tomorrowReward: getDefaultTomorrowReward(currentState.currentStreak, newLevelInfo.level),
     updatedAt: new Date().toISOString(),
   };
 
@@ -411,6 +455,9 @@ export interface AwardSessionCompletionOptions {
   sessionDate: string; // YYYY-MM-DD
   completedSessionsCount: number;
   realmsDiscovered?: number;
+  totalRealmsCount?: number;
+  hitsInSession?: number;
+  totalArrowsInSession?: number;
 }
 
 /**
@@ -479,22 +526,48 @@ export function awardSessionCompleteRewards(
   tryUnlockAch('ach_daily_champion');
 
   // Consecutive streak achievements
-  if (nextStreak >= 2) {
-    tryUnlockAch('ach_streak_return_2');
-  }
-  if (nextStreak >= 3) {
-    tryUnlockAch('ach_streak_return_3');
-  }
+  if (nextStreak >= 2) tryUnlockAch('ach_streak_return_2');
+  if (nextStreak >= 3) tryUnlockAch('ach_streak_return_3');
+  if (nextStreak >= 5) tryUnlockAch('ach_streak_return_5');
+  if (nextStreak >= 7) tryUnlockAch('ach_streak_return_7');
+  if (nextStreak >= 14) tryUnlockAch('ach_streak_return_14');
+  if (nextStreak >= 30) tryUnlockAch('ach_streak_return_30');
 
-  // Realm Wanderer
+  // Sessions completed count achievements
+  if (options.completedSessionsCount >= 5) tryUnlockAch('ach_sessions_5');
+  if (options.completedSessionsCount >= 10) tryUnlockAch('ach_sessions_10');
+  if (options.completedSessionsCount >= 25) tryUnlockAch('ach_sessions_25');
+
+  // Realm Wanderer & Cartographer
   if ((options.realmsDiscovered ?? 1) >= 2) {
     tryUnlockAch('ach_realm_explorer');
+  }
+  if (
+    (options.totalRealmsCount && (options.realmsDiscovered ?? 1) >= options.totalRealmsCount) ||
+    (options.realmsDiscovered ?? 1) >= 4
+  ) {
+    tryUnlockAch('ach_realm_master');
+  }
+
+  // Master of the Range (>=90% accuracy in a 50-arrow session)
+  if (
+    options.totalArrowsInSession !== undefined &&
+    options.totalArrowsInSession >= 50 &&
+    options.hitsInSession !== undefined &&
+    options.hitsInSession / options.totalArrowsInSession >= 0.9
+  ) {
+    tryUnlockAch('ach_perfect_session');
   }
 
   // Total XP
   const totalCompletionXp = xpAwards.reduce((sum, award) => sum + award.amount, 0);
   const newTotalXp = currentState.totalXp + totalCompletionXp;
   const newLevelInfo = calculateLevel(newTotalXp);
+
+  // Level milestones
+  if (newLevelInfo.level >= 10) tryUnlockAch('ach_level_10');
+  if (newLevelInfo.level >= 20) tryUnlockAch('ach_level_20');
+  if (newLevelInfo.level >= 30) tryUnlockAch('ach_level_30');
 
   const levelUp =
     newLevelInfo.level > currentState.level
@@ -523,11 +596,12 @@ export function awardSessionCompleteRewards(
     }
   }
 
-  if (allUnlockedCosmetics.length >= 4) {
-    tryUnlockAch('ach_collector');
-  }
+  // Collection milestones
+  if (allUnlockedCosmetics.length >= 4) tryUnlockAch('ach_collector');
+  if (allUnlockedCosmetics.length >= 12) tryUnlockAch('ach_wardrobe_12');
+  if (allUnlockedCosmetics.length >= 25) tryUnlockAch('ach_wardrobe_25');
 
-  const tomorrowReward = getDefaultTomorrowReward(nextStreak);
+  const tomorrowReward = getDefaultTomorrowReward(nextStreak, newLevelInfo.level);
 
   const nextState: PlayerRewardsState = {
     ...currentState,

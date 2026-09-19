@@ -77,9 +77,16 @@ describe('Task 9.4 — Rewards Engine', () => {
       expect(lvl5.level).toBe(5);
       expect(lvl5.title).toBe('Royal Marksman');
 
-      const max = calculateLevel(2500);
-      expect(max.level).toBe(7);
-      expect(max.title).toBe('Legendary Sharpshooter');
+      // Level 7 at 2500 XP progresses towards Level 8 (2750 XP)
+      const lvl7Mid = calculateLevel(2500);
+      expect(lvl7Mid.level).toBe(7);
+      expect(lvl7Mid.title).toBe('Legendary Sharpshooter');
+      expect(lvl7Mid.levelProgressPct).toBe(67);
+
+      // Level 30 Max Cap (45,000 XP)
+      const max = calculateLevel(50000);
+      expect(max.level).toBe(30);
+      expect(max.title).toBe('Divine Archon of Math');
       expect(max.levelProgressPct).toBe(100);
     });
   });
@@ -264,6 +271,75 @@ describe('Task 9.4 — Rewards Engine', () => {
       const attempt = equipCosmetic(state, 'bow', 'bow_regal_gold');
       // Equipping fails, stays default oak
       expect(attempt.equippedCosmetics.bow).toBe('bow_recurve_oak');
+    });
+  });
+
+  describe('Level 1–30 Progression & Advanced Achievements', () => {
+    it('awards century arrow achievement after 100 shots', () => {
+      let state = createDefaultRewardsState('p1');
+      state.achievementProgress['arrows_shot'] = 99;
+
+      const result = awardAttemptRewards(state, { isCorrect: true });
+      expect(result.newAchievements.some((a) => a.id === 'ach_arrows_100')).toBe(true);
+      expect(result.nextState.unlockedAchievementIds).toContain('ach_arrows_100');
+    });
+
+    it('awards Make-10 Bridge Builder after 10 Make-10 problems', () => {
+      let state = createDefaultRewardsState('p1');
+      state.achievementProgress['make10_count'] = 9;
+
+      const result = awardAttemptRewards(state, { isCorrect: true, isMake10: true });
+      expect(result.newAchievements.some((a) => a.id === 'ach_make_10_veteran')).toBe(true);
+    });
+
+    it('awards Doubles Twin Strike after 10 doubles questions', () => {
+      let state = createDefaultRewardsState('p1');
+      state.achievementProgress['doubles_count'] = 9;
+
+      const result = awardAttemptRewards(state, { isCorrect: true, isDoubles: true });
+      expect(result.newAchievements.some((a) => a.id === 'ach_doubles_expert')).toBe(true);
+    });
+
+    it('awards Level 10 and Level 30 milestone achievements and unlocks high tier gear', () => {
+      let state = createDefaultRewardsState('p1');
+      state.totalXp = 44990; // 10 XP away from 45,000 (Level 30)
+
+      const result = awardAttemptRewards(state, { isCorrect: true }); // +15 XP -> 45,005 XP -> Level 30!
+      expect(result.nextState.level).toBe(30);
+      expect(result.nextState.levelTitle).toBe('Divine Archon of Math');
+      expect(result.newAchievements.some((a) => a.id === 'ach_level_30')).toBe(true);
+
+      // Unlocks Divine Archon Regalia, Infinity Bow, Supernova Effect, and Mythic Castle Decos!
+      expect(result.nextState.unlockedCosmeticIds).toContain('outfit_divine_archon');
+      expect(result.nextState.unlockedCosmeticIds).toContain('bow_divine_infinity');
+      expect(result.nextState.unlockedCosmeticIds).toContain('arrow_effect_celestial_supernova');
+      expect(result.nextState.unlockedCosmeticIds).toContain('castle_statue_celestial_archon');
+    });
+
+    it('awards 7-day Week Warrior and 14-day Fortnight Knight streak achievements', () => {
+      let state = createDefaultRewardsState('p1');
+      state.currentStreak = 6;
+      state.lastActiveDate = '2026-09-18';
+
+      const result = awardSessionCompleteRewards(state, {
+        sessionDate: '2026-09-19',
+        completedSessionsCount: 7,
+      });
+
+      expect(result.nextState.currentStreak).toBe(7);
+      expect(result.newAchievements.some((a) => a.id === 'ach_streak_return_7')).toBe(true);
+    });
+
+    it('awards Master of the Range for high accuracy (>=90%) 50-arrow session', () => {
+      const state = createDefaultRewardsState('p1');
+      const result = awardSessionCompleteRewards(state, {
+        sessionDate: '2026-09-19',
+        completedSessionsCount: 1,
+        totalArrowsInSession: 50,
+        hitsInSession: 48, // 96% accuracy
+      });
+
+      expect(result.newAchievements.some((a) => a.id === 'ach_perfect_session')).toBe(true);
     });
   });
 });

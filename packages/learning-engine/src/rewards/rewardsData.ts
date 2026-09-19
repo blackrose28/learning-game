@@ -19,6 +19,29 @@ export const LEVEL_THRESHOLDS: readonly LevelThreshold[] = [
   { level: 5, xpRequired: 900, title: 'Royal Marksman' },
   { level: 6, xpRequired: 1400, title: 'Grand Champion' },
   { level: 7, xpRequired: 2000, title: 'Legendary Sharpshooter' },
+  { level: 8, xpRequired: 2750, title: 'Hawk-Eye Hunter' },
+  { level: 9, xpRequired: 3600, title: 'Storm Chaser' },
+  { level: 10, xpRequired: 4550, title: 'Castle Vanguard' },
+  { level: 11, xpRequired: 5600, title: 'Dragon Watcher' },
+  { level: 12, xpRequired: 6750, title: 'Rune Carver' },
+  { level: 13, xpRequired: 8000, title: 'Shadow Ranger' },
+  { level: 14, xpRequired: 9350, title: 'Griffin Rider' },
+  { level: 15, xpRequired: 10800, title: 'Realm Sentinel' },
+  { level: 16, xpRequired: 12350, title: 'Ember Knight' },
+  { level: 17, xpRequired: 14000, title: 'Frost Warden' },
+  { level: 18, xpRequired: 15750, title: 'Wind Strider' },
+  { level: 19, xpRequired: 17600, title: 'Earth Shaper' },
+  { level: 20, xpRequired: 19550, title: 'Master of Elements' },
+  { level: 21, xpRequired: 21600, title: 'Celestial Archer' },
+  { level: 22, xpRequired: 23750, title: 'Starfall Warden' },
+  { level: 23, xpRequired: 26000, title: 'Phoenix Bowman' },
+  { level: 24, xpRequired: 28350, title: 'Aurora Marksman' },
+  { level: 25, xpRequired: 30800, title: 'Kingdom Archon' },
+  { level: 26, xpRequired: 33350, title: 'Titan Fletcher' },
+  { level: 27, xpRequired: 36000, title: 'Mythic Sentinel' },
+  { level: 28, xpRequired: 38750, title: 'Sovereign of Sherwood' },
+  { level: 29, xpRequired: 41600, title: 'Astral Champion' },
+  { level: 30, xpRequired: 45000, title: 'Divine Archon of Math' },
 ];
 
 export const DEFAULT_EQUIPPED: EquippedCosmetics = {
@@ -31,7 +54,9 @@ export const DEFAULT_EQUIPPED: EquippedCosmetics = {
 };
 
 export const COSMETIC_ITEMS: readonly CosmeticItem[] = [
-  // --- OUTFITS ---
+  // ==========================================
+  // --- OUTFITS (14) ---
+  // ==========================================
   {
     id: 'outfit_classic_green',
     name: 'Forest Ranger Tunic',
@@ -112,8 +137,154 @@ export const COSMETIC_ITEMS: readonly CosmeticItem[] = [
       accentColor: '#fbbf24',
     },
   },
+  {
+    id: 'outfit_shadow_stalker',
+    name: 'Shadow Stalker Tunic',
+    category: 'outfit',
+    description: 'Silent night-woven tunic dyed deep midnight indigo, prized by stealth woodland scouts.',
+    icon: '🥷',
+    rarity: 'rare',
+    unlockType: 'xp_level',
+    unlockThreshold: 6,
+    unlockDescription: 'Reach Level 6 (Grand Champion)',
+    preview: {
+      primaryColor: '#312e81',
+      secondaryColor: '#1e1b4b',
+      accentColor: '#818cf8',
+    },
+  },
+  {
+    id: 'outfit_ember_knight',
+    name: 'Ember Knight Plate',
+    category: 'outfit',
+    description: 'Hardened basalt plates laced with molten crimson lining from the volcanic peaks.',
+    icon: '🛡️',
+    rarity: 'epic',
+    unlockType: 'xp_level',
+    unlockThreshold: 8,
+    unlockDescription: 'Reach Level 8 (Hawk-Eye Hunter)',
+    preview: {
+      primaryColor: '#991b1b',
+      secondaryColor: '#450a0a',
+      accentColor: '#f97316',
+    },
+  },
+  {
+    id: 'outfit_guardian_iron',
+    name: 'Iron Vanguard Hauberk',
+    category: 'outfit',
+    description: 'Fortified steel-ring mail with regal royal-blue heraldic tabard.',
+    icon: '⚔️',
+    rarity: 'epic',
+    unlockType: 'xp_level',
+    unlockThreshold: 10,
+    unlockDescription: 'Reach Level 10 (Castle Vanguard)',
+    preview: {
+      primaryColor: '#1e40af',
+      secondaryColor: '#1e293b',
+      accentColor: '#94a3b8',
+    },
+  },
+  {
+    id: 'outfit_mystic_sage',
+    name: 'Rune Sage Raiment',
+    category: 'outfit',
+    description: 'Enchanted amethyst silk threaded with celestial runes that glow softly under starlight.',
+    icon: '🔮',
+    rarity: 'epic',
+    unlockType: 'xp_level',
+    unlockThreshold: 12,
+    unlockDescription: 'Reach Level 12 (Rune Carver)',
+    preview: {
+      primaryColor: '#7e22ce',
+      secondaryColor: '#581c87',
+      accentColor: '#c084fc',
+    },
+  },
+  {
+    id: 'outfit_phoenix_flame',
+    name: 'Phoenix Feather Mantle',
+    category: 'outfit',
+    description: 'Mantle of radiant golden-crimson plumes that never lose their warmth.',
+    icon: '🪶',
+    rarity: 'legendary',
+    unlockType: 'xp_level',
+    unlockThreshold: 15,
+    unlockDescription: 'Reach Level 15 (Realm Sentinel)',
+    preview: {
+      primaryColor: '#c2410c',
+      secondaryColor: '#7c2d12',
+      accentColor: '#fde047',
+    },
+  },
+  {
+    id: 'outfit_frost_monarch',
+    name: 'Glacial Monarch Regalia',
+    category: 'outfit',
+    description: 'Majestic ice-velvet cloak edged with diamond frost fur and crystalline clasps.',
+    icon: '❄️',
+    rarity: 'legendary',
+    unlockType: 'xp_level',
+    unlockThreshold: 18,
+    unlockDescription: 'Reach Level 18 (Wind Strider)',
+    preview: {
+      primaryColor: '#0369a1',
+      secondaryColor: '#082f49',
+      accentColor: '#bae6fd',
+    },
+  },
+  {
+    id: 'outfit_celestial_aurora',
+    name: 'Celestial Aurora Robe',
+    category: 'outfit',
+    description: 'Shifting starlight threads woven with the green and violet shimmer of the northern lights.',
+    icon: '🌌',
+    rarity: 'legendary',
+    unlockType: 'xp_level',
+    unlockThreshold: 21,
+    unlockDescription: 'Reach Level 21 (Celestial Archer)',
+    preview: {
+      primaryColor: '#4338ca',
+      secondaryColor: '#0f766e',
+      accentColor: '#22d3ee',
+    },
+  },
+  {
+    id: 'outfit_dragon_slayer',
+    name: 'Dragon Scale Cuirass',
+    category: 'outfit',
+    description: 'Forged from unbreakable emerald dragon scales with gleaming dragon-bone pauldrons.',
+    icon: '🐉',
+    rarity: 'mythic',
+    unlockType: 'xp_level',
+    unlockThreshold: 25,
+    unlockDescription: 'Reach Level 25 (Kingdom Archon)',
+    preview: {
+      primaryColor: '#065f46',
+      secondaryColor: '#022c22',
+      accentColor: '#fbbf24',
+    },
+  },
+  {
+    id: 'outfit_divine_archon',
+    name: 'Divine Archon Regalia',
+    category: 'outfit',
+    description: 'The supreme vestment of mathematics mastery, radiating celestial white and holy golden light.',
+    icon: '✨',
+    rarity: 'mythic',
+    unlockType: 'xp_level',
+    unlockThreshold: 30,
+    unlockDescription: 'Reach Level 30 (Divine Archon of Math)',
+    preview: {
+      primaryColor: '#f8fafc',
+      secondaryColor: '#d97706',
+      accentColor: '#fef08a',
+    },
+  },
 
-  // --- BOWS ---
+  // ==========================================
+  // --- BOWS (14) ---
+  // ==========================================
   {
     id: 'bow_recurve_oak',
     name: 'Apprentice Recurve',
@@ -194,8 +365,154 @@ export const COSMETIC_ITEMS: readonly CosmeticItem[] = [
       accentColor: '#fef08a',
     },
   },
+  {
+    id: 'bow_shadow_composite',
+    name: 'Midnight Composite Bow',
+    category: 'bow',
+    description: 'Lightweight obsidian-fiber composite strung with silent whispercord.',
+    icon: '🏹',
+    rarity: 'rare',
+    unlockType: 'xp_level',
+    unlockThreshold: 7,
+    unlockDescription: 'Reach Level 7 (Legendary Sharpshooter)',
+    preview: {
+      primaryColor: '#475569',
+      secondaryColor: '#1e293b',
+      accentColor: '#a855f7',
+    },
+  },
+  {
+    id: 'bow_storm_surge',
+    name: 'Tempest Thunderbow',
+    category: 'bow',
+    description: 'Electrified storm-wood limbs crackling with static energy and lightning sparks.',
+    icon: '⚡',
+    rarity: 'epic',
+    unlockType: 'xp_level',
+    unlockThreshold: 9,
+    unlockDescription: 'Reach Level 9 (Storm Chaser)',
+    preview: {
+      primaryColor: '#0284c7',
+      secondaryColor: '#075985',
+      accentColor: '#facc15',
+    },
+  },
+  {
+    id: 'bow_dragon_horn',
+    name: 'Horned Dragon Recurve',
+    category: 'bow',
+    description: 'Crafted from the curved horns of an ancient red dragon with glowing magma grip.',
+    icon: '🐉',
+    rarity: 'epic',
+    unlockType: 'xp_level',
+    unlockThreshold: 11,
+    unlockDescription: 'Reach Level 11 (Dragon Watcher)',
+    preview: {
+      primaryColor: '#b91c1c',
+      secondaryColor: '#7f1d1d',
+      accentColor: '#f97316',
+    },
+  },
+  {
+    id: 'bow_crystalline_prism',
+    name: 'Prismatic Diamond Longbow',
+    category: 'bow',
+    description: 'Faceted pure diamond bow that refracts bright sunlight into dazzling rainbow flashes.',
+    icon: '💎',
+    rarity: 'epic',
+    unlockType: 'xp_level',
+    unlockThreshold: 14,
+    unlockDescription: 'Reach Level 14 (Griffin Rider)',
+    preview: {
+      primaryColor: '#c084fc',
+      secondaryColor: '#7e22ce',
+      accentColor: '#e0e7ff',
+    },
+  },
+  {
+    id: 'bow_phoenix_wing',
+    name: 'Phoenix Flame Wing Bow',
+    category: 'bow',
+    description: 'Limbs shaped like sweeping fiery wings that shower embers on string release.',
+    icon: '🔥',
+    rarity: 'legendary',
+    unlockType: 'xp_level',
+    unlockThreshold: 17,
+    unlockDescription: 'Reach Level 17 (Frost Warden)',
+    preview: {
+      primaryColor: '#ea580c',
+      secondaryColor: '#9a3412',
+      accentColor: '#fef08a',
+    },
+  },
+  {
+    id: 'bow_master_elemental',
+    name: 'Quad-Elemental Compound',
+    category: 'bow',
+    description: 'Harmonizes Fire, Ice, Wind, and Earth through rotating elemental power crystals.',
+    icon: '🌀',
+    rarity: 'legendary',
+    unlockType: 'xp_level',
+    unlockThreshold: 20,
+    unlockDescription: 'Reach Level 20 (Master of Elements)',
+    preview: {
+      primaryColor: '#059669',
+      secondaryColor: '#dc2626',
+      accentColor: '#38bdf8',
+    },
+  },
+  {
+    id: 'bow_celestial_harp',
+    name: 'Astral Starharp Bow',
+    category: 'bow',
+    description: 'A poetic celestial instrument that rings harmonic chords when arrows are released.',
+    icon: '🎵',
+    rarity: 'legendary',
+    unlockType: 'xp_level',
+    unlockThreshold: 24,
+    unlockDescription: 'Reach Level 24 (Aurora Marksman)',
+    preview: {
+      primaryColor: '#6366f1',
+      secondaryColor: '#3730a3',
+      accentColor: '#f472b6',
+    },
+  },
+  {
+    id: 'bow_mythic_sovereign',
+    name: 'Titan Sovereign Bow',
+    category: 'bow',
+    description: 'Ancient aurum bow inscribed with mathematics titans, imbued with relentless velocity.',
+    icon: '👑',
+    rarity: 'mythic',
+    unlockType: 'xp_level',
+    unlockThreshold: 28,
+    unlockDescription: 'Reach Level 28 (Sovereign of Sherwood)',
+    preview: {
+      primaryColor: '#ca8a04',
+      secondaryColor: '#854d0e',
+      accentColor: '#fef08a',
+    },
+  },
+  {
+    id: 'bow_divine_infinity',
+    name: 'Infinity Bow of Wisdom',
+    category: 'bow',
+    description: 'Transcendent bow of eternal knowledge that fires arrows enveloped in holy cosmic light.',
+    icon: '♾️',
+    rarity: 'mythic',
+    unlockType: 'xp_level',
+    unlockThreshold: 30,
+    unlockDescription: 'Reach Level 30 (Divine Archon of Math)',
+    preview: {
+      primaryColor: '#f1f5f9',
+      secondaryColor: '#ca8a04',
+      accentColor: '#38bdf8',
+    },
+  },
 
-  // --- ARROW EFFECTS ---
+  // ==========================================
+  // --- ARROW EFFECTS (14) ---
+  // ==========================================
   {
     id: 'arrow_effect_classic',
     name: 'Classic Fletch Spark',
@@ -271,8 +588,146 @@ export const COSMETIC_ITEMS: readonly CosmeticItem[] = [
       glowColor: '#38bdf8',
     },
   },
+  {
+    id: 'arrow_effect_thunder_strike',
+    name: 'Thunderbolt Flash',
+    category: 'arrow_effect',
+    description: 'Electric blue lightning arcs dance along the arrow shaft and snap on the target.',
+    icon: '⚡',
+    rarity: 'rare',
+    unlockType: 'xp_level',
+    unlockThreshold: 6,
+    unlockDescription: 'Reach Level 6 (Grand Champion)',
+    preview: {
+      primaryColor: '#0ea5e9',
+      glowColor: '#7dd3fc',
+    },
+  },
+  {
+    id: 'arrow_effect_shadow_void',
+    name: 'Void Mist Spiral',
+    category: 'arrow_effect',
+    description: 'Dark purple astral void smoke swirls in corkscrews along the flight path.',
+    icon: '🌌',
+    rarity: 'epic',
+    unlockType: 'xp_level',
+    unlockThreshold: 8,
+    unlockDescription: 'Reach Level 8 (Hawk-Eye Hunter)',
+    preview: {
+      primaryColor: '#7c3aed',
+      glowColor: '#c4b5fd',
+    },
+  },
+  {
+    id: 'arrow_effect_golden_sunbeam',
+    name: 'Solar Sunbeam Ray',
+    category: 'arrow_effect',
+    description: 'Blinding golden sunbeams radiate outward as the arrow streaks across the range.',
+    icon: '☀️',
+    rarity: 'epic',
+    unlockType: 'xp_level',
+    unlockThreshold: 10,
+    unlockDescription: 'Reach Level 10 (Castle Vanguard)',
+    preview: {
+      primaryColor: '#eab308',
+      glowColor: '#fef08a',
+    },
+  },
+  {
+    id: 'arrow_effect_sakura_petals',
+    name: 'Sakura Blossom Breeze',
+    category: 'arrow_effect',
+    description: 'Delicate pink cherry blossom petals flurry through the air following the arrow.',
+    icon: '🌸',
+    rarity: 'epic',
+    unlockType: 'xp_level',
+    unlockThreshold: 13,
+    unlockDescription: 'Reach Level 13 (Shadow Ranger)',
+    preview: {
+      primaryColor: '#f472b6',
+      glowColor: '#fce7f3',
+    },
+  },
+  {
+    id: 'arrow_effect_ice_shards',
+    name: 'Glacial Needle Storm',
+    category: 'arrow_effect',
+    description: 'Crackling ice crystals flake off the fletching and shatter into frosty frostwork.',
+    icon: '❄️',
+    rarity: 'legendary',
+    unlockType: 'xp_level',
+    unlockThreshold: 16,
+    unlockDescription: 'Reach Level 16 (Ember Knight)',
+    preview: {
+      primaryColor: '#38bdf8',
+      glowColor: '#e0f2fe',
+    },
+  },
+  {
+    id: 'arrow_effect_dragon_fire',
+    name: 'Draconic Flame Vortex',
+    category: 'arrow_effect',
+    description: 'A spiraling vortex of deep dragon fire engulfing the target in crimson flames.',
+    icon: '🐲',
+    rarity: 'legendary',
+    unlockType: 'xp_level',
+    unlockThreshold: 19,
+    unlockDescription: 'Reach Level 19 (Earth Shaper)',
+    preview: {
+      primaryColor: '#dc2626',
+      glowColor: '#f97316',
+    },
+  },
+  {
+    id: 'arrow_effect_comet_trail',
+    name: 'Starfall Meteor Trail',
+    category: 'arrow_effect',
+    description: 'A brilliant cyan-white meteor core leaving a glittering starlight dust tail.',
+    icon: '☄️',
+    rarity: 'legendary',
+    unlockType: 'xp_level',
+    unlockThreshold: 22,
+    unlockDescription: 'Reach Level 22 (Starfall Warden)',
+    preview: {
+      primaryColor: '#06b6d4',
+      glowColor: '#a5f3fc',
+    },
+  },
+  {
+    id: 'arrow_effect_phoenix_sparks',
+    name: 'Phoenix Rebirth Radiance',
+    category: 'arrow_effect',
+    description: 'Ascending golden and ruby phoenix sparks accompanied by harmonic celestial tones.',
+    icon: '🪶',
+    rarity: 'mythic',
+    unlockType: 'xp_level',
+    unlockThreshold: 26,
+    unlockDescription: 'Reach Level 26 (Titan Fletcher)',
+    preview: {
+      primaryColor: '#f59e0b',
+      glowColor: '#ef4444',
+    },
+  },
+  {
+    id: 'arrow_effect_celestial_supernova',
+    name: 'Prismatic Supernova',
+    category: 'arrow_effect',
+    description: 'Blinds the field with full-spectrum rainbow cosmic ripples that illuminate the courtyard.',
+    icon: '💫',
+    rarity: 'mythic',
+    unlockType: 'xp_level',
+    unlockThreshold: 30,
+    unlockDescription: 'Reach Level 30 (Divine Archon of Math)',
+    preview: {
+      primaryColor: '#ec4899',
+      glowColor: '#38bdf8',
+    },
+  },
 
-  // --- CASTLE DECORATIONS ---
+  // ==========================================
+  // --- CASTLE DECORATIONS (21) ---
+  // ==========================================
+  // --- Banners ---
   {
     id: 'castle_banner_royal_lion',
     name: 'Royal Lion Pennants',
@@ -319,6 +774,68 @@ export const COSMETIC_ITEMS: readonly CosmeticItem[] = [
     },
   },
   {
+    id: 'castle_banner_phoenix',
+    name: 'Phoenix Rising Standard',
+    category: 'castle_decoration',
+    description: 'Gilded battle standards showing the phoenix spreading golden wings of victory.',
+    icon: '🔥',
+    rarity: 'rare',
+    unlockType: 'sessions_count',
+    unlockThreshold: 5,
+    unlockDescription: 'Complete 5 full daily sessions',
+    preview: {
+      primaryColor: '#dc2626',
+      secondaryColor: '#f59e0b',
+    },
+  },
+  {
+    id: 'castle_banner_griffin',
+    name: 'Griffin Vanguard Tapestry',
+    category: 'castle_decoration',
+    description: 'Rich emerald and silver tapestries bearing the vigilant kingdom griffin.',
+    icon: '🦅',
+    rarity: 'epic',
+    unlockType: 'sessions_count',
+    unlockThreshold: 10,
+    unlockDescription: 'Complete 10 full daily sessions',
+    preview: {
+      primaryColor: '#047857',
+      secondaryColor: '#e2e8f0',
+    },
+  },
+  {
+    id: 'castle_banner_celestial_star',
+    name: 'Astral Constellation Banner',
+    category: 'castle_decoration',
+    description: 'Midnight blue satin banners shimmering with embroidered silver star charts.',
+    icon: '🌌',
+    rarity: 'legendary',
+    unlockType: 'sessions_count',
+    unlockThreshold: 25,
+    unlockDescription: 'Complete 25 full daily sessions',
+    preview: {
+      primaryColor: '#312e81',
+      secondaryColor: '#38bdf8',
+    },
+  },
+  {
+    id: 'castle_banner_infinite_crown',
+    name: 'Imperial Crown of Infinity',
+    category: 'castle_decoration',
+    description: 'The supreme royal regalia pennant radiating golden aura over the entire castle.',
+    icon: '👑',
+    rarity: 'mythic',
+    unlockType: 'xp_level',
+    unlockThreshold: 30,
+    unlockDescription: 'Reach Level 30 (Divine Archon of Math)',
+    preview: {
+      primaryColor: '#ca8a04',
+      secondaryColor: '#fef08a',
+    },
+  },
+
+  // --- Statues ---
+  {
     id: 'castle_statue_none',
     name: 'Clear Parapets',
     category: 'castle_decoration',
@@ -363,6 +880,68 @@ export const COSMETIC_ITEMS: readonly CosmeticItem[] = [
     },
   },
   {
+    id: 'castle_statue_griffin',
+    name: 'Vigilant Griffin Sentinels',
+    category: 'castle_decoration',
+    description: 'Noble stone griffins flanking the ramparts with proud outspread wings.',
+    icon: '🦅',
+    rarity: 'rare',
+    unlockType: 'xp_level',
+    unlockThreshold: 8,
+    unlockDescription: 'Reach Level 8 (Hawk-Eye Hunter)',
+    preview: {
+      primaryColor: '#64748b',
+      secondaryColor: '#0284c7',
+    },
+  },
+  {
+    id: 'castle_statue_crystal_dragon',
+    name: 'Crystalline Dragon Guardian',
+    category: 'castle_decoration',
+    description: 'Luminous blue crystal dragon perched atop the battlements that hums with energy.',
+    icon: '🐉',
+    rarity: 'legendary',
+    unlockType: 'xp_level',
+    unlockThreshold: 15,
+    unlockDescription: 'Reach Level 15 (Realm Sentinel)',
+    preview: {
+      primaryColor: '#06b6d4',
+      secondaryColor: '#e0f2fe',
+    },
+  },
+  {
+    id: 'castle_statue_phoenix_pillar',
+    name: 'Phoenix Pillar Monument',
+    category: 'castle_decoration',
+    description: 'Soaring marble columns supporting sculpted golden phoenixes in eternal flight.',
+    icon: '🪶',
+    rarity: 'legendary',
+    unlockType: 'xp_level',
+    unlockThreshold: 22,
+    unlockDescription: 'Reach Level 22 (Starfall Warden)',
+    preview: {
+      primaryColor: '#f97316',
+      secondaryColor: '#facc15',
+    },
+  },
+  {
+    id: 'castle_statue_celestial_archon',
+    name: 'Archon of Mathematics Monument',
+    category: 'castle_decoration',
+    description: 'Colossal heroic statue carved from starlight marble holding aloft the Bow of Truth.',
+    icon: '✨',
+    rarity: 'mythic',
+    unlockType: 'xp_level',
+    unlockThreshold: 30,
+    unlockDescription: 'Reach Level 30 (Divine Archon of Math)',
+    preview: {
+      primaryColor: '#f8fafc',
+      secondaryColor: '#fbbf24',
+    },
+  },
+
+  // --- Courtyard Grounds ---
+  {
     id: 'castle_ground_classic_lawn',
     name: 'Courtyard Lawn',
     category: 'castle_decoration',
@@ -406,9 +985,73 @@ export const COSMETIC_ITEMS: readonly CosmeticItem[] = [
       secondaryColor: '#f59e0b',
     },
   },
+  {
+    id: 'castle_ground_obsidian_cobble',
+    name: 'Obsidian Flagstone Courtyard',
+    category: 'castle_decoration',
+    description: 'Dark polished volcanic stones framed with glowing fire-moss seams.',
+    icon: '🪨',
+    rarity: 'rare',
+    unlockType: 'xp_level',
+    unlockThreshold: 9,
+    unlockDescription: 'Reach Level 9 (Storm Chaser)',
+    preview: {
+      primaryColor: '#1e293b',
+      secondaryColor: '#f97316',
+    },
+  },
+  {
+    id: 'castle_ground_enchanted_meadow',
+    name: 'Bioluminescent Glade',
+    category: 'castle_decoration',
+    description: 'Enchanted nighttime meadow dotted with glowing purple and azure moon-lilies.',
+    icon: '🌸',
+    rarity: 'legendary',
+    unlockType: 'xp_level',
+    unlockThreshold: 16,
+    unlockDescription: 'Reach Level 16 (Ember Knight)',
+    preview: {
+      primaryColor: '#1e1b4b',
+      secondaryColor: '#a855f7',
+    },
+  },
+  {
+    id: 'castle_ground_royal_marble',
+    name: 'Palatial Imperial Marble',
+    category: 'castle_decoration',
+    description: 'Pristine polished white marble paving inlaid with gleaming gilded labyrinth spirals.',
+    icon: '🏛️',
+    rarity: 'legendary',
+    unlockType: 'xp_level',
+    unlockThreshold: 24,
+    unlockDescription: 'Reach Level 24 (Aurora Marksman)',
+    preview: {
+      primaryColor: '#f8fafc',
+      secondaryColor: '#ca8a04',
+    },
+  },
+  {
+    id: 'castle_ground_starfall_mosaic',
+    name: 'Cosmic Starfall Mosaic',
+    category: 'castle_decoration',
+    description: 'Glistening lapis-lazuli and diamond ground mosaic mapping kingdom constellations.',
+    icon: '🌌',
+    rarity: 'mythic',
+    unlockType: 'xp_level',
+    unlockThreshold: 30,
+    unlockDescription: 'Reach Level 30 (Divine Archon of Math)',
+    preview: {
+      primaryColor: '#0f172a',
+      secondaryColor: '#38bdf8',
+    },
+  },
 ];
 
+// ==========================================
+// --- ACHIEVEMENTS / TROPHIES (35) ---
+// ==========================================
 export const ACHIEVEMENTS: readonly Achievement[] = [
+  // --- Exploration & World ---
   {
     id: 'ach_first_arrow',
     title: 'First Flight',
@@ -418,6 +1061,26 @@ export const ACHIEVEMENTS: readonly Achievement[] = [
     badgeColor: '#3b82f6',
     category: 'exploration',
   },
+  {
+    id: 'ach_realm_explorer',
+    title: 'Realm Wanderer',
+    description: 'Unlock your first new realm on the World Map.',
+    icon: '🗺️',
+    xpReward: 75,
+    badgeColor: '#14b8a6',
+    category: 'exploration',
+  },
+  {
+    id: 'ach_realm_master',
+    title: 'Cartographer of the Realm',
+    description: 'Unlock all realms across the kingdom on the World Map.',
+    icon: '🧭',
+    xpReward: 250,
+    badgeColor: '#059669',
+    category: 'exploration',
+  },
+
+  // --- Consistency & Practice Streaks ---
   {
     id: 'ach_daily_champion',
     title: 'Daily Archer',
@@ -446,6 +1109,71 @@ export const ACHIEVEMENTS: readonly Achievement[] = [
     category: 'consistency',
   },
   {
+    id: 'ach_streak_return_5',
+    title: 'Five-Day Fire',
+    description: 'Maintain a 5-day daily practice streak.',
+    icon: '⚡',
+    xpReward: 250,
+    badgeColor: '#f59e0b',
+    category: 'consistency',
+  },
+  {
+    id: 'ach_streak_return_7',
+    title: 'Week Warrior',
+    description: 'Practice consistently every day for a full week (7-Day Streak).',
+    icon: '🛡️',
+    xpReward: 350,
+    badgeColor: '#dc2626',
+    category: 'consistency',
+  },
+  {
+    id: 'ach_streak_return_14',
+    title: 'Fortnight Knight',
+    description: 'Maintain an unbroken daily practice streak for 14 straight days.',
+    icon: '⚔️',
+    xpReward: 500,
+    badgeColor: '#7c3aed',
+    category: 'consistency',
+  },
+  {
+    id: 'ach_streak_return_30',
+    title: 'Iron Will Legend',
+    description: 'Reach a legendary 30-day streak of daily archery training!',
+    icon: '🌟',
+    xpReward: 1000,
+    badgeColor: '#d97706',
+    category: 'consistency',
+  },
+  {
+    id: 'ach_sessions_5',
+    title: 'Dedicated Apprentice',
+    description: 'Complete 5 full daily sessions in the kingdom.',
+    icon: '📜',
+    xpReward: 150,
+    badgeColor: '#0284c7',
+    category: 'consistency',
+  },
+  {
+    id: 'ach_sessions_10',
+    title: 'Kingdom Regular',
+    description: 'Complete 10 full daily archery sessions.',
+    icon: '🏰',
+    xpReward: 250,
+    badgeColor: '#0891b2',
+    category: 'consistency',
+  },
+  {
+    id: 'ach_sessions_25',
+    title: 'Seasoned Marksman',
+    description: 'Complete 25 full daily sessions of practice.',
+    icon: '🎖️',
+    xpReward: 500,
+    badgeColor: '#4f46e5',
+    category: 'consistency',
+  },
+
+  // --- Resilience & Grit ---
+  {
     id: 'ach_resilience',
     title: 'Grit & Determination',
     description: 'Hit the target on your next try after missing an arrow.',
@@ -454,6 +1182,26 @@ export const ACHIEVEMENTS: readonly Achievement[] = [
     badgeColor: '#8b5cf6',
     category: 'resilience',
   },
+  {
+    id: 'ach_resilience_5',
+    title: 'Unshakeable Courage',
+    description: 'Recover from misses with immediate bullseyes 5 times.',
+    icon: '🦁',
+    xpReward: 120,
+    badgeColor: '#d97706',
+    category: 'resilience',
+  },
+  {
+    id: 'ach_resilience_15',
+    title: 'Never Give Up',
+    description: 'Bounce back with bullseyes 15 times after tricky questions.',
+    icon: '🛡️',
+    xpReward: 250,
+    badgeColor: '#059669',
+    category: 'resilience',
+  },
+
+  // --- Sharpshooter Focus & Volume Mastery ---
   {
     id: 'ach_elements_all',
     title: 'Elemental Adept',
@@ -473,14 +1221,79 @@ export const ACHIEVEMENTS: readonly Achievement[] = [
     category: 'mastery',
   },
   {
-    id: 'ach_realm_explorer',
-    title: 'Realm Wanderer',
-    description: 'Unlock your first new realm on the World Map.',
-    icon: '🗺️',
-    xpReward: 75,
-    badgeColor: '#14b8a6',
-    category: 'exploration',
+    id: 'ach_streak_10',
+    title: 'Sharpshooter Focus',
+    description: 'Hit 10 consecutive targets without missing.',
+    icon: '🎯',
+    xpReward: 100,
+    badgeColor: '#e11d48',
+    category: 'mastery',
   },
+  {
+    id: 'ach_streak_20',
+    title: 'Deadeye Archer',
+    description: 'Hit 20 consecutive targets without a single miss!',
+    icon: '🔥',
+    xpReward: 250,
+    badgeColor: '#b91c1c',
+    category: 'mastery',
+  },
+  {
+    id: 'ach_perfect_session',
+    title: 'Master of the Range',
+    description: 'Complete a 50-arrow session with 90% or higher accuracy.',
+    icon: '🏅',
+    xpReward: 200,
+    badgeColor: '#f59e0b',
+    category: 'mastery',
+  },
+  {
+    id: 'ach_arrows_100',
+    title: 'Century Shot',
+    description: 'Shoot 100 total arrows in archery practice.',
+    icon: '🏹',
+    xpReward: 100,
+    badgeColor: '#3b82f6',
+    category: 'mastery',
+  },
+  {
+    id: 'ach_arrows_500',
+    title: 'Quiver of 500',
+    description: 'Shoot 500 total arrows in practice.',
+    icon: '📦',
+    xpReward: 300,
+    badgeColor: '#6366f1',
+    category: 'mastery',
+  },
+  {
+    id: 'ach_arrows_1000',
+    title: 'Grandmaster Fletcher',
+    description: 'Shoot 1,000 total practice arrows across your journey.',
+    icon: '🏛️',
+    xpReward: 600,
+    badgeColor: '#7c3aed',
+    category: 'mastery',
+  },
+  {
+    id: 'ach_hits_100',
+    title: 'Centurion Archer',
+    description: 'Score 100 successful bullseye hits.',
+    icon: '🎯',
+    xpReward: 150,
+    badgeColor: '#10b981',
+    category: 'mastery',
+  },
+  {
+    id: 'ach_hits_500',
+    title: 'Bullseye Legend',
+    description: 'Score 500 successful bullseye hits.',
+    icon: '💎',
+    xpReward: 400,
+    badgeColor: '#059669',
+    category: 'mastery',
+  },
+
+  // --- Math Strategy Mastery ---
   {
     id: 'ach_make_10_master',
     title: 'Ten-Maker',
@@ -491,6 +1304,26 @@ export const ACHIEVEMENTS: readonly Achievement[] = [
     category: 'mastery',
   },
   {
+    id: 'ach_make_10_veteran',
+    title: 'Bridge Builder',
+    description: 'Solve 10 questions using the Make-10 bridge strategy.',
+    icon: '🌉',
+    xpReward: 120,
+    badgeColor: '#4f46e5',
+    category: 'mastery',
+  },
+  {
+    id: 'ach_doubles_expert',
+    title: 'Twin Strike',
+    description: 'Solve 10 Doubles facts questions.',
+    icon: '👯',
+    xpReward: 120,
+    badgeColor: '#8b5cf6',
+    category: 'mastery',
+  },
+
+  // --- Collection ---
+  {
     id: 'ach_collector',
     title: 'Royal Wardrobe',
     description: 'Unlock at least 4 custom cosmetics or castle decorations.',
@@ -498,6 +1331,53 @@ export const ACHIEVEMENTS: readonly Achievement[] = [
     xpReward: 60,
     badgeColor: '#a855f7',
     category: 'collection',
+  },
+  {
+    id: 'ach_wardrobe_12',
+    title: 'Master of the Armory',
+    description: 'Unlock at least 12 custom cosmetics across your journey.',
+    icon: '🧰',
+    xpReward: 200,
+    badgeColor: '#c026d3',
+    category: 'collection',
+  },
+  {
+    id: 'ach_wardrobe_25',
+    title: 'Sovereign Vault',
+    description: 'Unlock at least 25 custom outfits, bows, effects, or decorations.',
+    icon: '👑',
+    xpReward: 500,
+    badgeColor: '#ca8a04',
+    category: 'collection',
+  },
+
+  // --- Level Milestones ---
+  {
+    id: 'ach_level_10',
+    title: 'Castle Vanguard Rank',
+    description: 'Advance your skills and reach Archer Level 10!',
+    icon: '🛡️',
+    xpReward: 200,
+    badgeColor: '#0284c7',
+    category: 'milestone',
+  },
+  {
+    id: 'ach_level_20',
+    title: 'Master of Elements Rank',
+    description: 'Ascend to the prestigious rank of Level 20!',
+    icon: '🌀',
+    xpReward: 400,
+    badgeColor: '#059669',
+    category: 'milestone',
+  },
+  {
+    id: 'ach_level_30',
+    title: 'Divine Archon of Math',
+    description: 'Reach the pinnacle of kingdom archery: Level 30!',
+    icon: '✨',
+    xpReward: 1000,
+    badgeColor: '#d97706',
+    category: 'milestone',
   },
 ];
 
@@ -529,7 +1409,10 @@ export function getCosmeticsByCategory(category: CosmeticItem['category']): Cosm
   return COSMETIC_ITEMS.filter((item) => item.category === category);
 }
 
-export function getDefaultTomorrowReward(currentStreak: number = 0): TomorrowRewardPreview {
+export function getDefaultTomorrowReward(
+  currentStreak: number = 0,
+  currentLevel: number = 1
+): TomorrowRewardPreview {
   if (currentStreak === 0) {
     return {
       type: 'streak_bonus',
@@ -563,6 +1446,63 @@ export function getDefaultTomorrowReward(currentStreak: number = 0): TomorrowRew
     };
   }
 
+  if (currentStreak === 4) {
+    return {
+      type: 'quest',
+      title: 'Five-Day Fire Milestone (+250 XP)',
+      description: 'Complete tomorrow’s session to earn the prestigious Five-Day Fire Trophy!',
+      icon: '⚡',
+      reasonToReturn: 'One more day to ignite your 5-Day Streak Trophy!',
+      unlockCondition: 'Complete 1 session tomorrow (5-Day Streak)',
+    };
+  }
+
+  if (currentStreak === 6) {
+    return {
+      type: 'quest',
+      title: 'Week Warrior Trophy (+350 XP)',
+      description: 'Practice tomorrow to conquer an entire week of daily training!',
+      icon: '🛡️',
+      reasonToReturn: 'Tomorrow completes a full 7-day practice streak!',
+      unlockCondition: 'Complete 1 session tomorrow (7-Day Streak)',
+    };
+  }
+
+  if (currentStreak === 13) {
+    return {
+      type: 'quest',
+      title: 'Fortnight Knight Trophy (+500 XP)',
+      description: 'Unbroken practice for two straight weeks unlocks the Knight Trophy!',
+      icon: '⚔️',
+      reasonToReturn: 'Reach 14 consecutive days of kingdom practice tomorrow!',
+      unlockCondition: 'Complete 1 session tomorrow (14-Day Streak)',
+    };
+  }
+
+  if (currentStreak === 29) {
+    return {
+      type: 'quest',
+      title: 'Iron Will Legend (+1000 XP)',
+      description: 'The legendary 30-Day streak milestone awaits tomorrow!',
+      icon: '🌟',
+      reasonToReturn: 'Reach the ultimate 30-Day training legend tomorrow!',
+      unlockCondition: 'Complete 1 session tomorrow (30-Day Streak)',
+    };
+  }
+
+  // Check next level unlock
+  const nextLvl = LEVEL_THRESHOLDS.find((t) => t.level === currentLevel + 1);
+  if (nextLvl) {
+    return {
+      type: 'level_unlock',
+      title: `Rank Milestone: ${nextLvl.title}`,
+      description: `Practice tomorrow to advance towards Level ${nextLvl.level} (${nextLvl.title}) and new armory unlocks!`,
+      icon: '⭐',
+      reasonToReturn: `Maintain your heroic ${currentStreak}-day streak and push toward Level ${nextLvl.level}!`,
+      unlockCondition: `Level ${nextLvl.level} rank unlock`,
+    };
+  }
+
   return {
     type: 'streak_bonus',
     title: `${currentStreak + 1}-Day Streak Champion Bonus`,
@@ -572,4 +1512,3 @@ export function getDefaultTomorrowReward(currentStreak: number = 0): TomorrowRew
     unlockCondition: 'Practice tomorrow to protect your streak',
   };
 }
-

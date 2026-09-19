@@ -83,6 +83,7 @@ export const AppContent: React.FC = () => {
     if (tab === 'history' || tab === 'dashboard') {
       setProgress(loadLocalProgress(activeChild.id));
     }
+    setSyncTick((t) => t + 1);
     setActiveTab(tab);
   };
 
@@ -90,6 +91,7 @@ export const AppContent: React.FC = () => {
     enabled: true,
     onButtonDown: (btn) => {
       if (btn === XboxButton.LB) {
+        setSyncTick((t) => t + 1);
         setActiveTab((curr) => {
           const idx = APP_TABS.indexOf(curr);
           const prevIdx = (idx - 1 + APP_TABS.length) % APP_TABS.length;
@@ -100,6 +102,7 @@ export const AppContent: React.FC = () => {
           return nextTab;
         });
       } else if (btn === XboxButton.RB) {
+        setSyncTick((t) => t + 1);
         setActiveTab((curr) => {
           const idx = APP_TABS.indexOf(curr);
           const nextIdx = (idx + 1) % APP_TABS.length;
@@ -443,7 +446,7 @@ export const AppContent: React.FC = () => {
             />
           ) : activeTab === 'rewards' ? (
             <RewardsScreen
-              key={`${activeChild.id}_${syncTick}`}
+              key={activeChild.id}
               playerId={activeChild.id}
               apiClient={apiClient}
               onRewardsChange={() => setSyncTick((t) => t + 1)}

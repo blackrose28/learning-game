@@ -202,9 +202,47 @@ describe('Task 9.3 — World Progression', () => {
       expect(backdrop).toHaveAttribute('data-area', 'earth_area');
       expect(screen.getByTestId('realm-banner-overlay')).toHaveTextContent(/Earth Mountain/i);
     });
+
+    it('supports arena variant with full-height 500 viewBox and compact variant with 180 viewBox', () => {
+      const { rerender, container } = render(<RangeBackdrop areaId="castle" variant="arena" />);
+      let backdrop = screen.getByTestId('range-backdrop');
+      expect(backdrop).toHaveAttribute('data-variant', 'arena');
+      let svg = container.querySelector('svg.range-backdrop-svg');
+      expect(svg).toHaveAttribute('viewBox', '0 0 600 500');
+
+      rerender(<RangeBackdrop areaId="castle" variant="compact" />);
+      backdrop = screen.getByTestId('range-backdrop');
+      expect(backdrop).toHaveAttribute('data-variant', 'compact');
+      svg = container.querySelector('svg.range-backdrop-svg');
+      expect(svg).toHaveAttribute('viewBox', '0 0 600 180');
+    });
   });
 
   describe('GameScreen integration with World Progression', () => {
+    it('renders full-span arena environment containing archer, target, and badges below', () => {
+      const { container } = render(
+        <GameScreen initialQuestion={MOCK_QUESTION} initialAreaId="castle" autoAdvanceDelayMs={0} />
+      );
+
+      const rangeColumn = container.querySelector('.game-range-column');
+      expect(rangeColumn).toBeInTheDocument();
+
+      // Range backdrop spans the entire range column view
+      const backdrop = rangeColumn!.querySelector('[data-testid="range-backdrop"]');
+      expect(backdrop).toBeInTheDocument();
+      expect(backdrop).toHaveAttribute('data-variant', 'arena');
+
+      // Contains archer, target, and badges below inside the range column
+      const archerStage = rangeColumn!.querySelector('[data-testid="archer-stage"]');
+      expect(archerStage).toBeInTheDocument();
+
+      const targetCard = rangeColumn!.querySelector('[data-testid="target-card"]');
+      expect(targetCard).toBeInTheDocument();
+
+      const metaRow = rangeColumn!.querySelector('.range-meta-row');
+      expect(metaRow).toBeInTheDocument();
+      expect(metaRow!.querySelector('[data-testid="adaptation-info-bar"]')).toBeInTheDocument();
+    });
     it('displays active realm badge and renders range backdrop', () => {
       render(
         <GameScreen initialQuestion={MOCK_QUESTION} initialAreaId="castle" autoAdvanceDelayMs={0} />

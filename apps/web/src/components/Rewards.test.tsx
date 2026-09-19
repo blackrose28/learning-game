@@ -282,5 +282,183 @@ describe('Task 9.4 — Rewards Integration Tests', () => {
       fireEvent.click(rewardsTab);
       expect(screen.getByTestId('rewards-screen')).toBeInTheDocument();
     });
+
+    it('maintains the active category tab when equipping an item', () => {
+      const state = createDefaultRewardsState('player-local');
+      state.unlockedCosmeticIds.push('bow_ember_blaze');
+      savePlayerRewards(state);
+
+      render(<App />);
+
+      // Navigate to Royal Armory
+      fireEvent.click(screen.getByTestId('tab-rewards'));
+
+      // Switch to Bows tab
+      fireEvent.click(screen.getByTestId('tab-cat-bow'));
+      expect(screen.getByTestId('tab-cat-bow')).toHaveClass('active');
+
+      // Equip ember bow
+      const equipBtn = screen.getByTestId('equip-bow_ember_blaze');
+      fireEvent.click(equipBtn);
+
+      // Verify that the Bows tab remains active and user was not pushed back to Outfits
+      expect(screen.getByTestId('tab-cat-bow')).toHaveClass('active');
+      expect(screen.getByTestId('tab-cat-outfit')).not.toHaveClass('active');
+      expect(screen.getByTestId('status-equipped-bow_ember_blaze')).toBeInTheDocument();
+    });
+  });
+
+  describe('Level 1–30 Rewards & Trophy Wall Integration', () => {
+    it('renders Level 30 Divine Archon rank and progress', () => {
+      const state = createDefaultRewardsState('player-1');
+      state.totalXp = 46000;
+      state.level = 30;
+      state.levelTitle = 'Divine Archon of Math';
+      state.currentStreak = 15;
+      savePlayerRewards(state, storage);
+
+      render(<RewardsScreen playerId="player-1" storage={storage} />);
+
+      expect(screen.getByTestId('player-level-badge')).toHaveTextContent(/Level 30/i);
+      expect(screen.getByTestId('player-level-badge')).toHaveTextContent(/Divine Archon of Math/i);
+    });
+
+    it('filters Trophy Wall by category and displays progress chips on locked achievements', () => {
+      const state = createDefaultRewardsState('player-1');
+      state.achievementProgress['arrows_shot'] = 65;
+      savePlayerRewards(state, storage);
+
+      render(<RewardsScreen playerId="player-1" storage={storage} />);
+
+      // Switch to Trophy Wall
+      fireEvent.click(screen.getByTestId('tab-cat-achievements'));
+      expect(screen.getByTestId('trophy-filters')).toBeInTheDocument();
+
+      // Check progress chip on 100-arrow trophy
+      const progressChip = screen.getByTestId('ach-progress-ach_arrows_100');
+      expect(progressChip).toHaveTextContent(/65 \/ 100 arrows/i);
+
+      // Filter by Streaks & Habits (consistency)
+      fireEvent.click(screen.getByTestId('trophy-filter-consistency'));
+      expect(screen.getByTestId('ach-card-ach_daily_champion')).toBeInTheDocument();
+      expect(screen.queryByTestId('ach-card-ach_first_arrow')).not.toBeInTheDocument();
+
+      // Filter by Exploration
+      fireEvent.click(screen.getByTestId('trophy-filter-exploration'));
+      expect(screen.getByTestId('ach-card-ach_first_arrow')).toBeInTheDocument();
+      expect(screen.queryByTestId('ach-card-ach_daily_champion')).not.toBeInTheDocument();
+    });
+
+    it('allows equipping Mythic Level 30 cosmetics and updates preview attributes', () => {
+      const state = createDefaultRewardsState('player-1');
+      state.unlockedCosmeticIds.push(
+        'outfit_divine_archon',
+        'bow_divine_infinity',
+        'arrow_effect_celestial_supernova',
+        'castle_ground_starfall_mosaic'
+      );
+      savePlayerRewards(state, storage);
+
+      render(<RewardsScreen playerId="player-1" storage={storage} />);
+
+      // Equip Divine Archon outfit
+      fireEvent.click(screen.getByTestId('equip-outfit_divine_archon'));
+      expect(screen.getByTestId('status-equipped-outfit_divine_archon')).toBeInTheDocument();
+
+      const archer = screen.getByTestId('rewards-showcase').querySelector('[data-testid="archer-graphic"]');
+      expect(archer).toHaveAttribute('data-outfit', 'outfit_divine_archon');
+
+      // Switch to Bows and equip Infinity Bow
+      fireEvent.click(screen.getByTestId('tab-cat-bow'));
+      fireEvent.click(screen.getByTestId('equip-bow_divine_infinity'));
+      expect(archer).toHaveAttribute('data-bow', 'bow_divine_infinity');
+
+      // Switch to Castle Decorations and equip Starfall Mosaic
+      fireEvent.click(screen.getByTestId('tab-cat-castle'));
+      fireEvent.click(screen.getByTestId('equip-castle_ground_starfall_mosaic'));
+
+      const backdrop = screen.getByTestId('rewards-showcase').querySelector('[data-testid="range-backdrop"]');
+      expect(backdrop).toHaveAttribute('data-ground', 'castle_ground_starfall_mosaic');
+    });
+
+    it('renders arena showcase containing archer, target, and equipped badges below', () => {
+      const state = createDefaultRewardsState('player-1');
+      state.unlockedCosmeticIds.push('arrow_effect_flame_embers', 'bow_ember_blaze');
+      savePlayerRewards(state, storage);
+
+      render(<RewardsScreen playerId="player-1" storage={storage} />);
+
+      const showcase = screen.getByTestId('rewards-showcase');
+      const backdrop = showcase.querySelector('[data-testid="range-backdrop"]');
+      expect(backdrop).toBeInTheDocument();
+      expect(backdrop).toHaveAttribute('data-variant', 'arena');
+
+      // Contains archer
+      const archer = showcase.querySelector('[data-testid="archer-graphic"]');
+      expect(archer).toBeInTheDocument();
+
+      // Contains target
+      const target = showcase.querySelector('[data-testid="target-card"]');
+      expect(target).toBeInTheDocument();
+      expect(target).toHaveAttribute('data-effect', 'arrow_effect_classic');
+
+      // Contains badges below
+      const badges = screen.getByTestId('stage-equipped-badges');
+      expect(badges).toBeInTheDocument();
+      expect(screen.getByTestId('badge-equipped-outfit')).toBeInTheDocument();
+      expect(screen.getByTestId('badge-equipped-bow')).toBeInTheDocument();
+      expect(screen.getByTestId('badge-equipped-effect')).toBeInTheDocument();
+      expect(screen.getByTestId('badge-equipped-banner')).toBeInTheDocument();
+      expect(screen.getByTestId('badge-equipped-statue')).toBeInTheDocument();
+      expect(screen.getByTestId('badge-equipped-ground')).toBeInTheDocument();
+
+      // Equip flame embers effect and verify target reflects it
+      fireEvent.click(screen.getByTestId('tab-cat-effects'));
+      fireEvent.click(screen.getByTestId('equip-arrow_effect_flame_embers'));
+      expect(target).toHaveAttribute('data-effect', 'arrow_effect_flame_embers');
+
+      // Clicking an equipped badge chip jumps to that category
+      fireEvent.click(screen.getByTestId('badge-equipped-bow'));
+      expect(screen.getByTestId('tab-cat-bow')).toHaveClass('active');
+    });
+
+    it('triggers test shot impact on target when clicking test shot or target', () => {
+      render(<RewardsScreen playerId="player-1" storage={storage} />);
+
+      const testBtn = screen.getByTestId('btn-test-shot');
+      expect(testBtn).toBeInTheDocument();
+      fireEvent.click(testBtn);
+
+      const target = screen.getByTestId('rewards-showcase').querySelector('[data-testid="target-card"]');
+      expect(target).toHaveAttribute('data-hit-state', 'hit');
+    });
+
+    it('synchronizes equipped rewards bidirectionally between Royal Armory and Play screens', () => {
+      const state = createDefaultRewardsState('player-local');
+      state.unlockedCosmeticIds.push('outfit_ember_crimson', 'bow_ember_blaze', 'arrow_effect_flame_embers');
+      savePlayerRewards(state);
+
+      render(<App />);
+
+      // Verify initial state on Play screen
+      const playArcher = screen.getByTestId('archer-character').querySelector('[data-testid="archer-graphic"]');
+      expect(playArcher).toHaveAttribute('data-outfit', 'outfit_classic_green');
+
+      // Navigate to Royal Armory
+      fireEvent.click(screen.getByTestId('tab-rewards'));
+      expect(screen.getByTestId('rewards-screen')).toBeInTheDocument();
+
+      // Equip ember crimson outfit
+      fireEvent.click(screen.getByTestId('equip-outfit_ember_crimson'));
+      expect(screen.getByTestId('status-equipped-outfit_ember_crimson')).toBeInTheDocument();
+
+      // Switch back to Play screen via back button
+      fireEvent.click(screen.getByTestId('btn-back-to-game'));
+      expect(screen.getByTestId('archer-stage')).toBeInTheDocument();
+
+      // Play screen immediately reflects the newly equipped outfit!
+      const updatedPlayArcher = screen.getByTestId('archer-character').querySelector('[data-testid="archer-graphic"]');
+      expect(updatedPlayArcher).toHaveAttribute('data-outfit', 'outfit_ember_crimson');
+    });
   });
 });

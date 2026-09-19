@@ -1,6 +1,7 @@
 import React from 'react';
 import type { ElementType } from '@math-archer/learning-engine';
 import { ElementalArrowGraphic } from './ElementalArrowGraphic';
+import { getArrowEffectVisual } from './arrowEffects';
 
 export interface ArcheryTargetProps {
   expression: string;
@@ -17,6 +18,8 @@ export const ArcheryTarget: React.FC<ArcheryTargetProps> = ({
   className = '',
   equippedEffect = 'arrow_effect_classic',
 }) => {
+  const effectVisual = getArrowEffectVisual(equippedEffect);
+
   const elementGlow =
     activeElement === 'fire'
       ? '#f97316'
@@ -30,12 +33,16 @@ export const ArcheryTarget: React.FC<ArcheryTargetProps> = ({
 
   return (
     <div
-      className={`target-card hit-${hitState} ${
+      className={`target-card hit-${hitState} effect-${effectVisual.id} ${
         hitState === 'hit' ? 'target-impact-hit' : hitState === 'miss' ? 'target-impact-miss' : ''
       } ${className}`}
       data-testid="target-card"
       data-hit-state={hitState}
       data-effect={equippedEffect}
+      style={{
+        ['--effect-primary' as any]: effectVisual.primaryColor,
+        ['--effect-glow' as any]: effectVisual.glowColor,
+      }}
     >
       {/* Wooden Archery Stand Tripod Backdrop */}
       <div className="target-stand" aria-hidden="true">
@@ -139,12 +146,17 @@ export const ArcheryTarget: React.FC<ArcheryTargetProps> = ({
         {/* Embedded Arrow (Stuck in the Bullseye on Hit with distinct elemental geometry) */}
         {hitState === 'hit' && (
           <div
-            className={`embedded-arrow element-${activeElement || 'fire'}`}
+            className={`embedded-arrow element-${activeElement || 'fire'} effect-${effectVisual.id}`}
             data-testid="embedded-arrow"
             data-element={activeElement || 'fire'}
+            data-effect={equippedEffect}
             aria-hidden="true"
           >
-            <ElementalArrowGraphic element={activeElement || 'fire'} variant="embedded" />
+            <ElementalArrowGraphic
+              element={activeElement || 'fire'}
+              variant="embedded"
+              equippedEffect={equippedEffect}
+            />
           </div>
         )}
       </div>
@@ -159,15 +171,26 @@ export const ArcheryTarget: React.FC<ArcheryTargetProps> = ({
         </div>
       </div>
 
-      {/* Impact Visual Effects with Distinct Elemental Feedback */}
+      {/* Impact Visual Effects with Distinct Elemental Feedback & Arrow Effects */}
       {hitState === 'hit' && (
         <div
-          className={`target-hit-effect element-${activeElement || 'fire'}`}
+          className={`target-hit-effect element-${activeElement || 'fire'} effect-${effectVisual.id}`}
           data-testid="target-hit-effect"
           data-element={activeElement || 'fire'}
+          data-effect={equippedEffect}
         >
-          <span className="hit-stars" aria-hidden="true">
-            ✨🎯✨
+          <span className="hit-stars" data-testid="hit-stars" aria-hidden="true">
+            {effectVisual.impactGlyphs}
+          </span>
+          <span
+            className="hit-effect-badge"
+            data-testid="hit-effect-badge"
+            style={{
+              color: effectVisual.primaryColor,
+              textShadow: `0 0 8px ${effectVisual.glowColor}`,
+            }}
+          >
+            {effectVisual.icon} {effectVisual.name}
           </span>
           {activeElement && (
             <span className="hit-element-badge" data-testid="hit-element-badge">
@@ -177,8 +200,21 @@ export const ArcheryTarget: React.FC<ArcheryTargetProps> = ({
               {activeElement === 'earth' && '🪨 Seismic Impact!'}
             </span>
           )}
-          <div className="hit-ring-burst" aria-hidden="true" />
-          <div className="hit-sparkle-burst" aria-hidden="true" />
+          <div
+            className="hit-ring-burst"
+            aria-hidden="true"
+            style={{
+              borderColor: effectVisual.primaryColor,
+              boxShadow: `0 0 16px ${effectVisual.glowColor}`,
+            }}
+          />
+          <div
+            className="hit-sparkle-burst"
+            aria-hidden="true"
+            style={{
+              background: `radial-gradient(circle, ${effectVisual.glowColor} 0%, transparent 70%)`,
+            }}
+          />
         </div>
       )}
       {hitState === 'miss' && (

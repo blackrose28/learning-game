@@ -1,6 +1,6 @@
 export type CosmeticCategory = 'outfit' | 'bow' | 'arrow_effect' | 'castle_decoration';
 
-export type CosmeticRarity = 'common' | 'rare' | 'epic' | 'legendary';
+export type CosmeticRarity = 'common' | 'rare' | 'epic' | 'legendary' | 'mythic';
 
 export type UnlockType = 'default' | 'xp_level' | 'sessions_count' | 'streak_days' | 'achievement';
 
@@ -31,7 +31,8 @@ export type AchievementCategory =
   | 'consistency'
   | 'resilience'
   | 'mastery'
-  | 'collection';
+  | 'collection'
+  | 'milestone';
 
 export interface Achievement {
   id: string;

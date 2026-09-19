@@ -658,9 +658,11 @@ export const GameScreen: React.FC<GameScreenProps> = ({
 
       // Task 9.4 Rewards: Award attempt XP & evaluate achievements
       const isMake10 = isMake10Eligible(question);
+      const isDoubles = question.left === question.right && question.operation === 'add';
       const attemptRewards = awardAttemptRewards(playerRewards, {
         isCorrect: correct,
         isMake10,
+        isDoubles,
         element: choice.element,
         wasMissPreceding: lastAttemptWasMiss,
         consecutiveHits: correct ? consecutiveHitsCount + 1 : 0,
@@ -714,6 +716,8 @@ export const GameScreen: React.FC<GameScreenProps> = ({
             sessionDate: currentSession.date || new Date().toISOString().slice(0, 10),
             completedSessionsCount: newCompletedCount,
             realmsDiscovered: updatedProg.unlockedAreaIds.length,
+            hitsInSession: currentSession.hits,
+            totalArrowsInSession: currentSession.arrowsUsed,
           });
           setPlayerRewards(sessionRewards.nextState);
           savePlayerRewards(sessionRewards.nextState, storage);
@@ -1627,6 +1631,7 @@ export const GameScreen: React.FC<GameScreenProps> = ({
             equippedBanner={playerRewards.equippedCosmetics.castleBanner}
             equippedStatue={playerRewards.equippedCosmetics.castleStatue}
             equippedGround={playerRewards.equippedCosmetics.castleGround}
+            variant="arena"
           />
 
           {/* Archer Character & Shooting Arena */}
@@ -1666,9 +1671,13 @@ export const GameScreen: React.FC<GameScreenProps> = ({
                 data-testid="flying-arrow"
                 data-element={activeShot.element}
                 data-outcome={activeShot.outcome}
+                data-effect={playerRewards.equippedCosmetics.arrowEffect}
                 aria-hidden="true"
               >
-                <div className="flying-arrow-trail" />
+                <div
+                  className="flying-arrow-trail"
+                  data-effect={playerRewards.equippedCosmetics.arrowEffect}
+                />
                 <div className="flying-arrow-body">
                   <ElementalArrowGraphic
                     element={activeShot.element}

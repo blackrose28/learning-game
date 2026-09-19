@@ -4,14 +4,21 @@ import {
   type PlayerRewardsState,
   type CosmeticCategory,
   type CosmeticItem,
+  type AchievementCategory,
+  type WorldAreaId,
   loadPlayerRewards,
   savePlayerRewards,
   equipCosmetic,
   getAllAchievements,
   getCosmeticsByCategory,
   getDefaultStorage,
+  loadWorldProgression,
+  getWorldArea,
+  getCosmeticItem,
 } from '@math-archer/learning-engine';
 import { ArcherGraphic } from './ArcherGraphic';
+import { ArcheryTarget } from './ArcheryTarget';
+import { ElementalArrowGraphic } from './ElementalArrowGraphic';
 import { RangeBackdrop } from './RangeBackdrop';
 import './RewardsScreen.css';
 import { useGamepad, XboxButton } from '../input/useGamepad';
@@ -22,6 +29,7 @@ export interface RewardsScreenProps {
   playerId?: string;
   storage?: SessionStorageAdapter;
   apiClient?: MathArcherApiClient;
+  initialAreaId?: WorldAreaId;
   onBackToGame?: () => void;
   onRewardsChange?: (rewards: PlayerRewardsState) => void;
 }
@@ -30,6 +38,7 @@ export const RewardsScreen: React.FC<RewardsScreenProps> = ({
   playerId = 'player-local',
   storage = getDefaultStorage(),
   apiClient,
+  initialAreaId,
   onBackToGame,
   onRewardsChange,
 }) => {
@@ -39,6 +48,19 @@ export const RewardsScreen: React.FC<RewardsScreenProps> = ({
   const [rewardsState, setRewardsState] = useState<PlayerRewardsState>(() =>
     loadPlayerRewards(playerId, storage)
   );
+
+  const [worldProgression] = useState(() => loadWorldProgression(playerId, storage));
+  const [inspectedAreaId, setInspectedAreaId] = useState<WorldAreaId>(
+    initialAreaId || worldProgression.activeAreaId || 'castle'
+  );
+  const [testShotActive, setTestShotActive] = useState(false);
+
+  const handleTriggerTestShot = () => {
+    setTestShotActive(true);
+    setTimeout(() => {
+      setTestShotActive(false);
+    }, 1800);
+  };
 
   useGamepad({
     enabled: true,
@@ -68,7 +90,18 @@ export const RewardsScreen: React.FC<RewardsScreenProps> = ({
     setRewardsState(next);
     onRewardsChange?.(next);
     activeApiClient?.updatePlayerRewards(next, playerId).catch(() => {});
+
+    if (category === 'arrow_effect' || category === 'bow') {
+      handleTriggerTestShot();
+    }
   };
+
+  const outfitItem = getCosmeticItem(rewardsState.equippedCosmetics.outfit);
+  const bowItem = getCosmeticItem(rewardsState.equippedCosmetics.bow);
+  const effectItem = getCosmeticItem(rewardsState.equippedCosmetics.arrowEffect);
+  const bannerItem = getCosmeticItem(rewardsState.equippedCosmetics.castleBanner);
+  const statueItem = getCosmeticItem(rewardsState.equippedCosmetics.castleStatue);
+  const groundItem = getCosmeticItem(rewardsState.equippedCosmetics.castleGround);
 
   const isEquipped = (item: CosmeticItem): boolean => {
     const eq = rewardsState.equippedCosmetics;
@@ -84,6 +117,32 @@ export const RewardsScreen: React.FC<RewardsScreenProps> = ({
 
   const isUnlocked = (item: CosmeticItem): boolean => {
     return rewardsState.unlockedCosmeticIds.includes(item.id);
+  };
+
+  const [trophyFilter, setTrophyFilter] = useState<AchievementCategory | 'all'>('all');
+
+  const getAchievementProgressText = (achId: string): string | null => {
+    const prog = rewardsState.achievementProgress;
+    if (achId === 'ach_arrows_100') return `Progress: ${Math.min(100, prog.arrows_shot ?? 0)} / 100 arrows`;
+    if (achId === 'ach_arrows_500') return `Progress: ${Math.min(500, prog.arrows_shot ?? 0)} / 500 arrows`;
+    if (achId === 'ach_arrows_1000') return `Progress: ${Math.min(1000, prog.arrows_shot ?? 0)} / 1,000 arrows`;
+    if (achId === 'ach_hits_100') return `Progress: ${Math.min(100, prog.hits ?? 0)} / 100 bullseyes`;
+    if (achId === 'ach_hits_500') return `Progress: ${Math.min(500, prog.hits ?? 0)} / 500 bullseyes`;
+    if (achId === 'ach_resilience_5') return `Progress: ${Math.min(5, prog.comeback_hits ?? 0)} / 5 comebacks`;
+    if (achId === 'ach_resilience_15') return `Progress: ${Math.min(15, prog.comeback_hits ?? 0)} / 15 comebacks`;
+    if (achId === 'ach_make_10_veteran') return `Progress: ${Math.min(10, prog.make10_count ?? 0)} / 10 Make-10`;
+    if (achId === 'ach_doubles_expert') return `Progress: ${Math.min(10, prog.doubles_count ?? 0)} / 10 Doubles`;
+    if (achId === 'ach_streak_return_5') return `Current Streak: ${Math.min(5, rewardsState.currentStreak)} / 5 days`;
+    if (achId === 'ach_streak_return_7') return `Current Streak: ${Math.min(7, rewardsState.currentStreak)} / 7 days`;
+    if (achId === 'ach_streak_return_14') return `Current Streak: ${Math.min(14, rewardsState.currentStreak)} / 14 days`;
+    if (achId === 'ach_streak_return_30') return `Current Streak: ${Math.min(30, rewardsState.currentStreak)} / 30 days`;
+    if (achId === 'ach_level_10') return `Current Level: ${Math.min(10, rewardsState.level)} / 10`;
+    if (achId === 'ach_level_20') return `Current Level: ${Math.min(20, rewardsState.level)} / 20`;
+    if (achId === 'ach_level_30') return `Current Level: ${Math.min(30, rewardsState.level)} / 30`;
+    if (achId === 'ach_collector') return `Unlocked: ${Math.min(4, rewardsState.unlockedCosmeticIds.length)} / 4`;
+    if (achId === 'ach_wardrobe_12') return `Unlocked: ${Math.min(12, rewardsState.unlockedCosmeticIds.length)} / 12`;
+    if (achId === 'ach_wardrobe_25') return `Unlocked: ${Math.min(25, rewardsState.unlockedCosmeticIds.length)} / 25`;
+    return null;
   };
 
   const achievements = getAllAchievements();
@@ -162,27 +221,167 @@ export const RewardsScreen: React.FC<RewardsScreenProps> = ({
       {/* Hero Showcase Stage */}
       <section className="hero-showcase-stage" data-testid="rewards-showcase">
         <div className="stage-header">
-          <h3>👑 Archer & Kingdom Inspection</h3>
-          <span style={{ fontSize: '0.85rem', color: '#64748b' }}>
-            Live preview of your equipped gear and castle
-          </span>
+          <div className="stage-header-title-group">
+            <h3>👑 Archer & Kingdom Inspection</h3>
+            <span className="stage-header-subtitle">
+              Live preview of your equipped gear, bow, target impact & kingdom
+            </span>
+          </div>
+
+          <div className="stage-header-controls">
+            {worldProgression.unlockedAreaIds.length > 1 ? (
+              <div className="stage-realm-selector" data-testid="stage-realm-selector">
+                <span className="stage-realm-label">Realm:</span>
+                <select
+                  value={inspectedAreaId}
+                  onChange={(e) => setInspectedAreaId(e.target.value as WorldAreaId)}
+                  className="stage-realm-select"
+                  data-testid="stage-realm-select"
+                  aria-label="Select realm to inspect"
+                >
+                  {worldProgression.unlockedAreaIds.map((areaId) => {
+                    const area = getWorldArea(areaId);
+                    return (
+                      <option key={areaId} value={areaId}>
+                        {area ? `${area.icon} ${area.name}` : areaId}
+                      </option>
+                    );
+                  })}
+                </select>
+              </div>
+            ) : (
+              <span className="stage-realm-pill" data-testid="stage-realm-pill">
+                🏰 {getWorldArea(inspectedAreaId)?.name ?? 'Royal Castle Courtyard'}
+              </span>
+            )}
+            <button
+              type="button"
+              className="stage-test-shot-btn"
+              data-testid="btn-test-shot"
+              onClick={handleTriggerTestShot}
+              title="Test fire equipped bow and arrow effect"
+            >
+              🏹 Test Shot
+            </button>
+          </div>
         </div>
 
-        <div className="stage-viewport">
+        <div className="stage-viewport" data-testid="stage-viewport">
           <div className="stage-backdrop-wrapper">
             <RangeBackdrop
-              areaId="castle"
+              areaId={inspectedAreaId}
               equippedBanner={rewardsState.equippedCosmetics.castleBanner}
               equippedStatue={rewardsState.equippedCosmetics.castleStatue}
               equippedGround={rewardsState.equippedCosmetics.castleGround}
+              variant="arena"
             />
           </div>
-          <div className="stage-archer-preview">
-            <ArcherGraphic
-              state="drawing"
-              equippedOutfit={rewardsState.equippedCosmetics.outfit}
-              equippedBow={rewardsState.equippedCosmetics.bow}
-            />
+
+          <div className="stage-arena-content">
+            {/* Upper Area: Archer & Target */}
+            <div className="stage-entities-row">
+              <div
+                className="stage-archer-preview"
+                data-testid="stage-archer-preview"
+                onClick={handleTriggerTestShot}
+                title="Click archer to test shoot"
+                role="button"
+                tabIndex={0}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ' ') handleTriggerTestShot();
+                }}
+              >
+                <ArcherGraphic
+                  state={testShotActive ? 'released' : 'drawing'}
+                  element="fire"
+                  equippedOutfit={rewardsState.equippedCosmetics.outfit}
+                  equippedBow={rewardsState.equippedCosmetics.bow}
+                />
+              </div>
+
+              <div
+                className="stage-target-preview"
+                data-testid="stage-target-preview"
+                onClick={handleTriggerTestShot}
+                title="Click target to test arrow impact"
+                role="button"
+                tabIndex={0}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ' ') handleTriggerTestShot();
+                }}
+              >
+                <ArcheryTarget
+                  expression="🎯 Royal Bullseye"
+                  hitState={testShotActive ? 'hit' : 'idle'}
+                  activeElement="fire"
+                  equippedEffect={rewardsState.equippedCosmetics.arrowEffect}
+                />
+              </div>
+            </div>
+
+            {/* Lower Ground Area: Badges Below */}
+            <div className="stage-equipped-badges" data-testid="stage-equipped-badges">
+              <button
+                type="button"
+                className="equipped-badge-chip"
+                data-testid="badge-equipped-outfit"
+                onClick={() => setActiveCategory('outfit')}
+                title="Equipped Outfit (Click to browse outfits)"
+              >
+                <span className="chip-icon">🧥</span>
+                <span className="chip-text">{outfitItem?.name ?? 'Classic Tunic'}</span>
+              </button>
+              <button
+                type="button"
+                className="equipped-badge-chip"
+                data-testid="badge-equipped-bow"
+                onClick={() => setActiveCategory('bow')}
+                title="Equipped Bow (Click to browse bows)"
+              >
+                <span className="chip-icon">🏹</span>
+                <span className="chip-text">{bowItem?.name ?? 'Recurve Bow'}</span>
+              </button>
+              <button
+                type="button"
+                className="equipped-badge-chip"
+                data-testid="badge-equipped-effect"
+                onClick={() => setActiveCategory('arrow_effect')}
+                title="Equipped Arrow Effect (Click to browse effects)"
+              >
+                <span className="chip-icon">{effectItem?.icon ?? '🎯'}</span>
+                <span className="chip-text">{effectItem?.name ?? 'Classic Arrow'}</span>
+              </button>
+              <button
+                type="button"
+                className="equipped-badge-chip"
+                data-testid="badge-equipped-banner"
+                onClick={() => setActiveCategory('castle_decoration')}
+                title="Equipped Castle Banner (Click to browse castle decor)"
+              >
+                <span className="chip-icon">🚩</span>
+                <span className="chip-text">{bannerItem?.name ?? 'Royal Banner'}</span>
+              </button>
+              <button
+                type="button"
+                className="equipped-badge-chip"
+                data-testid="badge-equipped-statue"
+                onClick={() => setActiveCategory('castle_decoration')}
+                title="Equipped Castle Statue (Click to browse castle decor)"
+              >
+                <span className="chip-icon">🗿</span>
+                <span className="chip-text">{statueItem?.name ?? 'Royal Monument'}</span>
+              </button>
+              <button
+                type="button"
+                className="equipped-badge-chip"
+                data-testid="badge-equipped-ground"
+                onClick={() => setActiveCategory('castle_decoration')}
+                title="Equipped Castle Ground (Click to browse castle decor)"
+              >
+                <span className="chip-icon">🌿</span>
+                <span className="chip-text">{groundItem?.name ?? 'Courtyard Pavers'}</span>
+              </button>
+            </div>
           </div>
         </div>
       </section>
@@ -257,6 +456,25 @@ export const RewardsScreen: React.FC<RewardsScreenProps> = ({
                   </div>
                 </div>
 
+                {item.category === 'arrow_effect' && (
+                  <div
+                    className="arrow-effect-card-preview"
+                    data-testid={`arrow-preview-${item.id}`}
+                    onClick={() => {
+                      if (equipped) {
+                        handleTriggerTestShot();
+                      }
+                    }}
+                    title={equipped ? 'Click to test fire this effect' : undefined}
+                  >
+                    <ElementalArrowGraphic
+                      element="fire"
+                      variant="quiver"
+                      equippedEffect={item.id}
+                    />
+                  </div>
+                )}
+
                 <div className="card-bottom">
                   <div className="card-status-badge">
                     {equipped ? (
@@ -291,32 +509,73 @@ export const RewardsScreen: React.FC<RewardsScreenProps> = ({
         /* Trophy Wall / Achievements */
         <div className="achievements-wall" data-testid="achievements-wall">
           <div className="achievements-header">
-            <h3>🏆 Archery Achievements</h3>
-            <p style={{ margin: 0, color: '#64748b', fontSize: '0.9rem' }}>
-              Special milestones honoring effort, resilience, and daily practice.
-            </p>
+            <div className="achievements-header-text">
+              <h3>🏆 Kingdom Trophy Wall</h3>
+              <p style={{ margin: 0, color: '#64748b', fontSize: '0.9rem' }}>
+                Milestones honoring consistency, focus, strategy, and perseverance.
+              </p>
+            </div>
+
+            {/* Category Filter Pills */}
+            <div className="trophy-filters-bar" data-testid="trophy-filters">
+              {(
+                [
+                  { id: 'all', label: 'All Trophies' },
+                  { id: 'consistency', label: 'Streaks & Habits' },
+                  { id: 'mastery', label: 'Sharpshooter Mastery' },
+                  { id: 'resilience', label: 'Resilience' },
+                  { id: 'milestone', label: 'Ranks & Levels' },
+                  { id: 'exploration', label: 'Exploration' },
+                  { id: 'collection', label: 'Armory Vault' },
+                ] as const
+              ).map((tab) => (
+                <button
+                  key={tab.id}
+                  type="button"
+                  className={`trophy-filter-btn ${trophyFilter === tab.id ? 'active' : ''}`}
+                  data-testid={`trophy-filter-${tab.id}`}
+                  onClick={() => setTrophyFilter(tab.id)}
+                >
+                  {tab.label}
+                </button>
+              ))}
+            </div>
           </div>
 
           <div className="achievements-grid">
-            {achievements.map((ach) => {
-              const isUnlocked = rewardsState.unlockedAchievementIds.includes(ach.id);
-              return (
-                <div
-                  key={ach.id}
-                  className={`achievement-card ${isUnlocked ? 'is-unlocked' : 'is-locked'}`}
-                  data-testid={`ach-card-${ach.id}`}
-                >
-                  <div className="ach-icon-box">{ach.icon}</div>
-                  <div className="ach-info">
-                    <h4>{ach.title}</h4>
-                    <p>{ach.description}</p>
-                    <span className="ach-reward-chip">
-                      {isUnlocked ? `⭐ Claimed +${ach.xpReward} XP` : `+${ach.xpReward} XP Reward`}
-                    </span>
+            {achievements
+              .filter((ach) => trophyFilter === 'all' || ach.category === trophyFilter)
+              .map((ach) => {
+                const isUnlocked = rewardsState.unlockedAchievementIds.includes(ach.id);
+                const progressText = !isUnlocked ? getAchievementProgressText(ach.id) : null;
+
+                return (
+                  <div
+                    key={ach.id}
+                    className={`achievement-card ${isUnlocked ? 'is-unlocked' : 'is-locked'}`}
+                    data-testid={`ach-card-${ach.id}`}
+                  >
+                    <div className="ach-icon-box">{ach.icon}</div>
+                    <div className="ach-info">
+                      <div className="ach-title-row">
+                        <h4>{ach.title}</h4>
+                        <span className="ach-category-tag">{ach.category}</span>
+                      </div>
+                      <p>{ach.description}</p>
+                      <div className="ach-card-footer">
+                        <span className="ach-reward-chip">
+                          {isUnlocked ? `⭐ Claimed +${ach.xpReward} XP` : `+${ach.xpReward} XP Reward`}
+                        </span>
+                        {progressText && (
+                          <span className="ach-progress-chip" data-testid={`ach-progress-${ach.id}`}>
+                            {progressText}
+                          </span>
+                        )}
+                      </div>
+                    </div>
                   </div>
-                </div>
-              );
-            })}
+                );
+              })}
           </div>
         </div>
       )}
