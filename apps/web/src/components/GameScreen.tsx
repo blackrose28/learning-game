@@ -120,7 +120,8 @@ export interface GameScreenProps {
   allowSameDayRestart?: boolean;
 
   /**
-   * Whether to display the test profile switcher bar (defaults to true for MVP/testing).
+   * Whether to display the test profile switcher bar.
+   * Only displayed in development mode (import.meta.env.DEV) and hidden in production.
    */
   showProfileSelector?: boolean;
 
@@ -224,7 +225,7 @@ export const GameScreen: React.FC<GameScreenProps> = ({
   sessionDate,
   playerId = 'player-local',
   allowSameDayRestart = false,
-  showProfileSelector = true,
+  showProfileSelector = Boolean(import.meta.env?.DEV),
   initialTrainingSkill,
   onAnswerSubmit,
   onNextQuestion,
@@ -237,6 +238,10 @@ export const GameScreen: React.FC<GameScreenProps> = ({
   initialAreaId,
   onAreaChange,
 }) => {
+  // Test Controlled Profile switcher toolbar must be hidden in production and only show in dev
+  const isDev = Boolean(import.meta.env?.DEV);
+  const shouldShowProfileSelector = isDev && showProfileSelector;
+
   // Game mode (Adventure vs Training, Task 4.2 & Task 4.3)
   const [gameMode, setGameMode] = useState<GameMode>(mode);
   const auth = useSafeAuth();
@@ -1138,81 +1143,83 @@ export const GameScreen: React.FC<GameScreenProps> = ({
             <span className="world-shortcut-tag">[🗺️ Map]</span>
           </button>
 
-          {/* Player Level & Streak Badges (Task 9.4) */}
-          <span
-            className="player-level-badge"
-            data-testid="player-level-badge"
-            title={`Level ${playerRewards.level}: ${playerRewards.levelTitle}`}
-          >
-            ⭐ Lvl {playerRewards.level}
-          </span>
-          <span
-            className="streak-badge"
-            data-testid="streak-badge"
-            title={`Daily Practice Streak: ${playerRewards.currentStreak} Days`}
-          >
-            🔥 {playerRewards.currentStreak}d
-          </span>
+          {/* Player Level & Streak Badges (Task 9.4) & Cloud Sync Status (Task 6.4) */}
+          <div className="game-mode-status-group">
+            <span
+              className="player-level-badge"
+              data-testid="player-level-badge"
+              title={`Level ${playerRewards.level}: ${playerRewards.levelTitle}`}
+            >
+              ⭐ Lvl {playerRewards.level}
+            </span>
+            <span
+              className="streak-badge"
+              data-testid="streak-badge"
+              title={`Daily Practice Streak: ${playerRewards.currentStreak} Days`}
+            >
+              🔥 {playerRewards.currentStreak}d
+            </span>
 
-          <div
-            className="cloud-sync-status-indicator"
-            data-testid="cloud-sync-status"
-            style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 6 }}
-          >
-            {syncState.status === 'synced' && (
-              <span
-                className="sync-badge sync-synced"
-                title="All attempts synced to cloud"
-                style={{ fontSize: 12, color: '#16a34a', fontWeight: 600 }}
-              >
-                🟢 Synced
-              </span>
-            )}
-            {syncState.status === 'syncing' && (
-              <span
-                className="sync-badge sync-syncing"
-                title="Syncing attempts with server"
-                style={{ fontSize: 12, color: '#ca8a04', fontWeight: 600 }}
-              >
-                🟡 Syncing{syncState.pendingCount > 0 ? ` (${syncState.pendingCount})` : ''}...
-              </span>
-            )}
-            {syncState.status === 'offline' && (
-              <span
-                className="sync-badge sync-offline"
-                title="Working offline; attempts queued securely in local storage"
-                style={{ fontSize: 12, color: '#dc2626', fontWeight: 600 }}
-              >
-                🔴 Offline ({syncState.pendingCount} queued)
-              </span>
-            )}
-            {syncState.status === 'error' && (
-              <span
-                className="sync-badge sync-error"
-                title={syncState.lastError || 'Sync error'}
-                style={{ fontSize: 12, color: '#ea580c', fontWeight: 600 }}
-              >
-                ⚠️ Sync issue ({syncState.pendingCount} pending)
-              </span>
-            )}
-            {syncState.pendingCount > 0 && syncState.status !== 'syncing' && (
-              <button
-                type="button"
-                data-testid="sync-now-button"
-                className="sync-now-btn"
-                onClick={() => activeSyncManager.flushQueue()}
-                style={{
-                  fontSize: 11,
-                  padding: '2px 6px',
-                  borderRadius: 4,
-                  border: '1px solid #d1d5db',
-                  background: '#f9fafb',
-                  cursor: 'pointer',
-                }}
-              >
-                Sync Now
-              </button>
-            )}
+            <div
+              className="cloud-sync-status-indicator"
+              data-testid="cloud-sync-status"
+              style={{ display: 'flex', alignItems: 'center', gap: 6 }}
+            >
+              {syncState.status === 'synced' && (
+                <span
+                  className="sync-badge sync-synced"
+                  title="All attempts synced to cloud"
+                  style={{ fontSize: 12, color: '#16a34a', fontWeight: 600 }}
+                >
+                  🟢 Synced
+                </span>
+              )}
+              {syncState.status === 'syncing' && (
+                <span
+                  className="sync-badge sync-syncing"
+                  title="Syncing attempts with server"
+                  style={{ fontSize: 12, color: '#ca8a04', fontWeight: 600 }}
+                >
+                  🟡 Syncing{syncState.pendingCount > 0 ? ` (${syncState.pendingCount})` : ''}...
+                </span>
+              )}
+              {syncState.status === 'offline' && (
+                <span
+                  className="sync-badge sync-offline"
+                  title="Working offline; attempts queued securely in local storage"
+                  style={{ fontSize: 12, color: '#dc2626', fontWeight: 600 }}
+                >
+                  🔴 Offline ({syncState.pendingCount} queued)
+                </span>
+              )}
+              {syncState.status === 'error' && (
+                <span
+                  className="sync-badge sync-error"
+                  title={syncState.lastError || 'Sync error'}
+                  style={{ fontSize: 12, color: '#ea580c', fontWeight: 600 }}
+                >
+                  ⚠️ Sync issue ({syncState.pendingCount} pending)
+                </span>
+              )}
+              {syncState.pendingCount > 0 && syncState.status !== 'syncing' && (
+                <button
+                  type="button"
+                  data-testid="sync-now-button"
+                  className="sync-now-btn"
+                  onClick={() => activeSyncManager.flushQueue()}
+                  style={{
+                    fontSize: 11,
+                    padding: '2px 6px',
+                    borderRadius: 4,
+                    border: '1px solid #d1d5db',
+                    background: '#f9fafb',
+                    cursor: 'pointer',
+                  }}
+                >
+                  Sync Now
+                </button>
+              )}
+            </div>
           </div>
         </div>
 
@@ -1253,10 +1260,15 @@ export const GameScreen: React.FC<GameScreenProps> = ({
               ⭐ Session Complete Bonus: +100 XP Earned!
             </span>
             <span style={{ color: '#15803d', fontSize: 14 }}>
-              Archer Rank: <strong>Level {playerRewards.level} ({playerRewards.levelTitle})</strong> • Total XP: {playerRewards.totalXp}
+              Archer Rank:{' '}
+              <strong>
+                Level {playerRewards.level} ({playerRewards.levelTitle})
+              </strong>{' '}
+              • Total XP: {playerRewards.totalXp}
             </span>
             <span style={{ color: '#c2410c', fontWeight: 700, fontSize: 14 }}>
-              🔥 Daily Practice Streak: {playerRewards.currentStreak} Day{playerRewards.currentStreak === 1 ? '' : 's'}!
+              🔥 Daily Practice Streak: {playerRewards.currentStreak} Day
+              {playerRewards.currentStreak === 1 ? '' : 's'}!
             </span>
           </div>
 
@@ -1438,81 +1450,83 @@ export const GameScreen: React.FC<GameScreenProps> = ({
           </span>
         )}
 
-        {/* Player Level & Streak Badges (Task 9.4) */}
-        <span
-          className="player-level-badge"
-          data-testid="player-level-badge"
-          title={`Level ${playerRewards.level}: ${playerRewards.levelTitle} (${playerRewards.totalXp} XP)`}
-        >
-          ⭐ Lvl {playerRewards.level}
-        </span>
-        <span
-          className="streak-badge"
-          data-testid="streak-badge"
-          title={`Daily Practice Streak: ${playerRewards.currentStreak} Days (Best: ${playerRewards.bestStreak})`}
-        >
-          🔥 {playerRewards.currentStreak}d
-        </span>
+        {/* Player Level & Streak Badges (Task 9.4) & Cloud Sync Status (Task 6.4) */}
+        <div className="game-mode-status-group">
+          <span
+            className="player-level-badge"
+            data-testid="player-level-badge"
+            title={`Level ${playerRewards.level}: ${playerRewards.levelTitle} (${playerRewards.totalXp} XP)`}
+          >
+            ⭐ Lvl {playerRewards.level}
+          </span>
+          <span
+            className="streak-badge"
+            data-testid="streak-badge"
+            title={`Daily Practice Streak: ${playerRewards.currentStreak} Days (Best: ${playerRewards.bestStreak})`}
+          >
+            🔥 {playerRewards.currentStreak}d
+          </span>
 
-        <div
-          className="cloud-sync-status-indicator"
-          data-testid="cloud-sync-status"
-          style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 6 }}
-        >
-          {syncState.status === 'synced' && (
-            <span
-              className="sync-badge sync-synced"
-              title="All attempts synced to cloud"
-              style={{ fontSize: 12, color: '#16a34a', fontWeight: 600 }}
-            >
-              🟢 Synced
-            </span>
-          )}
-          {syncState.status === 'syncing' && (
-            <span
-              className="sync-badge sync-syncing"
-              title="Syncing attempts with server"
-              style={{ fontSize: 12, color: '#ca8a04', fontWeight: 600 }}
-            >
-              🟡 Syncing{syncState.pendingCount > 0 ? ` (${syncState.pendingCount})` : ''}...
-            </span>
-          )}
-          {syncState.status === 'offline' && (
-            <span
-              className="sync-badge sync-offline"
-              title="Working offline; attempts queued securely in local storage"
-              style={{ fontSize: 12, color: '#dc2626', fontWeight: 600 }}
-            >
-              🔴 Offline ({syncState.pendingCount} queued)
-            </span>
-          )}
-          {syncState.status === 'error' && (
-            <span
-              className="sync-badge sync-error"
-              title={syncState.lastError || 'Sync error'}
-              style={{ fontSize: 12, color: '#ea580c', fontWeight: 600 }}
-            >
-              ⚠️ Sync issue ({syncState.pendingCount} pending)
-            </span>
-          )}
-          {syncState.pendingCount > 0 && syncState.status !== 'syncing' && (
-            <button
-              type="button"
-              data-testid="sync-now-button"
-              className="sync-now-btn"
-              onClick={() => activeSyncManager.flushQueue()}
-              style={{
-                fontSize: 11,
-                padding: '2px 6px',
-                borderRadius: 4,
-                border: '1px solid #d1d5db',
-                background: '#f9fafb',
-                cursor: 'pointer',
-              }}
-            >
-              Sync Now
-            </button>
-          )}
+          <div
+            className="cloud-sync-status-indicator"
+            data-testid="cloud-sync-status"
+            style={{ display: 'flex', alignItems: 'center', gap: 6 }}
+          >
+            {syncState.status === 'synced' && (
+              <span
+                className="sync-badge sync-synced"
+                title="All attempts synced to cloud"
+                style={{ fontSize: 12, color: '#16a34a', fontWeight: 600 }}
+              >
+                🟢 Synced
+              </span>
+            )}
+            {syncState.status === 'syncing' && (
+              <span
+                className="sync-badge sync-syncing"
+                title="Syncing attempts with server"
+                style={{ fontSize: 12, color: '#ca8a04', fontWeight: 600 }}
+              >
+                🟡 Syncing{syncState.pendingCount > 0 ? ` (${syncState.pendingCount})` : ''}...
+              </span>
+            )}
+            {syncState.status === 'offline' && (
+              <span
+                className="sync-badge sync-offline"
+                title="Working offline; attempts queued securely in local storage"
+                style={{ fontSize: 12, color: '#dc2626', fontWeight: 600 }}
+              >
+                🔴 Offline ({syncState.pendingCount} queued)
+              </span>
+            )}
+            {syncState.status === 'error' && (
+              <span
+                className="sync-badge sync-error"
+                title={syncState.lastError || 'Sync error'}
+                style={{ fontSize: 12, color: '#ea580c', fontWeight: 600 }}
+              >
+                ⚠️ Sync issue ({syncState.pendingCount} pending)
+              </span>
+            )}
+            {syncState.pendingCount > 0 && syncState.status !== 'syncing' && (
+              <button
+                type="button"
+                data-testid="sync-now-button"
+                className="sync-now-btn"
+                onClick={() => activeSyncManager.flushQueue()}
+                style={{
+                  fontSize: 11,
+                  padding: '2px 6px',
+                  borderRadius: 4,
+                  border: '1px solid #d1d5db',
+                  background: '#f9fafb',
+                  cursor: 'pointer',
+                }}
+              >
+                Sync Now
+              </button>
+            )}
+          </div>
         </div>
       </div>
 
@@ -1603,114 +1617,312 @@ export const GameScreen: React.FC<GameScreenProps> = ({
         </div>
       )}
 
-      {/* Visual Environment Range Backdrop (Task 9.3 & Task 9.4) */}
-      <RangeBackdrop
-        areaId={activeAreaId}
-        equippedBanner={playerRewards.equippedCosmetics.castleBanner}
-        equippedStatue={playerRewards.equippedCosmetics.castleStatue}
-        equippedGround={playerRewards.equippedCosmetics.castleGround}
-      />
+      {/* Single-Screen Game Arena Layout */}
+      <div className="game-arena-layout">
+        {/* Left Column: Archery Range & Question Display */}
+        <div className="game-range-column">
+          {/* Visual Environment Range Backdrop (Task 9.3 & Task 9.4) */}
+          <RangeBackdrop
+            areaId={activeAreaId}
+            equippedBanner={playerRewards.equippedCosmetics.castleBanner}
+            equippedStatue={playerRewards.equippedCosmetics.castleStatue}
+            equippedGround={playerRewards.equippedCosmetics.castleGround}
+          />
 
-      {/* Archer Character & Shooting Arena */}
-      <div className={`archer-stage archer-header phase-${shotPhase}`} data-testid="archer-stage">
-        <div
-          className={`archer-character state-${archerState}`}
-          data-testid="archer-character"
-          data-state={archerState}
-        >
-          <span className="archer-icon" role="img" aria-label="archer">
-            <ArcherGraphic
-              state={archerState}
-              element={activeShot?.element}
-              equippedOutfit={playerRewards.equippedCosmetics.outfit}
-              equippedBow={playerRewards.equippedCosmetics.bow}
-            />
-          </span>
-          {activeShot && shotPhase === 'shooting' && (
-            <span
-              className={`archer-arrow-nock element-${activeShot.element}`}
-              data-testid="archer-arrow-nock"
-              aria-hidden="true"
-            >
-              {ELEMENT_INFO[activeShot.element].icon}
-            </span>
-          )}
-        </div>
-        <span className="game-title-badge">Math Archer</span>
-
-        {/* Flying Elemental Arrow Projectile (Task 3.2, Task 9.1 & Task 9.2 & Task 9.4) */}
-        {activeShot && shotPhase !== 'idle' && (
+          {/* Archer Character & Shooting Arena */}
           <div
-            className={`flying-arrow element-${activeShot.element} outcome-${activeShot.outcome} phase-${shotPhase}`}
-            data-testid="flying-arrow"
-            data-element={activeShot.element}
-            data-outcome={activeShot.outcome}
-            aria-hidden="true"
+            className={`archer-stage archer-header phase-${shotPhase}`}
+            data-testid="archer-stage"
           >
-            <div className="flying-arrow-trail" />
-            <div className="flying-arrow-body">
-              <ElementalArrowGraphic
-                element={activeShot.element}
-                variant="projectile"
-                equippedEffect={playerRewards.equippedCosmetics.arrowEffect}
-              />
+            <div
+              className={`archer-character state-${archerState}`}
+              data-testid="archer-character"
+              data-state={archerState}
+            >
+              <span className="archer-icon" role="img" aria-label="archer">
+                <ArcherGraphic
+                  state={archerState}
+                  element={activeShot?.element}
+                  equippedOutfit={playerRewards.equippedCosmetics.outfit}
+                  equippedBow={playerRewards.equippedCosmetics.bow}
+                />
+              </span>
+              {activeShot && shotPhase === 'shooting' && (
+                <span
+                  className={`archer-arrow-nock element-${activeShot.element}`}
+                  data-testid="archer-arrow-nock"
+                  aria-hidden="true"
+                >
+                  {ELEMENT_INFO[activeShot.element].icon}
+                </span>
+              )}
+            </div>
+            <span className="game-title-badge">Math Archer</span>
+
+            {/* Flying Elemental Arrow Projectile (Task 3.2, Task 9.1 & Task 9.2 & Task 9.4) */}
+            {activeShot && shotPhase !== 'idle' && (
+              <div
+                className={`flying-arrow element-${activeShot.element} outcome-${activeShot.outcome} phase-${shotPhase}`}
+                data-testid="flying-arrow"
+                data-element={activeShot.element}
+                data-outcome={activeShot.outcome}
+                aria-hidden="true"
+              >
+                <div className="flying-arrow-trail" />
+                <div className="flying-arrow-body">
+                  <ElementalArrowGraphic
+                    element={activeShot.element}
+                    variant="projectile"
+                    equippedEffect={playerRewards.equippedCosmetics.arrowEffect}
+                  />
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Target Question Display (Task 9.1 & Task 9.4) */}
+          <ArcheryTarget
+            expression={formatExpression(question)}
+            hitState={targetHitState}
+            activeElement={activeShot?.element}
+            equippedEffect={playerRewards.equippedCosmetics.arrowEffect}
+          />
+
+          {/* Correct / Wrong Instant Feedback */}
+          <div
+            className={`feedback-banner phase-${shotPhase} ${
+              isCorrect === true ? 'correct' : isCorrect === false ? 'wrong' : ''
+            }`}
+            data-testid="feedback-banner"
+            aria-live="polite"
+          >
+            {isCorrect === true && <span>🎯 Hit!</span>}
+            {isCorrect === false && (
+              <span>
+                {gameMode === 'adventure'
+                  ? isMake10Eligible(question)
+                    ? '❌ Miss! 💡 Try making 10 first.'
+                    : '❌ Miss!'
+                  : isMake10Eligible(question)
+                    ? '❌ Miss! 💡 Make-10 explanation available below [H].'
+                    : '❌ Miss! 💡 Review the explanation.'}
+              </span>
+            )}
+          </div>
+
+          {/* Meta Controls Row: Help button & Skill adaptation badges */}
+          <div className="range-meta-row">
+            {/* Guided Help Request Button (Task 4.1 & Task 4.2) */}
+            {isHelpAvailable && (
+              <div className="help-action-bar" data-testid="help-action-bar">
+                <button
+                  type="button"
+                  className="request-help-button"
+                  data-testid="request-help-button"
+                  onClick={() => handleRequestHelp()}
+                  disabled={isTransitioning}
+                  aria-label="Request help and view guided make-10 hints"
+                >
+                  <span className="help-icon" aria-hidden="true">
+                    💡
+                  </span>
+                  <span>
+                    {gameMode === 'training'
+                      ? 'Show Make-10 Explanation'
+                      : 'Need Help? Show Make-10 Guide'}
+                  </span>
+                  <span className="help-shortcut-badge">[H]</span>
+                </button>
+              </div>
+            )}
+
+            {/* Learning Engine Adaptation Bar (Task 3.4) */}
+            <div className="adaptation-info-bar" data-testid="adaptation-info-bar">
+              <div className="adaptation-badge-group">
+                <span className="active-skill-badge" data-testid="active-skill-badge">
+                  🎯 {skillName}
+                </span>
+                <span
+                  className={`pedagogical-category-badge ${categoryInfo.className}`}
+                  data-testid="pedagogical-category-badge"
+                >
+                  {categoryInfo.label}
+                </span>
+              </div>
+              {skillProgress && skillProgress.attempts > 0 && (
+                <span className="skill-mastery-badge" data-testid="skill-mastery-badge">
+                  Mastery: <strong>{skillProgress.masteryLevel}</strong> (
+                  {Math.round(skillProgress.score * 100)}% score)
+                </span>
+              )}
             </div>
           </div>
-        )}
-      </div>
-
-      {/* Learning Engine Adaptation Bar (Task 3.4) */}
-      <div className="adaptation-info-bar" data-testid="adaptation-info-bar">
-        <div className="adaptation-badge-group">
-          <span className="active-skill-badge" data-testid="active-skill-badge">
-            🎯 {skillName}
-          </span>
-          <span
-            className={`pedagogical-category-badge ${categoryInfo.className}`}
-            data-testid="pedagogical-category-badge"
-          >
-            {categoryInfo.label}
-          </span>
         </div>
-        {skillProgress && skillProgress.attempts > 0 && (
-          <span className="skill-mastery-badge" data-testid="skill-mastery-badge">
-            Mastery: <strong>{skillProgress.masteryLevel}</strong> (
-            {Math.round(skillProgress.score * 100)}% score)
-          </span>
-        )}
-      </div>
 
-      {/* Target Question Display (Task 9.1 & Task 9.4) */}
-      <ArcheryTarget
-        expression={formatExpression(question)}
-        hitState={targetHitState}
-        activeElement={activeShot?.element}
-        equippedEffect={playerRewards.equippedCosmetics.arrowEffect}
-      />
+        {/* Right Column: Quiver Answer Choices & Progress */}
+        <div className="game-quiver-column">
+          {/* 2x2 Elemental Answer Choices - The Archer's Quiver */}
+          <div className="quiver-section" data-testid="quiver-section">
+            <div className="quiver-header" aria-hidden="true">
+              <span className="quiver-badge">🏹 ARCHER'S QUIVER</span>
+              <span className="quiver-hint">Draw an arrow to loose at the target</span>
+            </div>
+            <div className="answers-grid" role="group" aria-label="Elemental arrow choices">
+              {question.choices.map((choice, index) => {
+                const isSelected = selectedChoice?.element === choice.element;
+                const isRevealedCorrect =
+                  isTransitioning && isCorrect === false && choice.category === 'correct';
 
-      {/* Guided Help Request Button (Task 4.1 & Task 4.2) */}
-      {isHelpAvailable && (
-        <div className="help-action-bar" data-testid="help-action-bar">
-          <button
-            type="button"
-            className="request-help-button"
-            data-testid="request-help-button"
-            onClick={() => handleRequestHelp()}
-            disabled={isTransitioning}
-            aria-label="Request help and view guided make-10 hints"
-          >
-            <span className="help-icon" aria-hidden="true">
-              💡
-            </span>
-            <span>
-              {gameMode === 'training'
-                ? 'Show Make-10 Explanation'
-                : 'Need Help? Show Make-10 Guide'}
-            </span>
-            <span className="help-shortcut-badge">[H]</span>
-          </button>
+                let stateClass = '';
+                if (isSelected) {
+                  stateClass = isCorrect ? 'selected-correct' : 'selected-wrong';
+                } else if (isRevealedCorrect) {
+                  stateClass = 'revealed-correct';
+                }
+
+                const info = ELEMENT_INFO[choice.element];
+                const profile = ELEMENTAL_PROFILES[choice.element];
+                const controllerButton =
+                  choice.element === 'fire'
+                    ? 'A'
+                    : choice.element === 'ice'
+                      ? 'B'
+                      : choice.element === 'wind'
+                        ? 'X'
+                        : 'Y';
+
+                const isControllerFocused = focusedChoiceElement === choice.element;
+
+                return (
+                  <button
+                    key={`${choice.element}-${choice.value}`}
+                    type="button"
+                    className={`arrow-button element-${choice.element} ${stateClass} ${isControllerFocused ? 'controller-focused' : ''}`}
+                    data-testid={`choice-${choice.element}`}
+                    data-element={choice.element}
+                    data-arrowhead-shape={profile.arrowheadShape}
+                    data-fletching-shape={profile.fletchingShape}
+                    data-value={choice.value}
+                    data-controller-focus={isControllerFocused ? 'true' : undefined}
+                    disabled={isTransitioning}
+                    onClick={() => handleSelectChoice(choice)}
+                    aria-label={`${info.label} arrow, value ${choice.value}`}
+                  >
+                    <div className="arrow-fletching-notch" aria-hidden="true" />
+
+                    {/* Top meta row: element icon, name badge, and input shortcuts */}
+                    <div className="arrow-card-header">
+                      <div className="arrow-element-content">
+                        <span className="element-icon" role="img" aria-label={info.label}>
+                          {info.icon}
+                        </span>
+                        <div className="element-label-group">
+                          <span className="element-label">{info.label}</span>
+                          <span className="element-type-badge">{profile.name}</span>
+                        </div>
+                      </div>
+                      <div className="arrow-shortcuts-group">
+                        <span className="keyboard-shortcut-hint">[{index + 1}]</span>
+                        <span
+                          className={`controller-shortcut-hint btn-${controllerButton.toLowerCase()}`}
+                          data-testid={`controller-hint-${choice.element}`}
+                          aria-label={`Xbox button ${controllerButton}`}
+                        >
+                          ({controllerButton})
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Central Arrow with BIG number positioned right in the center of the arrow */}
+                    <div className="arrow-centerpiece">
+                      <div className="arrow-graphic-underlay" aria-hidden="true">
+                        <ElementalArrowGraphic element={choice.element} variant="quiver" />
+                      </div>
+                      <span className="arrow-value">{choice.value}</span>
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* 17 / 50 Arrow Counter Progress (Adventure) vs Unlimited Counter (Training) */}
+          <div className="progress-section" data-testid="progress-section">
+            {gameMode === 'adventure' ? (
+              <>
+                <div className="progress-text" data-testid="arrow-counter">
+                  <span role="img" aria-label="arrow">
+                    🏹
+                  </span>
+                  <span>
+                    {arrowIndex} / {maxArrows}
+                  </span>
+                </div>
+                <div className="progress-bar-container" aria-hidden="true">
+                  <div
+                    className="progress-bar-fill"
+                    style={{ width: `${(arrowIndex / maxArrows) * 100}%` }}
+                  />
+                </div>
+              </>
+            ) : (
+              <div className="training-progress-row" data-testid="training-progress-row">
+                <div className="progress-text" data-testid="arrow-counter">
+                  <span role="img" aria-label="training">
+                    🏋️
+                  </span>
+                  <span>Practice #{trainingCount + 1}</span>
+                </div>
+                <span className="training-unlimited-badge" data-testid="training-unlimited-badge">
+                  ♾️ Unlimited Arrows (0 Daily Arrows Used)
+                </span>
+                <div className="training-session-stats" data-testid="training-session-stats">
+                  Hits: <strong>{trainingHits}</strong> / {trainingCount}
+                  {trainingCount > 0 && ` (${Math.round((trainingHits / trainingCount) * 100)}%)`}
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Controlled Test Profile Switcher Toolbar (Task 3.4) */}
+          {shouldShowProfileSelector && (
+            <div
+              className="profile-selector-bar"
+              data-testid="profile-selector-bar"
+              role="region"
+              aria-label="Learning profile presets"
+            >
+              <div className="profile-selector-header">
+                <span className="profile-selector-title">🧪 Test Controlled Profile:</span>
+                <span className="profile-selector-hint">
+                  Select a profile to verify adaptive question generation
+                </span>
+              </div>
+              <div className="profile-presets-group">
+                {(Object.keys(CONTROLLED_TEST_PROFILES) as ControlledTestProfileKey[]).map(
+                  (key) => {
+                    const preset = CONTROLLED_TEST_PROFILES[key];
+                    const isActive = activePreset === key;
+                    return (
+                      <button
+                        key={key}
+                        type="button"
+                        className={`profile-preset-button ${isActive ? 'active' : ''}`}
+                        data-testid={`load-preset-${key}`}
+                        disabled={isTransitioning}
+                        onClick={() => handleLoadControlledProfile(key)}
+                        title={preset.description}
+                      >
+                        {preset.label}
+                      </button>
+                    );
+                  }
+                )}
+              </div>
+            </div>
+          )}
         </div>
-      )}
+      </div>
 
       {/* Guided Make-10 Worked Example / Progressive Hint Modal (Task 4.1 & Task 4.2) */}
       {isHelpOpen && make10Decomposition && (
@@ -2022,187 +2234,6 @@ export const GameScreen: React.FC<GameScreenProps> = ({
                 🏹 Got It! Ready to Shoot
               </button>
             </div>
-          </div>
-        </div>
-      )}
-
-      {/* Correct / Wrong Instant Feedback */}
-      <div
-        className={`feedback-banner phase-${shotPhase} ${
-          isCorrect === true ? 'correct' : isCorrect === false ? 'wrong' : ''
-        }`}
-        data-testid="feedback-banner"
-        aria-live="polite"
-      >
-        {isCorrect === true && <span>🎯 Hit!</span>}
-        {isCorrect === false && (
-          <span>
-            {gameMode === 'adventure'
-              ? isMake10Eligible(question)
-                ? '❌ Miss! 💡 Try making 10 first.'
-                : '❌ Miss!'
-              : isMake10Eligible(question)
-                ? '❌ Miss! 💡 Make-10 explanation available below [H].'
-                : '❌ Miss! 💡 Review the explanation.'}
-          </span>
-        )}
-      </div>
-
-      {/* 2x2 Elemental Answer Choices - The Archer's Quiver */}
-      <div className="quiver-section" data-testid="quiver-section">
-        <div className="quiver-header" aria-hidden="true">
-          <span className="quiver-badge">🏹 ARCHER'S QUIVER</span>
-          <span className="quiver-hint">Draw an arrow to loose at the target</span>
-        </div>
-        <div className="answers-grid" role="group" aria-label="Elemental arrow choices">
-          {question.choices.map((choice, index) => {
-            const isSelected = selectedChoice?.element === choice.element;
-            const isRevealedCorrect =
-              isTransitioning && isCorrect === false && choice.category === 'correct';
-
-            let stateClass = '';
-            if (isSelected) {
-              stateClass = isCorrect ? 'selected-correct' : 'selected-wrong';
-            } else if (isRevealedCorrect) {
-              stateClass = 'revealed-correct';
-            }
-
-            const info = ELEMENT_INFO[choice.element];
-            const profile = ELEMENTAL_PROFILES[choice.element];
-            const controllerButton =
-              choice.element === 'fire'
-                ? 'A'
-                : choice.element === 'ice'
-                  ? 'B'
-                  : choice.element === 'wind'
-                    ? 'X'
-                    : 'Y';
-
-            const isControllerFocused = focusedChoiceElement === choice.element;
-
-            return (
-              <button
-                key={`${choice.element}-${choice.value}`}
-                type="button"
-                className={`arrow-button element-${choice.element} ${stateClass} ${isControllerFocused ? 'controller-focused' : ''}`}
-                data-testid={`choice-${choice.element}`}
-                data-element={choice.element}
-                data-arrowhead-shape={profile.arrowheadShape}
-                data-fletching-shape={profile.fletchingShape}
-                data-value={choice.value}
-                data-controller-focus={isControllerFocused ? 'true' : undefined}
-                disabled={isTransitioning}
-                onClick={() => handleSelectChoice(choice)}
-                aria-label={`${info.label} arrow, value ${choice.value}`}
-              >
-                <div className="arrow-fletching-notch" aria-hidden="true" />
-
-                {/* Top meta row: element icon, name badge, and input shortcuts */}
-                <div className="arrow-card-header">
-                  <div className="arrow-element-content">
-                    <span className="element-icon" role="img" aria-label={info.label}>
-                      {info.icon}
-                    </span>
-                    <div className="element-label-group">
-                      <span className="element-label">{info.label}</span>
-                      <span className="element-type-badge">{profile.name}</span>
-                    </div>
-                  </div>
-                  <div className="arrow-shortcuts-group">
-                    <span className="keyboard-shortcut-hint">[{index + 1}]</span>
-                    <span
-                      className={`controller-shortcut-hint btn-${controllerButton.toLowerCase()}`}
-                      data-testid={`controller-hint-${choice.element}`}
-                      aria-label={`Xbox button ${controllerButton}`}
-                    >
-                      ({controllerButton})
-                    </span>
-                  </div>
-                </div>
-
-                {/* Central Arrow with BIG number positioned right in the center of the arrow */}
-                <div className="arrow-centerpiece">
-                  <div className="arrow-graphic-underlay" aria-hidden="true">
-                    <ElementalArrowGraphic element={choice.element} variant="quiver" />
-                  </div>
-                  <span className="arrow-value">{choice.value}</span>
-                </div>
-              </button>
-            );
-          })}
-        </div>
-      </div>
-
-      {/* 17 / 50 Arrow Counter Progress (Adventure) vs Unlimited Counter (Training) */}
-      <div className="progress-section" data-testid="progress-section">
-        {gameMode === 'adventure' ? (
-          <>
-            <div className="progress-text" data-testid="arrow-counter">
-              <span role="img" aria-label="arrow">
-                🏹
-              </span>
-              <span>
-                {arrowIndex} / {maxArrows}
-              </span>
-            </div>
-            <div className="progress-bar-container" aria-hidden="true">
-              <div
-                className="progress-bar-fill"
-                style={{ width: `${(arrowIndex / maxArrows) * 100}%` }}
-              />
-            </div>
-          </>
-        ) : (
-          <div className="training-progress-row" data-testid="training-progress-row">
-            <div className="progress-text" data-testid="arrow-counter">
-              <span role="img" aria-label="training">
-                🏋️
-              </span>
-              <span>Practice #{trainingCount + 1}</span>
-            </div>
-            <span className="training-unlimited-badge" data-testid="training-unlimited-badge">
-              ♾️ Unlimited Arrows (0 Daily Arrows Used)
-            </span>
-            <div className="training-session-stats" data-testid="training-session-stats">
-              Hits: <strong>{trainingHits}</strong> / {trainingCount}
-              {trainingCount > 0 && ` (${Math.round((trainingHits / trainingCount) * 100)}%)`}
-            </div>
-          </div>
-        )}
-      </div>
-
-      {/* Controlled Test Profile Switcher Toolbar (Task 3.4) */}
-      {showProfileSelector && (
-        <div
-          className="profile-selector-bar"
-          data-testid="profile-selector-bar"
-          role="region"
-          aria-label="Learning profile presets"
-        >
-          <div className="profile-selector-header">
-            <span className="profile-selector-title">🧪 Test Controlled Profile:</span>
-            <span className="profile-selector-hint">
-              Select a profile to verify adaptive question generation
-            </span>
-          </div>
-          <div className="profile-presets-group">
-            {(Object.keys(CONTROLLED_TEST_PROFILES) as ControlledTestProfileKey[]).map((key) => {
-              const preset = CONTROLLED_TEST_PROFILES[key];
-              const isActive = activePreset === key;
-              return (
-                <button
-                  key={key}
-                  type="button"
-                  className={`profile-preset-button ${isActive ? 'active' : ''}`}
-                  data-testid={`load-preset-${key}`}
-                  disabled={isTransitioning}
-                  onClick={() => handleLoadControlledProfile(key)}
-                  title={preset.description}
-                >
-                  {preset.label}
-                </button>
-              );
-            })}
           </div>
         </div>
       )}

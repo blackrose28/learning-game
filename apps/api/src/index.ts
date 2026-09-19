@@ -875,6 +875,7 @@ export default {
         return errorResponse('DAILY_LIMIT_EXCEEDED', err.message, 403);
       }
 
+      console.error(`[API Error in ${method} ${pathname}]:`, err);
       const message = err instanceof Error ? err.message : 'An unexpected server error occurred';
       return errorResponse('INTERNAL_SERVER_ERROR', message, 500);
     }

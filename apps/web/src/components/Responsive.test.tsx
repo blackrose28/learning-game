@@ -26,6 +26,8 @@ describe('Task 8.2 — Responsive Layout across Multi-Device Viewports', () => {
     { name: 'Tablet portrait (768x1024)', width: 768, height: 1024 },
     { name: 'Tablet landscape (1024x768)', width: 1024, height: 768 },
     { name: 'Desktop (1440x900)', width: 1440, height: 900 },
+    { name: 'Xbox Edge 720p (1280x720)', width: 1280, height: 720 },
+    { name: 'Xbox Edge 1080p (1920x1080)', width: 1920, height: 1080 },
   ];
 
   viewports.forEach(({ name, width, height }) => {
@@ -36,14 +38,22 @@ describe('Task 8.2 — Responsive Layout across Multi-Device Viewports', () => {
         window.innerHeight = height;
         window.dispatchEvent(new Event('resize'));
 
-        render(<GameScreen playerId="player-responsive-test" />);
+        const { container } = render(<GameScreen playerId="player-responsive-test" />);
 
-        // 1. Question is visible and non-empty
+        // 1. Single-screen arena layout structure is present
+        const arenaLayout = container.querySelector('.game-arena-layout');
+        expect(arenaLayout).toBeInTheDocument();
+        const rangeCol = container.querySelector('.game-range-column');
+        expect(rangeCol).toBeInTheDocument();
+        const quiverCol = container.querySelector('.game-quiver-column');
+        expect(quiverCol).toBeInTheDocument();
+
+        // 2. Question is visible and non-empty
         const questionEl = screen.getByTestId('question-expression');
         expect(questionEl).toBeInTheDocument();
         expect(questionEl.textContent?.trim()).not.toBe('');
 
-        // 2. Exactly four elemental choices are present
+        // 3. Exactly four elemental choices are present
         const fireBtn = screen.getByTestId('choice-fire');
         const iceBtn = screen.getByTestId('choice-ice');
         const windBtn = screen.getByTestId('choice-wind');
@@ -71,18 +81,22 @@ describe('Task 8.2 — Responsive Layout across Multi-Device Viewports', () => {
           const iconSpan = btn.querySelector('.element-icon');
           expect(iconSpan).not.toBeNull();
           expect(iconSpan?.textContent).toBeTruthy();
+
+          // Gamepad controller badge is rendered on each choice
+          const gamepadBadge = btn.querySelector('.controller-shortcut-hint');
+          expect(gamepadBadge).not.toBeNull();
         });
 
-        // 3. Four choices are distinct elements
+        // 4. Four choices are distinct elements
         expect(fireBtn).toHaveClass('element-fire');
         expect(iceBtn).toHaveClass('element-ice');
         expect(windBtn).toHaveClass('element-wind');
         expect(earthBtn).toHaveClass('element-earth');
 
-        // 4. Session progress section is visible
+        // 5. Session progress section is visible
         expect(screen.getByTestId('progress-section')).toBeVisible();
 
-        // 5. Arrow animation is anchored inside archer-stage
+        // 6. Arrow animation is anchored inside archer-stage
         const archerStage = screen.getByTestId('archer-stage');
         expect(archerStage).toBeInTheDocument();
       });

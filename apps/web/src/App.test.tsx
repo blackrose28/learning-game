@@ -59,6 +59,28 @@ describe('App navigation and Progress & History View', () => {
     expect(screen.queryByTestId('child-profile-picker')).not.toBeInTheDocument();
   });
 
+  it('opens and closes the slide-out game menu drawer via button and Escape key', () => {
+    render(<App />);
+
+    const menuDrawer = screen.getByTestId('app-menu-drawer');
+    expect(menuDrawer).not.toHaveClass('open');
+
+    // Open menu
+    fireEvent.click(screen.getByTestId('app-menu-toggle'));
+    expect(menuDrawer).toHaveClass('open');
+
+    // Close via close button
+    fireEvent.click(screen.getByTestId('close-menu-btn'));
+    expect(menuDrawer).not.toHaveClass('open');
+
+    // Reopen and close via Escape key
+    fireEvent.click(screen.getByTestId('app-menu-toggle'));
+    expect(menuDrawer).toHaveClass('open');
+
+    fireEvent.keyDown(window, { key: 'Escape' });
+    expect(menuDrawer).not.toHaveClass('open');
+  });
+
   it('navigates to World Map tab and renders the world exploration view', () => {
     render(<App />);
 

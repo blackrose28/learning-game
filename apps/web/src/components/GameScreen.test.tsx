@@ -846,6 +846,17 @@ describe('Task 3.4 — Connect the real learning engine', () => {
     expect(resetBtn).toHaveClass('active');
   });
 
+  it('shows the controlled test profile bar by default in development environment', () => {
+    render(<GameScreen />);
+    expect(screen.getByTestId('profile-selector-bar')).toBeInTheDocument();
+    expect(screen.getByText(/Test Controlled Profile/i)).toBeInTheDocument();
+  });
+
+  it('hides the controlled test profile bar when showProfileSelector is false', () => {
+    render(<GameScreen showProfileSelector={false} />);
+    expect(screen.queryByTestId('profile-selector-bar')).not.toBeInTheDocument();
+  });
+
   it('persists and restores updated skill profile across browser reloads / storage', () => {
     vi.useFakeTimers();
     const storage = createMemoryStorage();

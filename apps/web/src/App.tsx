@@ -25,7 +25,7 @@ import './App.css';
 const APP_TABS = ['game', 'world', 'rewards', 'dashboard', 'history', 'curriculum'] as const;
 
 export const AppContent: React.FC = () => {
-  const { activeChild, isParentUnlocked, apiClient, authToken, isAuthenticated } = useAuth();
+  const { activeChild, isParentUnlocked, apiClient, isAuthenticated } = useAuth();
   const [activeTab, setActiveTab] = useState<
     'game' | 'world' | 'rewards' | 'dashboard' | 'history' | 'curriculum'
   >('game');
@@ -33,12 +33,24 @@ export const AppContent: React.FC = () => {
   const [syncTick, setSyncTick] = useState<number>(0);
   const [showChildPicker, setShowChildPicker] = useState<boolean>(false);
   const [isMuted, setIsMuted] = useState<boolean>(() => audioFx.getIsMuted());
+  const [isMenuOpen, setIsMenuOpen] = useState<boolean>(false);
 
   // Keep mute state in sync with AudioFx
   useEffect(() => {
     return audioFx.subscribe((muted) => {
       setIsMuted(muted);
     });
+  }, []);
+
+  // Close menu on Escape key
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        setIsMenuOpen(false);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
   }, []);
 
   const handleToggleMute = () => {
@@ -58,13 +70,12 @@ export const AppContent: React.FC = () => {
     hydratePlayerProgress(activeChild.id, apiClient).then(() => {
       if (isMounted) {
         setProgress(loadLocalProgress(activeChild.id));
-        setSyncTick((t) => t + 1);
       }
     });
     return () => {
       isMounted = false;
     };
-  }, [activeChild.id, apiClient, authToken, isAuthenticated]);
+  }, [activeChild.id, apiClient, isAuthenticated]);
 
   const handleSwitchTab = (
     tab: 'game' | 'world' | 'rewards' | 'dashboard' | 'history' | 'curriculum'
@@ -98,6 +109,10 @@ export const AppContent: React.FC = () => {
           }
           return nextTab;
         });
+      } else if (btn === XboxButton.Menu) {
+        setIsMenuOpen((prev) => !prev);
+      } else if (btn === XboxButton.B && isMenuOpen) {
+        setIsMenuOpen(false);
       }
     },
   });
@@ -117,99 +132,30 @@ export const AppContent: React.FC = () => {
     <main className="app-main-container">
       <InstallPrompt />
       <header className="app-header">
-        <div className="app-header-top">
-          <div>
-            <h1 className="app-title">🏹 Math Archer</h1>
-            <p className="app-subtitle">Adaptive Archery Math Practice for Children</p>
-          </div>
-
-          {/* Active Player Profile Badge */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-            <div
-              data-testid="current-player-badge"
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: 8,
-                background: '#f0fdf4',
-                border: '1px solid #bbf7d0',
-                borderRadius: 20,
-                padding: '6px 14px',
-              }}
-            >
-              <span data-testid="current-player-avatar" style={{ fontSize: 16 }}>
-                {AVATAR_MAP[activeChild.avatar] || '🏹'}
-              </span>
-              <span style={{ fontSize: 13, fontWeight: 700, color: '#166534' }}>
-                Playing as: <strong>{activeChild.name}</strong>
-              </span>
-              <button
-                type="button"
-                data-testid="switch-child-profile-btn"
-                onClick={() => setShowChildPicker(true)}
-                style={{
-                  background: 'none',
-                  border: 'none',
-                  color: '#15803d',
-                  textDecoration: 'underline',
-                  cursor: 'pointer',
-                  fontSize: 12,
-                  fontWeight: 600,
-                  padding: 0,
-                  marginLeft: 4,
-                }}
-              >
-                [Switch]
-              </button>
-            </div>
-
-            {/* Xbox Controller Status Indicator */}
-            {controllerState.isActive && (
-              <div
-                className="controller-status-badge"
-                data-testid="controller-status-badge"
-                title={
-                  controllerState.isConnected
-                    ? `Xbox Controller Connected: ${controllerState.gamepadId}`
-                    : 'Xbox Controller Navigation Ready'
-                }
-              >
-                <span style={{ fontSize: 16 }}>🎮</span>
-                <span style={{ fontSize: 13, fontWeight: 700 }}>Controller Ready</span>
-                <span className="controller-bumper-hints">[LB / RB Tabs]</span>
-              </div>
-            )}
-
-            {/* Audio Mute Toggle Button */}
-            <button
-              type="button"
-              data-testid="audio-mute-toggle"
-              className={`audio-toggle-btn ${isMuted ? 'muted' : 'unmuted'}`}
-              onClick={handleToggleMute}
-              aria-label={isMuted ? 'Unmute procedural audio' : 'Mute procedural audio'}
-              title={isMuted ? 'Sound is muted (Click to unmute)' : 'Sound is active (Click to mute)'}
-            >
-              <span aria-hidden="true" style={{ fontSize: 15 }}>{isMuted ? '🔇' : '🔊'}</span>
-              <span className="audio-toggle-label">{isMuted ? 'Muted' : 'Sound On'}</span>
-            </button>
-          </div>
+        <div className="app-header-brand">
+          <h1 className="app-title">🏹 Math Archer</h1>
         </div>
 
-        {/* Main Tab Navigation */}
-        <nav className="app-nav">
+        {/* Main Tab Navigation: Streamlined Primary Game Modes */}
+        <nav className="app-nav" aria-label="Game Modes">
+          {controllerState.isActive && (
+            <span className="bumper-tab-hint" aria-hidden="true">[LB]</span>
+          )}
           <button
             type="button"
             data-testid="tab-game"
             onClick={() => handleSwitchTab('game')}
             className={`nav-tab-btn ${activeTab === 'game' ? 'active' : ''}`}
+            aria-label="Play Game"
           >
-            🏹 Game Screen
+            🏹 Play
           </button>
           <button
             type="button"
             data-testid="tab-world"
             onClick={() => handleSwitchTab('world')}
             className={`nav-tab-btn ${activeTab === 'world' ? 'active' : ''}`}
+            aria-label="World Map"
           >
             🗺️ World Map
           </button>
@@ -218,69 +164,302 @@ export const AppContent: React.FC = () => {
             data-testid="tab-rewards"
             onClick={() => handleSwitchTab('rewards')}
             className={`nav-tab-btn ${activeTab === 'rewards' ? 'active' : ''}`}
+            aria-label="Royal Armory"
           >
             🏆 Royal Armory
           </button>
+
+          {/* Active indicator pill when viewing a secondary menu view */}
+          {(activeTab === 'dashboard' || activeTab === 'history' || activeTab === 'curriculum') && (
+            <span className="nav-tab-btn active secondary-active-pill" aria-current="page">
+              {activeTab === 'dashboard' && '👨‍👩‍👧 Parent Dashboard'}
+              {activeTab === 'history' && '📊 Progress & History'}
+              {activeTab === 'curriculum' && '📋 Curriculum & Engine'}
+            </span>
+          )}
+
+          {controllerState.isActive && (
+            <span className="bumper-tab-hint" aria-hidden="true">[RB]</span>
+          )}
+        </nav>
+
+        {/* Header Controls: Player profile, Controller badge, Audio toggle, and Menu Button */}
+        <div className="app-header-controls">
+          <div
+            data-testid="current-player-badge"
+            className="current-player-badge"
+          >
+            <span data-testid="current-player-avatar" style={{ fontSize: 16 }}>
+              {AVATAR_MAP[activeChild.avatar] || '🏹'}
+            </span>
+            <span className="current-player-name">
+              <strong>{activeChild.name}</strong>
+            </span>
+            <button
+              type="button"
+              data-testid="switch-child-profile-btn"
+              onClick={() => setShowChildPicker(true)}
+              className="switch-child-profile-btn"
+              aria-label="Switch child profile"
+            >
+              [Switch]
+            </button>
+          </div>
+
+          {/* Xbox Controller Status Indicator */}
+          {controllerState.isActive && (
+            <div
+              className="controller-status-badge"
+              data-testid="controller-status-badge"
+              title={
+                controllerState.isConnected
+                  ? `Xbox Controller Connected: ${controllerState.gamepadId}`
+                  : 'Xbox Controller Navigation Ready'
+              }
+            >
+              <span style={{ fontSize: 15 }}>🎮</span>
+              <span className="controller-status-text">Ready</span>
+              <span className="controller-bumper-hints">[LB/RB]</span>
+            </div>
+          )}
+
+          {/* Audio Mute Toggle Button */}
+          <button
+            type="button"
+            data-testid="audio-mute-toggle"
+            className={`audio-toggle-btn ${isMuted ? 'muted' : 'unmuted'}`}
+            onClick={handleToggleMute}
+            aria-label={isMuted ? 'Unmute procedural audio' : 'Mute procedural audio'}
+            title={isMuted ? 'Sound is muted (Click to unmute)' : 'Sound is active (Click to mute)'}
+          >
+            <span aria-hidden="true" style={{ fontSize: 15 }}>{isMuted ? '🔇' : '🔊'}</span>
+            <span className="audio-toggle-label">{isMuted ? 'Muted' : 'Sound On'}</span>
+          </button>
+
+          {/* Menu Drawer Toggle Button */}
+          <button
+            type="button"
+            data-testid="app-menu-toggle"
+            className={`app-menu-toggle-btn ${isMenuOpen ? 'open' : ''}`}
+            onClick={() => setIsMenuOpen(!isMenuOpen)}
+            aria-label="Open game menu and settings"
+            title="Menu & Settings (Press Start on Xbox Controller)"
+          >
+            <span className="menu-icon" aria-hidden="true">☰</span>
+            <span className="menu-label">Menu</span>
+            {controllerState.isActive && (
+              <span className="controller-menu-hint" aria-hidden="true">[Start]</span>
+            )}
+          </button>
+        </div>
+      </header>
+
+      {/* Menu Drawer Backdrop Overlay */}
+      <div
+        className={`app-menu-backdrop ${isMenuOpen ? 'open' : ''}`}
+        onClick={() => setIsMenuOpen(false)}
+        aria-hidden="true"
+      />
+
+      {/* Slide-out Menu Drawer for Settings, Parent Dashboard & Learning Engine */}
+      <aside
+        className={`app-menu-drawer ${isMenuOpen ? 'open' : ''}`}
+        data-testid="app-menu-drawer"
+        aria-label="Game Menu & Settings"
+      >
+        <div className="menu-drawer-header">
+          <h2 className="menu-drawer-title">
+            <span>⚙️</span> Game Menu & Settings
+          </h2>
+          <button
+            type="button"
+            data-testid="close-menu-btn"
+            className="menu-close-btn"
+            onClick={() => setIsMenuOpen(false)}
+            aria-label="Close menu"
+          >
+            ✕
+          </button>
+        </div>
+
+        {/* Archer Profile Card */}
+        <div className="menu-drawer-profile-card">
+          <div className="drawer-profile-info">
+            <span className="drawer-profile-avatar">
+              {AVATAR_MAP[activeChild.avatar] || '🏹'}
+            </span>
+            <div className="drawer-profile-text">
+              <span className="drawer-profile-role">Active Archer</span>
+              <strong className="drawer-profile-name">{activeChild.name}</strong>
+            </div>
+          </div>
+          <button
+            type="button"
+            className="drawer-switch-profile-btn"
+            data-testid="drawer-switch-profile-btn"
+            onClick={() => {
+              setIsMenuOpen(false);
+              setShowChildPicker(true);
+            }}
+          >
+            Switch Profile
+          </button>
+        </div>
+
+        <nav className="menu-drawer-nav">
+          <span className="menu-drawer-section-label">Management & Analytics</span>
+
           <button
             type="button"
             data-testid="tab-dashboard"
-            onClick={() => handleSwitchTab('dashboard')}
-            className={`nav-tab-btn ${activeTab === 'dashboard' ? 'active' : ''}`}
+            onClick={() => {
+              handleSwitchTab('dashboard');
+              setIsMenuOpen(false);
+            }}
+            className={`menu-drawer-item ${activeTab === 'dashboard' ? 'active' : ''}`}
           >
-            👨‍👩‍👧 Parent Dashboard
+            <span className="menu-item-icon">👨‍👩‍👧</span>
+            <div className="menu-item-content">
+              <span className="menu-item-title">Parent Dashboard</span>
+              <span className="menu-item-desc">PIN Protected • Daily Targets & Limits</span>
+            </div>
           </button>
+
           <button
             type="button"
             data-testid="tab-history"
-            onClick={() => handleSwitchTab('history')}
-            className={`nav-tab-btn ${activeTab === 'history' ? 'active' : ''}`}
+            onClick={() => {
+              handleSwitchTab('history');
+              setIsMenuOpen(false);
+            }}
+            className={`menu-drawer-item ${activeTab === 'history' ? 'active' : ''}`}
           >
-            📊 Progress & History
+            <span className="menu-item-icon">📊</span>
+            <div className="menu-item-content">
+              <span className="menu-item-title">Progress & History</span>
+              <span className="menu-item-desc">Accuracy, Mastery Heatmaps & Streaks</span>
+            </div>
           </button>
+
           <button
             type="button"
             data-testid="tab-curriculum"
-            onClick={() => handleSwitchTab('curriculum')}
-            className={`nav-tab-btn ${activeTab === 'curriculum' ? 'active' : ''}`}
+            onClick={() => {
+              handleSwitchTab('curriculum');
+              setIsMenuOpen(false);
+            }}
+            className={`menu-drawer-item ${activeTab === 'curriculum' ? 'active' : ''}`}
           >
-            📋 Curriculum & Engine
+            <span className="menu-item-icon">📋</span>
+            <div className="menu-item-content">
+              <span className="menu-item-title">Curriculum & Engine</span>
+              <span className="menu-item-desc">Skill Tree Levels & Pedagogical Rules</span>
+            </div>
+          </button>
+
+          <span className="menu-drawer-section-label">Game Modes</span>
+
+          <button
+            type="button"
+            data-testid="drawer-tab-game"
+            onClick={() => {
+              handleSwitchTab('game');
+              setIsMenuOpen(false);
+            }}
+            className={`menu-drawer-item ${activeTab === 'game' ? 'active' : ''}`}
+          >
+            <span className="menu-item-icon">🏹</span>
+            <div className="menu-item-content">
+              <span className="menu-item-title">Archery Game Arena</span>
+              <span className="menu-item-desc">Elemental bow shooting & math practice</span>
+            </div>
+          </button>
+
+          <button
+            type="button"
+            data-testid="drawer-tab-world"
+            onClick={() => {
+              handleSwitchTab('world');
+              setIsMenuOpen(false);
+            }}
+            className={`menu-drawer-item ${activeTab === 'world' ? 'active' : ''}`}
+          >
+            <span className="menu-item-icon">🗺️</span>
+            <div className="menu-item-content">
+              <span className="menu-item-title">World Progression Map</span>
+              <span className="menu-item-desc">Explore kingdoms and biomes</span>
+            </div>
+          </button>
+
+          <button
+            type="button"
+            data-testid="drawer-tab-rewards"
+            onClick={() => {
+              handleSwitchTab('rewards');
+              setIsMenuOpen(false);
+            }}
+            className={`menu-drawer-item ${activeTab === 'rewards' ? 'active' : ''}`}
+          >
+            <span className="menu-item-icon">🏆</span>
+            <div className="menu-item-content">
+              <span className="menu-item-title">Royal Armory & Badges</span>
+              <span className="menu-item-desc">Trophies, bows, and quiver cosmetics</span>
+            </div>
           </button>
         </nav>
-      </header>
 
-      {/* Screen Render */}
+        <div className="menu-drawer-footer">
+          <button
+            type="button"
+            className="drawer-audio-btn"
+            onClick={handleToggleMute}
+          >
+            <span>{isMuted ? '🔇' : '🔊'}</span>
+            <span>{isMuted ? 'Procedural Audio: Muted' : 'Procedural Audio: Active'}</span>
+          </button>
+          {controllerState.isActive && (
+            <div className="drawer-controller-info">
+              🎮 Xbox Controller Active • Press [B] to close
+            </div>
+          )}
+        </div>
+      </aside>
+
+      {/* Screen Render: Game Screen is fixed 100vh; non-game views are scrollable */}
       {activeTab === 'game' ? (
         <GameScreen key={`${activeChild.id}_${syncTick}`} playerId={activeChild.id} />
-      ) : activeTab === 'world' ? (
-        <WorldMap
-          key={`${activeChild.id}_${syncTick}`}
-          playerId={activeChild.id}
-          apiClient={apiClient}
-          onSelectArea={() => {
-            setSyncTick((t) => t + 1);
-            handleSwitchTab('game');
-          }}
-          onBackToGame={() => handleSwitchTab('game')}
-        />
-      ) : activeTab === 'rewards' ? (
-        <RewardsScreen
-          key={`${activeChild.id}_${syncTick}`}
-          playerId={activeChild.id}
-          apiClient={apiClient}
-          onRewardsChange={() => setSyncTick((t) => t + 1)}
-          onBackToGame={() => handleSwitchTab('game')}
-        />
-      ) : activeTab === 'dashboard' ? (
-        !isParentUnlocked ? (
-          <ParentGate onCancel={() => handleSwitchTab('game')} />
-        ) : (
-          <ParentDashboard
-            key={`${activeChild.id}_${syncTick}`}
-            playerId={activeChild.id}
-            apiClient={apiClient}
-          />
-        )
-      ) : activeTab === 'history' ? (
+      ) : (
+        <div className="app-scrollable-content">
+          {activeTab === 'world' ? (
+            <WorldMap
+              key={`${activeChild.id}_${syncTick}`}
+              playerId={activeChild.id}
+              apiClient={apiClient}
+              onSelectArea={() => {
+                setSyncTick((t) => t + 1);
+                handleSwitchTab('game');
+              }}
+              onBackToGame={() => handleSwitchTab('game')}
+            />
+          ) : activeTab === 'rewards' ? (
+            <RewardsScreen
+              key={`${activeChild.id}_${syncTick}`}
+              playerId={activeChild.id}
+              apiClient={apiClient}
+              onRewardsChange={() => setSyncTick((t) => t + 1)}
+              onBackToGame={() => handleSwitchTab('game')}
+            />
+          ) : activeTab === 'dashboard' ? (
+            !isParentUnlocked ? (
+              <ParentGate onCancel={() => handleSwitchTab('game')} />
+            ) : (
+              <ParentDashboard
+                key={`${activeChild.id}_${syncTick}`}
+                playerId={activeChild.id}
+                apiClient={apiClient}
+              />
+            )
+          ) : activeTab === 'history' ? (
         <section data-testid="local-progress-view">
           <div
             style={{
@@ -656,6 +835,8 @@ export const AppContent: React.FC = () => {
             </div>
           </section>
         </>
+      )}
+        </div>
       )}
 
       {/* Child Profile Picker Modal */}
