@@ -476,5 +476,53 @@ describe('Task 9.4 — Rewards Integration Tests', () => {
       expect(showcase.querySelector('[data-testid="statue-crystal-dragon"]')).toBeInTheDocument();
       expect(showcase.querySelector('[data-testid="ground-obsidian"]')).toBeInTheDocument();
     });
+
+    it('allows toggling between Archer and Wizard in Royal Armory showcase', () => {
+      render(<RewardsScreen playerId="player-1" storage={storage} />);
+
+      const archerBtn = screen.getByTestId('rewards-switch-archer');
+      const wizardBtn = screen.getByTestId('rewards-switch-wizard');
+      expect(archerBtn).toHaveClass('active');
+      expect(wizardBtn).not.toHaveClass('active');
+      expect(screen.getByTestId('archer-graphic')).toBeInTheDocument();
+
+      // Switch to Wizard
+      fireEvent.click(wizardBtn);
+      expect(wizardBtn).toHaveClass('active');
+      expect(archerBtn).not.toHaveClass('active');
+      expect(screen.getByTestId('wizard-graphic')).toBeInTheDocument();
+
+      // Check weapon tab label transforms
+      const bowTab = screen.getByTestId('tab-cat-bow');
+      expect(bowTab).toHaveTextContent(/Staves & Wands/i);
+
+      // Check equipped weapon badge chip transforms
+      const weaponBadge = screen.getByTestId('badge-equipped-bow');
+      expect(weaponBadge).toHaveTextContent(/Apprentice Oak Wand/i);
+
+      // Navigate to weapons tab and check staff names
+      fireEvent.click(bowTab);
+      const oakCard = screen.getByTestId('cosmetic-card-bow_recurve_oak');
+      expect(oakCard).toHaveTextContent('Apprentice Oak Wand');
+      expect(oakCard).toHaveTextContent(/Hand-turned oak wand capped with a humming amber focus crystal/i);
+    });
+
+    it('allows toggling between Target and Training Dummy in Royal Armory showcase', () => {
+      render(<RewardsScreen playerId="player-1" storage={storage} />);
+
+      const targetBtn = screen.getByTestId('rewards-switch-target');
+      const dummyBtn = screen.getByTestId('rewards-switch-dummy');
+      expect(targetBtn).toHaveClass('active');
+      expect(dummyBtn).not.toHaveClass('active');
+      expect(screen.getByTestId('target-card')).toHaveAttribute('data-target-type', 'archery_target');
+
+      // Switch to Dummy
+      fireEvent.click(dummyBtn);
+      expect(dummyBtn).toHaveClass('active');
+      expect(targetBtn).not.toHaveClass('active');
+      expect(screen.getByTestId('target-card')).toHaveAttribute('data-target-type', 'dummy');
+      expect(screen.getByText('TRAINING DUMMY')).toBeInTheDocument();
+    });
   });
 });
+

@@ -2,7 +2,6 @@ import { describe, it, expect, beforeEach } from 'vitest';
 import {
   calculateLevel,
   isConsecutiveDay,
-  evaluateCosmeticUnlocks,
   createDefaultRewardsState,
   loadPlayerRewards,
   savePlayerRewards,
@@ -277,7 +276,7 @@ describe('Task 9.4 — Rewards Engine', () => {
 
   describe('Level 1–30 Progression & Advanced Achievements', () => {
     it('awards century arrow achievement after 100 shots', () => {
-      let state = createDefaultRewardsState('p1');
+      const state = createDefaultRewardsState('p1');
       state.achievementProgress['arrows_shot'] = 99;
 
       const result = awardAttemptRewards(state, { isCorrect: true });
@@ -286,7 +285,7 @@ describe('Task 9.4 — Rewards Engine', () => {
     });
 
     it('awards Make-10 Bridge Builder after 10 Make-10 problems', () => {
-      let state = createDefaultRewardsState('p1');
+      const state = createDefaultRewardsState('p1');
       state.achievementProgress['make10_count'] = 9;
 
       const result = awardAttemptRewards(state, { isCorrect: true, isMake10: true });
@@ -294,7 +293,7 @@ describe('Task 9.4 — Rewards Engine', () => {
     });
 
     it('awards Doubles Twin Strike after 10 doubles questions', () => {
-      let state = createDefaultRewardsState('p1');
+      const state = createDefaultRewardsState('p1');
       state.achievementProgress['doubles_count'] = 9;
 
       const result = awardAttemptRewards(state, { isCorrect: true, isDoubles: true });
@@ -302,7 +301,7 @@ describe('Task 9.4 — Rewards Engine', () => {
     });
 
     it('awards Level 10 and Level 30 milestone achievements and unlocks high tier gear', () => {
-      let state = createDefaultRewardsState('p1');
+      const state = createDefaultRewardsState('p1');
       state.totalXp = 44990; // 10 XP away from 45,000 (Level 30)
 
       const result = awardAttemptRewards(state, { isCorrect: true }); // +15 XP -> 45,005 XP -> Level 30!
@@ -318,7 +317,7 @@ describe('Task 9.4 — Rewards Engine', () => {
     });
 
     it('awards 7-day Week Warrior and 14-day Fortnight Knight streak achievements', () => {
-      let state = createDefaultRewardsState('p1');
+      const state = createDefaultRewardsState('p1');
       state.currentStreak = 6;
       state.lastActiveDate = '2026-09-18';
 

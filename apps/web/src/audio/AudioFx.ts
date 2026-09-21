@@ -412,6 +412,147 @@ class AudioManager {
       // Gracefully ignore
     }
   }
+
+  /**
+   * Wizard magic cast - sparkling arcane chime and soaring energy whoosh
+   */
+  public playMagicCast(element: ElementType = 'fire'): void {
+    if (this.isMuted) return;
+    const ctx = this.getContext();
+    if (!ctx) return;
+
+    try {
+      const now = ctx.currentTime;
+
+      // 1. Ascending Arcane Tone
+      const toneOsc = ctx.createOscillator();
+      const toneGain = ctx.createGain();
+      toneOsc.type = 'sine';
+
+      const baseFreq =
+        element === 'ice' ? 659.25 : element === 'wind' ? 587.33 : element === 'earth' ? 329.63 : 440; // E5, D5, E4, A4
+
+      toneOsc.frequency.setValueAtTime(baseFreq, now);
+      toneOsc.frequency.exponentialRampToValueAtTime(baseFreq * 2, now + 0.14);
+
+      toneGain.gain.setValueAtTime(0.01, now);
+      toneGain.gain.linearRampToValueAtTime(0.3, now + 0.04);
+      toneGain.gain.exponentialRampToValueAtTime(0.001, now + 0.22);
+
+      toneOsc.connect(toneGain);
+      toneGain.connect(ctx.destination);
+      toneOsc.start(now);
+      toneOsc.stop(now + 0.24);
+
+      // 2. Crystalline Sparkle Shimmer
+      const chimeOsc = ctx.createOscillator();
+      const chimeGain = ctx.createGain();
+      chimeOsc.type = 'triangle';
+      chimeOsc.frequency.setValueAtTime(baseFreq * 3, now + 0.03);
+      chimeOsc.frequency.exponentialRampToValueAtTime(baseFreq * 1.5, now + 0.18);
+
+      chimeGain.gain.setValueAtTime(0.18, now + 0.03);
+      chimeGain.gain.exponentialRampToValueAtTime(0.001, now + 0.2);
+
+      chimeOsc.connect(chimeGain);
+      chimeGain.connect(ctx.destination);
+      chimeOsc.start(now + 0.03);
+      chimeOsc.stop(now + 0.22);
+    } catch {
+      // Gracefully ignore
+    }
+  }
+
+  /**
+   * Training Dummy impact - punchy straw/wood thud with spring wobble boing
+   */
+  public playDummyHit(outcome: 'hit' | 'miss', element: ElementType = 'fire'): void {
+    if (this.isMuted) return;
+    const ctx = this.getContext();
+    if (!ctx) return;
+
+    try {
+      const now = ctx.currentTime;
+
+      if (outcome === 'hit') {
+        // 1. Deep Burlap & Straw Punch
+        const thudOsc = ctx.createOscillator();
+        const thudGain = ctx.createGain();
+        thudOsc.type = 'triangle';
+        thudOsc.frequency.setValueAtTime(140, now);
+        thudOsc.frequency.exponentialRampToValueAtTime(38, now + 0.16);
+
+        thudGain.gain.setValueAtTime(0.6, now);
+        thudGain.gain.exponentialRampToValueAtTime(0.001, now + 0.18);
+
+        thudOsc.connect(thudGain);
+        thudGain.connect(ctx.destination);
+        thudOsc.start(now);
+        thudOsc.stop(now + 0.2);
+
+        // 2. Coiled Spring Wobble Boing
+        const springOsc = ctx.createOscillator();
+        const springGain = ctx.createGain();
+        springOsc.type = 'sine';
+        springOsc.frequency.setValueAtTime(280, now + 0.04);
+        springOsc.frequency.linearRampToValueAtTime(360, now + 0.09);
+        springOsc.frequency.linearRampToValueAtTime(240, now + 0.16);
+        springOsc.frequency.linearRampToValueAtTime(300, now + 0.22);
+        springOsc.frequency.exponentialRampToValueAtTime(180, now + 0.35);
+
+        springGain.gain.setValueAtTime(0.01, now);
+        springGain.gain.linearRampToValueAtTime(0.28, now + 0.06);
+        springGain.gain.exponentialRampToValueAtTime(0.001, now + 0.36);
+
+        springOsc.connect(springGain);
+        springGain.connect(ctx.destination);
+        springOsc.start(now + 0.04);
+        springOsc.stop(now + 0.38);
+
+        // 3. Elemental Impact Layer
+        if (element === 'fire') {
+          const fireBurst = ctx.createOscillator();
+          const fireGain = ctx.createGain();
+          fireBurst.type = 'sine';
+          fireBurst.frequency.setValueAtTime(220, now);
+          fireBurst.frequency.exponentialRampToValueAtTime(50, now + 0.15);
+          fireGain.gain.setValueAtTime(0.25, now);
+          fireGain.gain.exponentialRampToValueAtTime(0.001, now + 0.18);
+          fireBurst.connect(fireGain);
+          fireGain.connect(ctx.destination);
+          fireBurst.start(now);
+          fireBurst.stop(now + 0.2);
+        } else if (element === 'ice') {
+          const iceCrack = ctx.createOscillator();
+          const iceGain = ctx.createGain();
+          iceCrack.type = 'sine';
+          iceCrack.frequency.setValueAtTime(1400, now + 0.02);
+          iceCrack.frequency.exponentialRampToValueAtTime(1900, now + 0.1);
+          iceGain.gain.setValueAtTime(0.2, now + 0.02);
+          iceGain.gain.exponentialRampToValueAtTime(0.001, now + 0.2);
+          iceCrack.connect(iceGain);
+          iceGain.connect(ctx.destination);
+          iceCrack.start(now + 0.02);
+          iceCrack.stop(now + 0.22);
+        }
+      } else {
+        // Miss: Wind whoosh passing dummy with light straw rattle
+        const missOsc = ctx.createOscillator();
+        const missGain = ctx.createGain();
+        missOsc.type = 'triangle';
+        missOsc.frequency.setValueAtTime(260, now);
+        missOsc.frequency.exponentialRampToValueAtTime(100, now + 0.15);
+        missGain.gain.setValueAtTime(0.2, now);
+        missGain.gain.exponentialRampToValueAtTime(0.001, now + 0.16);
+        missOsc.connect(missGain);
+        missGain.connect(ctx.destination);
+        missOsc.start(now);
+        missOsc.stop(now + 0.18);
+      }
+    } catch {
+      // Gracefully ignore
+    }
+  }
 }
 
 export const audioFx = new AudioManager();

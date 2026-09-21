@@ -746,7 +746,7 @@ describe('ParentDashboard Component (Task 5.2)', () => {
       // Now Alex's delayed response finishes with stale 10 / 50 data
       if (resolveAlex) {
         await act(async () => {
-          (resolveAlex as any)(
+          resolveAlex!(
             new Response(
               JSON.stringify({
                 profile: createEmptyProfile('player-local'),

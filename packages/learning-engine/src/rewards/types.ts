@@ -20,6 +20,10 @@ export interface CosmeticPreviewStyle {
   particleType?: string;
 }
 
+export type CharacterType = 'archer' | 'wizard';
+
+export type TargetType = 'archery_target' | 'dummy';
+
 export interface CosmeticItem {
   id: string;
   name: string;
@@ -31,6 +35,9 @@ export interface CosmeticItem {
   unlockThreshold: number | string;
   unlockDescription: string;
   preview: CosmeticPreviewStyle;
+  wizardWeaponName?: string;
+  wizardWeaponDesc?: string;
+  wizardWeaponIcon?: string;
 }
 
 export type AchievementCategory =
@@ -47,6 +54,8 @@ export interface Achievement {
 }
 
 export interface EquippedCosmetics {
+  character?: CharacterType;
+  target?: TargetType;
   outfit: string;
   bow: string;
   arrowEffect: string;

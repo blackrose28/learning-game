@@ -211,7 +211,9 @@ describe('Item 5: Active Child Profile Metadata & Selection Sync', () => {
               const b = JSON.parse(init.body as string);
               const found = serverChildren.find((c) => c.id === b.childId);
               if (found) reqChild = found;
-            } catch {}
+            } catch {
+              // Ignore malformed body
+            }
           }
           return new Response(
             JSON.stringify({

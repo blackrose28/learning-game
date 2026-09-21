@@ -10,9 +10,12 @@ import type {
   Achievement,
   CosmeticItem,
   EquippedCosmetics,
+  CharacterType,
+  TargetType,
 } from './types';
 import {
   LEVEL_THRESHOLDS,
+  WIZARD_LEVEL_TITLES,
   DEFAULT_EQUIPPED,
   COSMETIC_ITEMS,
   ACHIEVEMENTS,
@@ -25,6 +28,13 @@ export const REWARDS_KEY_PREFIX = 'math_archer_rewards_';
 
 export function getRewardsStorageKey(playerId: string = 'player-local'): string {
   return `${REWARDS_KEY_PREFIX}${playerId}`;
+}
+
+export function getLevelTitle(level: number, character: CharacterType = 'archer'): string {
+  if (character === 'wizard') {
+    return WIZARD_LEVEL_TITLES[level] || LEVEL_THRESHOLDS.find((t) => t.level === level)?.title || 'Novice Conjurer';
+  }
+  return LEVEL_THRESHOLDS.find((t) => t.level === level)?.title || 'Novice Archer';
 }
 
 export function calculateLevel(totalXp: number): {
@@ -198,7 +208,14 @@ export function loadPlayerRewards(
       : [];
     const mergedUnlocks = Array.from(new Set([...existingUnlocks, ...computedUnlocks]));
 
+    const character: CharacterType =
+      parsed.equippedCosmetics?.character === 'wizard' ? 'wizard' : 'archer';
+    const target: TargetType =
+      parsed.equippedCosmetics?.target === 'dummy' ? 'dummy' : 'archery_target';
+
     const equipped: EquippedCosmetics = {
+      character,
+      target,
       outfit: parsed.equippedCosmetics?.outfit || DEFAULT_EQUIPPED.outfit,
       bow: parsed.equippedCosmetics?.bow || DEFAULT_EQUIPPED.bow,
       arrowEffect: parsed.equippedCosmetics?.arrowEffect || DEFAULT_EQUIPPED.arrowEffect,
@@ -214,7 +231,7 @@ export function loadPlayerRewards(
       currentLevelXp: levelInfo.currentLevelXp,
       nextLevelXp: levelInfo.nextLevelXp,
       levelProgressPct: levelInfo.levelProgressPct,
-      levelTitle: levelInfo.title,
+      levelTitle: getLevelTitle(levelInfo.level, character),
       currentStreak,
       bestStreak,
       lastActiveDate: parsed.lastActiveDate ?? null,
@@ -254,6 +271,8 @@ export interface AwardAttemptOptions {
   consecutiveHits?: number;
   activeDate?: string;
   completedSessionsCount?: number;
+  character?: CharacterType;
+  target?: TargetType;
 }
 
 /**
@@ -312,8 +331,30 @@ export function awardAttemptRewards(
     }
   };
 
-  // Achievement 1: First Flight
-  tryUnlockAch('ach_first_arrow');
+  const activeChar = options.character || currentState.equippedCosmetics.character || 'archer';
+  const activeTarget = options.target || currentState.equippedCosmetics.target || 'archery_target';
+
+  // Achievement 1: First Flight (Archer) / First Incantation (Wizard)
+  if (activeChar === 'wizard') {
+    tryUnlockAch('ach_first_spell');
+    updatedAchProgress['spells_cast'] = (updatedAchProgress['spells_cast'] || 0) + 1;
+    if (updatedAchProgress['spells_cast'] >= 50) {
+      tryUnlockAch('ach_spells_50');
+    }
+  } else {
+    tryUnlockAch('ach_first_arrow');
+  }
+
+  // Dummy hits
+  if (activeTarget === 'dummy' && options.isCorrect) {
+    updatedAchProgress['dummy_hits'] = (updatedAchProgress['dummy_hits'] || 0) + 1;
+    if (updatedAchProgress['dummy_hits'] >= 25) {
+      tryUnlockAch('ach_dummy_hits_25');
+    }
+    if (updatedAchProgress['dummy_hits'] >= 100) {
+      tryUnlockAch('ach_dummy_hits_100');
+    }
+  }
 
   // Track lifetime arrows shot
   updatedAchProgress['arrows_shot'] = (updatedAchProgress['arrows_shot'] || 0) + 1;
@@ -663,6 +704,94 @@ export function equipCosmetic(
   return {
     ...currentState,
     equippedCosmetics: updatedEquipped,
+    updatedAt: new Date().toISOString(),
+  };
+}
+
+/**
+ * Switches the active player character ('archer' or 'wizard').
+ * Unlocks the 'Master of Disguise' achievement on first switch.
+ */
+export function switchCharacter(
+  currentState: PlayerRewardsState,
+  character: CharacterType
+): PlayerRewardsState {
+  const currentUnlockedAch = new Set(currentState.unlockedAchievementIds);
+  const updatedAchProgress = { ...currentState.achievementProgress };
+  const newAchievements = [...currentState.unlockedAchievementIds];
+  let xpAward = 0;
+
+  if (!currentUnlockedAch.has('ach_character_switch')) {
+    const ach = ACHIEVEMENT_BY_ID.get('ach_character_switch');
+    if (ach) {
+      newAchievements.push('ach_character_switch');
+      xpAward = ach.xpReward;
+    }
+  }
+
+  const updatedEquipped: EquippedCosmetics = {
+    ...currentState.equippedCosmetics,
+    character,
+  };
+
+  const newTotalXp = currentState.totalXp + xpAward;
+  const levelInfo = calculateLevel(newTotalXp);
+
+  return {
+    ...currentState,
+    totalXp: newTotalXp,
+    level: levelInfo.level,
+    currentLevelXp: levelInfo.currentLevelXp,
+    nextLevelXp: levelInfo.nextLevelXp,
+    levelProgressPct: levelInfo.levelProgressPct,
+    levelTitle: getLevelTitle(levelInfo.level, character),
+    equippedCosmetics: updatedEquipped,
+    unlockedAchievementIds: newAchievements,
+    achievementProgress: updatedAchProgress,
+    updatedAt: new Date().toISOString(),
+  };
+}
+
+/**
+ * Switches the active practice target ('archery_target' or 'dummy').
+ * Unlocks the 'Range Tactician' achievement on first switch.
+ */
+export function switchTarget(
+  currentState: PlayerRewardsState,
+  target: TargetType
+): PlayerRewardsState {
+  const currentUnlockedAch = new Set(currentState.unlockedAchievementIds);
+  const updatedAchProgress = { ...currentState.achievementProgress };
+  const newAchievements = [...currentState.unlockedAchievementIds];
+  let xpAward = 0;
+
+  if (!currentUnlockedAch.has('ach_target_switch')) {
+    const ach = ACHIEVEMENT_BY_ID.get('ach_target_switch');
+    if (ach) {
+      newAchievements.push('ach_target_switch');
+      xpAward = ach.xpReward;
+    }
+  }
+
+  const updatedEquipped: EquippedCosmetics = {
+    ...currentState.equippedCosmetics,
+    target,
+  };
+
+  const newTotalXp = currentState.totalXp + xpAward;
+  const levelInfo = calculateLevel(newTotalXp);
+
+  return {
+    ...currentState,
+    totalXp: newTotalXp,
+    level: levelInfo.level,
+    currentLevelXp: levelInfo.currentLevelXp,
+    nextLevelXp: levelInfo.nextLevelXp,
+    levelProgressPct: levelInfo.levelProgressPct,
+    levelTitle: getLevelTitle(levelInfo.level, currentState.equippedCosmetics.character || 'archer'),
+    equippedCosmetics: updatedEquipped,
+    unlockedAchievementIds: newAchievements,
+    achievementProgress: updatedAchProgress,
     updatedAt: new Date().toISOString(),
   };
 }

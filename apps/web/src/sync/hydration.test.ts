@@ -16,6 +16,8 @@ import {
   awardAttemptRewards,
   type Attempt,
   type SessionStorageAdapter,
+  type PlayerRewardsState,
+  type WorldProgressionState,
 } from '@math-archer/learning-engine';
 
 describe('Cloud Hydration Engine (hydratePlayerProgress)', () => {
@@ -350,7 +352,7 @@ describe('Cloud Hydration Engine (hydratePlayerProgress)', () => {
     localRewards = equipCosmetic(localRewards, 'outfit', 'outfit_ember_crimson');
     savePlayerRewards(localRewards, storage);
 
-    let pushedRewards: any = null;
+    let pushedRewards: PlayerRewardsState | null = null;
     const mockApiClient = new MathArcherApiClient({
       fetchFn: async (url, init) => {
         const u = url.toString();
@@ -398,12 +400,12 @@ describe('Cloud Hydration Engine (hydratePlayerProgress)', () => {
 
     // And pushed update to server!
     expect(pushedRewards).not.toBeNull();
-    expect(pushedRewards.equippedCosmetics.outfit).toBe('outfit_ember_crimson');
+    expect((pushedRewards as PlayerRewardsState | null)?.equippedCosmetics.outfit).toBe('outfit_ember_crimson');
   });
 
   it('adopts server equipped robe on Device B when server is newer', async () => {
     // Device B has fresh/older storage
-    let localRewards = createDefaultRewardsState(playerId);
+    const localRewards = createDefaultRewardsState(playerId);
     localRewards.totalXp = 200;
     localRewards.updatedAt = '2026-09-17T10:00:00.000Z';
     savePlayerRewards(localRewards, storage);
@@ -489,7 +491,7 @@ describe('Cloud Hydration Engine (hydratePlayerProgress)', () => {
     // Local user selected Ice Kingdom more recently than the server
     saveActiveArea(playerId, 'ice_area', storage, 2, '2026-09-18T15:00:00.000Z');
 
-    let pushedWorld: any = null;
+    let pushedWorld: WorldProgressionState | null = null;
     const mockApiClient = new MathArcherApiClient({
       fetchFn: async (url, init) => {
         const u = url.toString();
@@ -531,7 +533,7 @@ describe('Cloud Hydration Engine (hydratePlayerProgress)', () => {
 
     // And pushed update to server!
     expect(pushedWorld).not.toBeNull();
-    expect(pushedWorld.activeAreaId).toBe('ice_area');
+    expect((pushedWorld as WorldProgressionState | null)?.activeAreaId).toBe('ice_area');
   });
 });
 

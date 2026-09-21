@@ -303,18 +303,21 @@ export async function hydratePlayerProgress(
           'castleBanner',
           'castleStatue',
           'castleGround',
+          'character',
+          'target',
         ];
+        const equippedRecord = equipped as unknown as Record<string, string | undefined>;
         for (const k of keys) {
           const loc = localRewards.equippedCosmetics?.[k];
           const srv = serverRewards.equippedCosmetics?.[k];
           const def = DEFAULT_EQUIPPED[k];
           if (loc && loc !== def && (!srv || srv === def)) {
-            equipped[k] = loc;
+            equippedRecord[k] = loc;
             shouldPushEquipped = true;
           } else if (srv) {
-            equipped[k] = srv;
+            equippedRecord[k] = srv;
           } else if (loc) {
-            equipped[k] = loc;
+            equippedRecord[k] = loc;
           }
         }
       }

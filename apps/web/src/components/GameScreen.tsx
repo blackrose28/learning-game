@@ -40,15 +40,19 @@ import {
   checkNewAreaUnlocked,
   getCompletedSessionsCount,
   type PlayerRewardsState,
+  type CharacterType,
+  type TargetType,
   loadPlayerRewards,
   savePlayerRewards,
   awardAttemptRewards,
   awardSessionCompleteRewards,
+  switchCharacter,
+  switchTarget,
 } from '@math-archer/learning-engine';
 import './GameScreen.css';
 import { SyncManager, type SyncState } from '../sync';
-import { ArcherGraphic } from './ArcherGraphic';
-import { ArcheryTarget } from './ArcheryTarget';
+import { CharacterGraphic } from './CharacterGraphic';
+import { TargetGraphic } from './TargetGraphic';
 import { ElementalArrowGraphic, ELEMENTAL_PROFILES } from './ElementalArrowGraphic';
 import { RangeBackdrop } from './RangeBackdrop';
 import { WorldMap } from './WorldMap';
@@ -279,6 +283,37 @@ export const GameScreen: React.FC<GameScreenProps> = ({
   const [playerRewards, setPlayerRewards] = useState<PlayerRewardsState>(() =>
     loadPlayerRewards(playerId, storage)
   );
+  const activeCharacter: CharacterType =
+    playerRewards.equippedCosmetics?.character || 'archer';
+  const activeTarget: TargetType =
+    playerRewards.equippedCosmetics?.target || 'archery_target';
+
+  const handleSwitchCharacter = (char: CharacterType) => {
+    if (char === activeCharacter) return;
+    const next = switchCharacter(playerRewards, char);
+    setPlayerRewards(next);
+    savePlayerRewards(next, storage);
+    auth?.apiClient.updatePlayerRewards(next, playerId).catch(() => {});
+    if (char === 'wizard') {
+      audioFx.playMagicCast('fire');
+    } else {
+      audioFx.playBowRelease('fire');
+    }
+  };
+
+  const handleSwitchTarget = (t: TargetType) => {
+    if (t === activeTarget) return;
+    const next = switchTarget(playerRewards, t);
+    setPlayerRewards(next);
+    savePlayerRewards(next, storage);
+    auth?.apiClient.updatePlayerRewards(next, playerId).catch(() => {});
+    if (t === 'dummy') {
+      audioFx.playDummyHit('hit', 'fire');
+    } else {
+      audioFx.playTargetHit('hit', 'fire');
+    }
+  };
+
   const [recentFloatingXp, setRecentFloatingXp] = useState<string | null>(null);
   const [rewardToast, setRewardToast] = useState<string | null>(null);
   const [consecutiveHitsCount, setConsecutiveHitsCount] = useState<number>(0);
@@ -583,7 +618,11 @@ export const GameScreen: React.FC<GameScreenProps> = ({
       });
 
       // Procedural audio effects (Task 9.1 & 9.2)
-      audioFx.playBowRelease(choice.element);
+      if (activeCharacter === 'wizard') {
+        audioFx.playMagicCast(choice.element);
+      } else {
+        audioFx.playBowRelease(choice.element);
+      }
       audioFx.playArrowFlight(choice.element);
 
       const attempt: Attempt = {
@@ -667,6 +706,8 @@ export const GameScreen: React.FC<GameScreenProps> = ({
         wasMissPreceding: lastAttemptWasMiss,
         consecutiveHits: correct ? consecutiveHitsCount + 1 : 0,
         completedSessionsCount: worldProgression.completedSessionsCount,
+        character: activeCharacter,
+        target: activeTarget,
       });
 
       setPlayerRewards(attemptRewards.nextState);
@@ -768,18 +809,26 @@ export const GameScreen: React.FC<GameScreenProps> = ({
         }
       };
 
+      const playImpactSound = () => {
+        if (activeTarget === 'dummy') {
+          audioFx.playDummyHit(outcome, choice.element);
+        } else {
+          audioFx.playTargetHit(outcome, choice.element);
+        }
+      };
+
       if (autoAdvanceDelayMs > 0) {
         if (flightDelay > 0) {
           flightTimerRef.current = setTimeout(() => {
             // Phase 3 & 4: Arrow hits target -> impact reaction and feedback!
             setShotPhase('impact');
             setTargetHitState(outcome);
-            audioFx.playTargetHit(outcome, choice.element);
+            playImpactSound();
           }, flightDelay);
         } else {
           setShotPhase('impact');
           setTargetHitState(outcome);
-          audioFx.playTargetHit(outcome, choice.element);
+          playImpactSound();
         }
 
         // Phase 5: Next question after delay
@@ -787,7 +836,7 @@ export const GameScreen: React.FC<GameScreenProps> = ({
       } else {
         setShotPhase('impact');
         setTargetHitState(outcome);
-        audioFx.playTargetHit(outcome, choice.element);
+        playImpactSound();
         advance();
       }
     },
@@ -1639,13 +1688,59 @@ export const GameScreen: React.FC<GameScreenProps> = ({
             className={`archer-stage archer-header phase-${shotPhase}`}
             data-testid="archer-stage"
           >
+            {/* Quick Hero & Target Switcher Bar */}
+            <div className="range-switcher-bar" data-testid="range-switcher-bar">
+              <div className="switcher-group character-switcher" role="group" aria-label="Hero Selection">
+                <button
+                  type="button"
+                  className={`switcher-pill ${activeCharacter === 'archer' ? 'active' : ''}`}
+                  data-testid="btn-switch-archer"
+                  onClick={() => handleSwitchCharacter('archer')}
+                  title="Play as Archer"
+                >
+                  🏹 Archer
+                </button>
+                <button
+                  type="button"
+                  className={`switcher-pill ${activeCharacter === 'wizard' ? 'active' : ''}`}
+                  data-testid="btn-switch-wizard"
+                  onClick={() => handleSwitchCharacter('wizard')}
+                  title="Play as Wizard"
+                >
+                  🧙‍♂️ Wizard
+                </button>
+              </div>
+
+              <div className="switcher-group target-switcher" role="group" aria-label="Target Selection">
+                <button
+                  type="button"
+                  className={`switcher-pill ${activeTarget === 'archery_target' ? 'active' : ''}`}
+                  data-testid="btn-switch-target"
+                  onClick={() => handleSwitchTarget('archery_target')}
+                  title="Target Board"
+                >
+                  🎯 Target
+                </button>
+                <button
+                  type="button"
+                  className={`switcher-pill ${activeTarget === 'dummy' ? 'active' : ''}`}
+                  data-testid="btn-switch-dummy"
+                  onClick={() => handleSwitchTarget('dummy')}
+                  title="Training Dummy"
+                >
+                  🪵 Dummy
+                </button>
+              </div>
+            </div>
+
             <div
-              className={`archer-character state-${archerState}`}
+              className={`archer-character character-${activeCharacter} state-${archerState}`}
               data-testid="archer-character"
               data-state={archerState}
             >
-              <span className="archer-icon" role="img" aria-label="archer">
-                <ArcherGraphic
+              <span className="archer-icon" role="img" aria-label={activeCharacter}>
+                <CharacterGraphic
+                  character={activeCharacter}
                   state={archerState}
                   element={activeShot?.element}
                   equippedOutfit={playerRewards.equippedCosmetics.outfit}
@@ -1654,21 +1749,25 @@ export const GameScreen: React.FC<GameScreenProps> = ({
               </span>
               {activeShot && shotPhase === 'shooting' && (
                 <span
-                  className={`archer-arrow-nock element-${activeShot.element}`}
+                  className={`archer-arrow-nock element-${activeShot.element} ${activeCharacter === 'wizard' ? 'wizard-spell-spark' : ''}`}
                   data-testid="archer-arrow-nock"
+                  data-character={activeCharacter}
                   aria-hidden="true"
                 >
-                  {ELEMENT_INFO[activeShot.element].icon}
+                  {activeCharacter === 'wizard' ? '✨' : ELEMENT_INFO[activeShot.element].icon}
                 </span>
               )}
             </div>
-            <span className="game-title-badge">Math Archer</span>
+            <span className="game-title-badge">
+              {activeCharacter === 'wizard' ? 'Math Wizard' : 'Math Archer'}
+            </span>
 
-            {/* Flying Elemental Arrow Projectile (Task 3.2, Task 9.1 & Task 9.2 & Task 9.4) */}
+            {/* Flying Elemental Arrow / Spell Projectile */}
             {activeShot && shotPhase !== 'idle' && (
               <div
-                className={`flying-arrow element-${activeShot.element} outcome-${activeShot.outcome} phase-${shotPhase}`}
+                className={`flying-arrow character-${activeCharacter} element-${activeShot.element} outcome-${activeShot.outcome} phase-${shotPhase}`}
                 data-testid="flying-arrow"
+                data-character={activeCharacter}
                 data-element={activeShot.element}
                 data-outcome={activeShot.outcome}
                 data-effect={playerRewards.equippedCosmetics.arrowEffect}
@@ -1676,6 +1775,7 @@ export const GameScreen: React.FC<GameScreenProps> = ({
               >
                 <div
                   className="flying-arrow-trail"
+                  data-character={activeCharacter}
                   data-effect={playerRewards.equippedCosmetics.arrowEffect}
                 />
                 <div className="flying-arrow-body">
@@ -1683,6 +1783,7 @@ export const GameScreen: React.FC<GameScreenProps> = ({
                     element={activeShot.element}
                     variant="projectile"
                     equippedEffect={playerRewards.equippedCosmetics.arrowEffect}
+                    character={activeCharacter}
                   />
                 </div>
               </div>
@@ -1690,7 +1791,9 @@ export const GameScreen: React.FC<GameScreenProps> = ({
           </div>
 
           {/* Target Question Display (Task 9.1 & Task 9.4) */}
-          <ArcheryTarget
+          <TargetGraphic
+            target={activeTarget}
+            character={activeCharacter}
             expression={formatExpression(question)}
             hitState={targetHitState}
             activeElement={activeShot?.element}
@@ -1770,13 +1873,25 @@ export const GameScreen: React.FC<GameScreenProps> = ({
 
         {/* Right Column: Quiver Answer Choices & Progress */}
         <div className="game-quiver-column">
-          {/* 2x2 Elemental Answer Choices - The Archer's Quiver */}
+          {/* 2x2 Elemental Answer Choices - The Archer's Quiver / Wizard's Spellbook */}
           <div className="quiver-section" data-testid="quiver-section">
             <div className="quiver-header" aria-hidden="true">
-              <span className="quiver-badge">🏹 ARCHER'S QUIVER</span>
-              <span className="quiver-hint">Draw an arrow to loose at the target</span>
+              <span className="quiver-badge">
+                {activeCharacter === 'wizard' ? "🔮 WIZARD'S SPELLBOOK" : "🏹 ARCHER'S QUIVER"}
+              </span>
+              <span className="quiver-hint">
+                {activeCharacter === 'wizard'
+                  ? 'Channel a spell to cast at the target'
+                  : 'Draw an arrow to loose at the target'}
+              </span>
             </div>
-            <div className="answers-grid" role="group" aria-label="Elemental arrow choices">
+            <div
+              className="answers-grid"
+              role="group"
+              aria-label={
+                activeCharacter === 'wizard' ? 'Elemental spell choices' : 'Elemental arrow choices'
+              }
+            >
               {question.choices.map((choice, index) => {
                 const isSelected = selectedChoice?.element === choice.element;
                 const isRevealedCorrect =
@@ -1806,7 +1921,7 @@ export const GameScreen: React.FC<GameScreenProps> = ({
                   <button
                     key={`${choice.element}-${choice.value}`}
                     type="button"
-                    className={`arrow-button element-${choice.element} ${stateClass} ${isControllerFocused ? 'controller-focused' : ''}`}
+                    className={`arrow-button character-${activeCharacter} element-${choice.element} ${stateClass} ${isControllerFocused ? 'controller-focused' : ''}`}
                     data-testid={`choice-${choice.element}`}
                     data-element={choice.element}
                     data-arrowhead-shape={profile.arrowheadShape}
@@ -1815,9 +1930,17 @@ export const GameScreen: React.FC<GameScreenProps> = ({
                     data-controller-focus={isControllerFocused ? 'true' : undefined}
                     disabled={isTransitioning}
                     onClick={() => handleSelectChoice(choice)}
-                    aria-label={`${info.label} arrow, value ${choice.value}`}
+                    aria-label={
+                      activeCharacter === 'wizard'
+                        ? `${info.label} spell, value ${choice.value}`
+                        : `${info.label} arrow, value ${choice.value}`
+                    }
                   >
-                    <div className="arrow-fletching-notch" aria-hidden="true" />
+                    {activeCharacter === 'wizard' ? (
+                      <div className="wizard-spell-gem" aria-hidden="true" />
+                    ) : (
+                      <div className="arrow-fletching-notch" aria-hidden="true" />
+                    )}
 
                     {/* Top meta row: element icon, name badge, and input shortcuts */}
                     <div className="arrow-card-header">
@@ -1827,7 +1950,9 @@ export const GameScreen: React.FC<GameScreenProps> = ({
                         </span>
                         <div className="element-label-group">
                           <span className="element-label">{info.label}</span>
-                          <span className="element-type-badge">{profile.name}</span>
+                          <span className="element-type-badge">
+                            {activeCharacter === 'wizard' ? `${info.label} Spell` : profile.name}
+                          </span>
                         </div>
                       </div>
                       <div className="arrow-shortcuts-group">
@@ -1845,7 +1970,11 @@ export const GameScreen: React.FC<GameScreenProps> = ({
                     {/* Central Arrow with BIG number positioned right in the center of the arrow */}
                     <div className="arrow-centerpiece">
                       <div className="arrow-graphic-underlay" aria-hidden="true">
-                        <ElementalArrowGraphic element={choice.element} variant="quiver" />
+                        <ElementalArrowGraphic
+                          element={choice.element}
+                          variant="quiver"
+                          character={activeCharacter}
+                        />
                       </div>
                       <span className="arrow-value">{choice.value}</span>
                     </div>
@@ -1860,8 +1989,11 @@ export const GameScreen: React.FC<GameScreenProps> = ({
             {gameMode === 'adventure' ? (
               <>
                 <div className="progress-text" data-testid="arrow-counter">
-                  <span role="img" aria-label="arrow">
-                    🏹
+                  <span
+                    role="img"
+                    aria-label={activeCharacter === 'wizard' ? 'spell' : 'arrow'}
+                  >
+                    {activeCharacter === 'wizard' ? '🔮' : '🏹'}
                   </span>
                   <span>
                     {arrowIndex} / {maxArrows}
@@ -1877,13 +2009,18 @@ export const GameScreen: React.FC<GameScreenProps> = ({
             ) : (
               <div className="training-progress-row" data-testid="training-progress-row">
                 <div className="progress-text" data-testid="arrow-counter">
-                  <span role="img" aria-label="training">
-                    🏋️
+                  <span
+                    role="img"
+                    aria-label={activeCharacter === 'wizard' ? 'spell practice' : 'training'}
+                  >
+                    {activeCharacter === 'wizard' ? '🔮' : '🏋️'}
                   </span>
                   <span>Practice #{trainingCount + 1}</span>
                 </div>
                 <span className="training-unlimited-badge" data-testid="training-unlimited-badge">
-                  ♾️ Unlimited Arrows (0 Daily Arrows Used)
+                  {activeCharacter === 'wizard'
+                    ? '♾️ Unlimited Spells (0 Daily Spells Used)'
+                    : '♾️ Unlimited Arrows (0 Daily Arrows Used)'}
                 </span>
                 <div className="training-session-stats" data-testid="training-session-stats">
                   Hits: <strong>{trainingHits}</strong> / {trainingCount}

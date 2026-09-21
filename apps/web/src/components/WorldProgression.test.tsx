@@ -3,7 +3,7 @@ import { render, screen, fireEvent, act } from '@testing-library/react';
 import { WorldMap } from './WorldMap';
 import { RangeBackdrop } from './RangeBackdrop';
 import { GameScreen } from './GameScreen';
-import { saveDailySession, type Question } from '@math-archer/learning-engine';
+import { saveDailySession, type Question, type WorldProgressionState } from '@math-archer/learning-engine';
 import { MathArcherApiClient } from '../api/client';
 
 const MOCK_QUESTION: Question = {
@@ -144,7 +144,7 @@ describe('Task 9.3 — World Progression', () => {
         startedAt: `${today}T08:00:00.000Z`,
       });
 
-      let updatedData: any = null;
+      let updatedData: WorldProgressionState | null = null;
       let targetPlayerId: string | undefined = undefined;
 
       const mockApiClient = new MathArcherApiClient({
@@ -169,7 +169,7 @@ describe('Task 9.3 — World Progression', () => {
       fireEvent.click(travelBtn);
 
       expect(updatedData).not.toBeNull();
-      expect(updatedData.activeAreaId).toBe('fire_area');
+      expect((updatedData as WorldProgressionState | null)?.activeAreaId).toBe('fire_area');
       expect(targetPlayerId).toBe('player-test');
     });
   });

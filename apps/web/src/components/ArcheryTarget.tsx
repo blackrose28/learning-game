@@ -1,5 +1,5 @@
 import React from 'react';
-import type { ElementType } from '@math-archer/learning-engine';
+import type { ElementType, CharacterType } from '@math-archer/learning-engine';
 import { ElementalArrowGraphic } from './ElementalArrowGraphic';
 import { getArrowEffectVisual } from './arrowEffects';
 
@@ -9,6 +9,7 @@ export interface ArcheryTargetProps {
   activeElement?: ElementType | null;
   className?: string;
   equippedEffect?: string;
+  character?: CharacterType;
 }
 
 export const ArcheryTarget: React.FC<ArcheryTargetProps> = ({
@@ -17,6 +18,7 @@ export const ArcheryTarget: React.FC<ArcheryTargetProps> = ({
   activeElement,
   className = '',
   equippedEffect = 'arrow_effect_classic',
+  character = 'archer',
 }) => {
   const effectVisual = getArrowEffectVisual(equippedEffect);
 
@@ -37,12 +39,15 @@ export const ArcheryTarget: React.FC<ArcheryTargetProps> = ({
         hitState === 'hit' ? 'target-impact-hit' : hitState === 'miss' ? 'target-impact-miss' : ''
       } ${className}`}
       data-testid="target-card"
+      data-target-type="archery_target"
       data-hit-state={hitState}
       data-effect={equippedEffect}
-      style={{
-        ['--effect-primary' as any]: effectVisual.primaryColor,
-        ['--effect-glow' as any]: effectVisual.glowColor,
-      }}
+      style={
+        {
+          '--effect-primary': effectVisual.primaryColor,
+          '--effect-glow': effectVisual.glowColor,
+        } as React.CSSProperties
+      }
     >
       {/* Wooden Archery Stand Tripod Backdrop */}
       <div className="target-stand" aria-hidden="true">
@@ -156,6 +161,7 @@ export const ArcheryTarget: React.FC<ArcheryTargetProps> = ({
               element={activeElement || 'fire'}
               variant="embedded"
               equippedEffect={equippedEffect}
+              character={character}
             />
           </div>
         )}
