@@ -283,14 +283,19 @@ export const GameScreen: React.FC<GameScreenProps> = ({
   const [playerRewards, setPlayerRewards] = useState<PlayerRewardsState>(() =>
     loadPlayerRewards(playerId, storage)
   );
+  const playerRewardsRef = useRef<PlayerRewardsState>(playerRewards);
+  playerRewardsRef.current = playerRewards;
+
   const activeCharacter: CharacterType =
     playerRewards.equippedCosmetics?.character || 'archer';
   const activeTarget: TargetType =
     playerRewards.equippedCosmetics?.target || 'archery_target';
 
   const handleSwitchCharacter = (char: CharacterType) => {
-    if (char === activeCharacter) return;
-    const next = switchCharacter(playerRewards, char);
+    const current = playerRewardsRef.current;
+    if (char === current.equippedCosmetics?.character) return;
+    const next = switchCharacter(current, char);
+    playerRewardsRef.current = next;
     setPlayerRewards(next);
     savePlayerRewards(next, storage);
     auth?.apiClient.updatePlayerRewards(next, playerId).catch(() => {});
@@ -302,8 +307,10 @@ export const GameScreen: React.FC<GameScreenProps> = ({
   };
 
   const handleSwitchTarget = (t: TargetType) => {
-    if (t === activeTarget) return;
-    const next = switchTarget(playerRewards, t);
+    const current = playerRewardsRef.current;
+    if (t === current.equippedCosmetics?.target) return;
+    const next = switchTarget(current, t);
+    playerRewardsRef.current = next;
     setPlayerRewards(next);
     savePlayerRewards(next, storage);
     auth?.apiClient.updatePlayerRewards(next, playerId).catch(() => {});
@@ -617,8 +624,12 @@ export const GameScreen: React.FC<GameScreenProps> = ({
         outcome,
       });
 
+      const currentRewards = playerRewardsRef.current;
+      const currentChar = currentRewards.equippedCosmetics?.character || 'archer';
+      const currentTarget = currentRewards.equippedCosmetics?.target || 'archery_target';
+
       // Procedural audio effects (Task 9.1 & 9.2)
-      if (activeCharacter === 'wizard') {
+      if (currentChar === 'wizard') {
         audioFx.playMagicCast(choice.element);
       } else {
         audioFx.playBowRelease(choice.element);
@@ -698,7 +709,7 @@ export const GameScreen: React.FC<GameScreenProps> = ({
       // Task 9.4 Rewards: Award attempt XP & evaluate achievements
       const isMake10 = isMake10Eligible(question);
       const isDoubles = question.left === question.right && question.operation === 'add';
-      const attemptRewards = awardAttemptRewards(playerRewards, {
+      const attemptRewards = awardAttemptRewards(currentRewards, {
         isCorrect: correct,
         isMake10,
         isDoubles,
@@ -706,10 +717,11 @@ export const GameScreen: React.FC<GameScreenProps> = ({
         wasMissPreceding: lastAttemptWasMiss,
         consecutiveHits: correct ? consecutiveHitsCount + 1 : 0,
         completedSessionsCount: worldProgression.completedSessionsCount,
-        character: activeCharacter,
-        target: activeTarget,
+        character: currentChar,
+        target: currentTarget,
       });
 
+      playerRewardsRef.current = attemptRewards.nextState;
       setPlayerRewards(attemptRewards.nextState);
       savePlayerRewards(attemptRewards.nextState, storage);
       auth?.apiClient.updatePlayerRewards(attemptRewards.nextState, playerId).catch(() => {});
@@ -760,6 +772,7 @@ export const GameScreen: React.FC<GameScreenProps> = ({
             hitsInSession: currentSession.hits,
             totalArrowsInSession: currentSession.arrowsUsed,
           });
+          playerRewardsRef.current = sessionRewards.nextState;
           setPlayerRewards(sessionRewards.nextState);
           savePlayerRewards(sessionRewards.nextState, storage);
           auth?.apiClient.updatePlayerRewards(sessionRewards.nextState, playerId).catch(() => {});
@@ -810,7 +823,9 @@ export const GameScreen: React.FC<GameScreenProps> = ({
       };
 
       const playImpactSound = () => {
-        if (activeTarget === 'dummy') {
+        const targetToPlay =
+          playerRewardsRef.current.equippedCosmetics?.target || 'archery_target';
+        if (targetToPlay === 'dummy') {
           audioFx.playDummyHit(outcome, choice.element);
         } else {
           audioFx.playTargetHit(outcome, choice.element);
@@ -859,6 +874,14 @@ export const GameScreen: React.FC<GameScreenProps> = ({
       highestHintLevelUsed,
       gameMode,
       selectedTrainingSkill,
+      playerRewards,
+      activeCharacter,
+      activeTarget,
+      worldProgression,
+      consecutiveHitsCount,
+      lastAttemptWasMiss,
+      playerId,
+      auth,
     ]
   );
 

@@ -351,5 +351,65 @@ describe('Wizard & Training Dummy Presentation', () => {
 
       vi.useRealTimers();
     });
+
+    it('persists Wizard character and Dummy target across question advances and does NOT revert to Archer', () => {
+      vi.useFakeTimers();
+
+      render(
+        <GameScreen
+          initialQuestion={mockQuestion}
+          maxArrows={10}
+          autoAdvanceDelayMs={400}
+          shotFlightDurationMs={100}
+        />
+      );
+
+      // Switch to Wizard and Dummy
+      act(() => {
+        fireEvent.click(screen.getByTestId('btn-switch-wizard'));
+        fireEvent.click(screen.getByTestId('btn-switch-dummy'));
+      });
+
+      expect(screen.getByTestId('wizard-graphic')).toBeInTheDocument();
+      expect(screen.getByTestId('target-card')).toHaveAttribute('data-target-type', 'dummy');
+
+      // Answer Question 1 (cast fire spell)
+      act(() => {
+        fireEvent.click(screen.getByTestId('choice-fire'));
+      });
+
+      // Advance through flight and auto-advance delay (100ms flight + 400ms delay = 500ms)
+      act(() => {
+        vi.advanceTimersByTime(500);
+      });
+
+      // Question 2 has arrived: verify Wizard and Dummy remain active!
+      expect(screen.getByTestId('wizard-graphic')).toBeInTheDocument();
+      expect(screen.getByTestId('target-card')).toHaveAttribute('data-target-type', 'dummy');
+      expect(screen.getByRole('group', { name: /Elemental spell choices/i })).toBeInTheDocument();
+      expect(screen.getByTestId('btn-switch-wizard')).toHaveClass('active');
+      expect(screen.getByTestId('btn-switch-dummy')).toHaveClass('active');
+
+      // Answer Question 2 (cast another spell)
+      const spellButtons = screen.getAllByRole('button');
+      const firstSpell = spellButtons.find((btn) => btn.className.includes('arrow-button'));
+      expect(firstSpell).toHaveClass('character-wizard');
+
+      act(() => {
+        fireEvent.click(firstSpell!);
+      });
+
+      // Advance through flight and auto-advance again
+      act(() => {
+        vi.advanceTimersByTime(500);
+      });
+
+      // Still Wizard and Dummy on Question 3!
+      expect(screen.getByTestId('wizard-graphic')).toBeInTheDocument();
+      expect(screen.getByTestId('target-card')).toHaveAttribute('data-target-type', 'dummy');
+      expect(screen.getByRole('group', { name: /Elemental spell choices/i })).toBeInTheDocument();
+
+      vi.useRealTimers();
+    });
   });
 });

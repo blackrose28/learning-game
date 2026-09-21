@@ -466,6 +466,12 @@ export function awardAttemptRewards(
     tryUnlockAch('ach_wardrobe_25');
   }
 
+  const updatedEquipped: EquippedCosmetics = {
+    ...currentState.equippedCosmetics,
+    character: activeChar,
+    target: activeTarget,
+  };
+
   const nextState: PlayerRewardsState = {
     ...currentState,
     totalXp: newTotalXp,
@@ -473,7 +479,8 @@ export function awardAttemptRewards(
     currentLevelXp: newLevelInfo.currentLevelXp,
     nextLevelXp: newLevelInfo.nextLevelXp,
     levelProgressPct: newLevelInfo.levelProgressPct,
-    levelTitle: newLevelInfo.title,
+    levelTitle: getLevelTitle(newLevelInfo.level, activeChar),
+    equippedCosmetics: updatedEquipped,
     unlockedCosmeticIds: Array.from(
       new Set([...currentState.unlockedCosmeticIds, ...allUnlockedCosmetics])
     ),
@@ -644,6 +651,13 @@ export function awardSessionCompleteRewards(
   if (allUnlockedCosmetics.length >= 25) tryUnlockAch('ach_wardrobe_25');
 
   const tomorrowReward = getDefaultTomorrowReward(nextStreak, newLevelInfo.level);
+  const activeChar = currentState.equippedCosmetics?.character || 'archer';
+  const activeTarget = currentState.equippedCosmetics?.target || 'archery_target';
+  const updatedEquipped: EquippedCosmetics = {
+    ...currentState.equippedCosmetics,
+    character: activeChar,
+    target: activeTarget,
+  };
 
   const nextState: PlayerRewardsState = {
     ...currentState,
@@ -652,7 +666,8 @@ export function awardSessionCompleteRewards(
     currentLevelXp: newLevelInfo.currentLevelXp,
     nextLevelXp: newLevelInfo.nextLevelXp,
     levelProgressPct: newLevelInfo.levelProgressPct,
-    levelTitle: newLevelInfo.title,
+    levelTitle: getLevelTitle(newLevelInfo.level, activeChar),
+    equippedCosmetics: updatedEquipped,
     currentStreak: nextStreak,
     bestStreak: nextBestStreak,
     lastActiveDate: todayDate,
