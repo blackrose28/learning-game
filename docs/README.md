@@ -36,7 +36,7 @@ pnpm db:migrate
 # Start backend Worker API (http://localhost:8787)
 pnpm dev:api
 
-# Start web app (http://localhost:5173)
+# Start web app (http://localhost:3010)
 pnpm dev
 
 # Run unit tests across all packages
