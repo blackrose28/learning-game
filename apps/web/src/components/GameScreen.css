@@ -266,11 +266,11 @@
 }
 
 .archer-character.state-released {
-  animation: bow-recoil 0.35s cubic-bezier(0.2, 1.4, 0.4, 1);
+  animation: bow-recoil 0.7s cubic-bezier(0.2, 1.4, 0.4, 1);
 }
 
 .archer-character.character-wizard.state-released {
-  animation: wizard-cast-pulse 0.4s cubic-bezier(0.2, 1.4, 0.4, 1);
+  animation: wizard-cast-pulse 0.8s cubic-bezier(0.2, 1.4, 0.4, 1);
 }
 
 @keyframes wizard-cast-pulse {
@@ -354,11 +354,11 @@
   top: 10px;
   right: -8px;
   font-size: 20px;
-  animation: nock-pulse 0.2s ease-out;
+  animation: nock-pulse 0.4s ease-out;
 }
 
 .wizard-spell-spark {
-  animation: wizard-spark-burst 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  animation: wizard-spark-burst 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
   filter: drop-shadow(0 0 8px currentColor);
 }
 
@@ -842,7 +842,7 @@
   opacity: 0.8;
   filter: drop-shadow(0 0 6px currentColor);
   pointer-events: none;
-  animation: arrow-trail-pulse 0.22s ease-out infinite alternate;
+  animation: arrow-trail-pulse 0.44s ease-out infinite alternate;
 }
 
 @keyframes arrow-trail-pulse {
@@ -861,7 +861,7 @@
   height: 50px;
   background: linear-gradient(to top, currentColor 0%, rgba(255, 255, 255, 0.95) 40%, transparent 100%);
   filter: drop-shadow(0 0 12px currentColor);
-  animation: wizard-trail-pulse 0.18s ease-in-out infinite alternate;
+  animation: wizard-trail-pulse 0.5s ease-in-out infinite alternate;
 }
 
 @keyframes wizard-trail-pulse {
@@ -992,11 +992,11 @@
 
 /* Flying Trajectory Animations */
 .flying-arrow.outcome-hit {
-  animation: fly-straight-to-target 0.22s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+  animation: fly-straight-to-target var(--shot-flight-duration, 1000ms) linear forwards;
 }
 
 .flying-arrow.outcome-miss {
-  animation: fly-miss-target 0.24s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+  animation: fly-miss-target var(--shot-flight-duration, 1000ms) linear forwards;
 }
 
 @keyframes fly-straight-to-target {

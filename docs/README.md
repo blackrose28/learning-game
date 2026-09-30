@@ -49,6 +49,30 @@ pnpm build
 pnpm lint
 ```
 
+## Automatic deployment
+
+The [Check and deploy workflow](../.github/workflows/deploy.yml) builds all
+packages and runs the tests for pull requests and pushes to `main`. A successful
+push to `main` then deploys the tested frontend and API together using Wrangler
+to [learn.chuonglv.site](https://learn.chuonglv.site). Local commits do not deploy
+until they are pushed. Pull requests run checks without deploying.
+
+Before the first deployment, add these repository secrets in GitHub under
+**Settings → Secrets and variables → Actions → New repository secret**:
+
+| Secret                  | Value                                                                                                                                                                                      |
+| ----------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `CLOUDFLARE_API_TOKEN`  | A Cloudflare API token with Account / Workers Scripts / Edit and Account / D1 / Edit for the game's account, plus Zone / Workers Routes / Edit and Zone / Zone / Read for `chuonglv.site`. |
+| `CLOUDFLARE_ACCOUNT_ID` | The Cloudflare account ID that owns the `math-archer` Worker and `math-archer-db` database.                                                                                                |
+
+Wrangler uses the existing custom domain and D1 binding in
+`apps/api/wrangler.jsonc`. Database migrations are a separate operation;
+apply any required schema changes with `pnpm db:migrate:remote` before deploying
+code that needs them. Existing Worker secrets remain managed in Cloudflare.
+
+To redeploy `main` without a new commit, open **Actions → Check and deploy → Run
+workflow** and select `main`. Check the run's summary for the live URL.
+
 ## Architecture & Roadmap
 
 - **[math-archer-plan.md](../math-archer-plan.md)**: Comprehensive game specifications, curriculum levels, and multi-phase roadmap.

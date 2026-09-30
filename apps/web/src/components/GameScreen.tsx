@@ -88,7 +88,8 @@ export interface GameScreenProps {
 
   /**
    * Delay in milliseconds before advancing to the next question after an answer is chosen.
-   * Defaults to 750ms. Set to 0 in tests for synchronous transitions.
+   * Defaults to 2400ms so children can follow the shot and read the feedback.
+   * Set to 0 in tests for synchronous transitions.
    */
   autoAdvanceDelayMs?: number;
 
@@ -98,8 +99,9 @@ export interface GameScreenProps {
   initialArrowIndex?: number;
 
   /**
-   * Optional flight duration in milliseconds for the arrow projectile.
-   * If omitted, defaults to min(250, autoAdvanceDelayMs * 0.35).
+   * Optional flight duration in milliseconds for arrows and spells.
+   * If omitted, defaults to min(1000, max(50, floor(autoAdvanceDelayMs * 0.42))).
+   * A zero auto-advance delay skips flight for synchronous transitions.
    */
   shotFlightDurationMs?: number;
 
@@ -222,7 +224,7 @@ export const GameScreen: React.FC<GameScreenProps> = ({
   mode = 'adventure',
   initialProfile,
   maxArrows = 50,
-  autoAdvanceDelayMs = 750,
+  autoAdvanceDelayMs = 2400,
   initialArrowIndex = 1,
   shotFlightDurationMs,
   storage,
@@ -242,6 +244,13 @@ export const GameScreen: React.FC<GameScreenProps> = ({
   initialAreaId,
   onAreaChange,
 }) => {
+  // Share the same duration between projectile motion and the impact timer.
+  const shotFlightMs =
+    autoAdvanceDelayMs > 0
+      ? (shotFlightDurationMs ??
+        Math.min(1000, Math.max(50, Math.floor(autoAdvanceDelayMs * 0.42))))
+      : 0;
+
   // Test Controlled Profile switcher toolbar must be hidden in production and only show in dev
   const isDev = Boolean(import.meta.env?.DEV);
   const shouldShowProfileSelector = isDev && showProfileSelector;
@@ -745,13 +754,6 @@ export const GameScreen: React.FC<GameScreenProps> = ({
         setRewardToast(`🏆 Achievement: ${ach.title}! (+${ach.xpReward} XP)`);
       }
 
-      const flightDelay =
-        autoAdvanceDelayMs > 0
-          ? shotFlightDurationMs !== undefined
-            ? shotFlightDurationMs
-            : Math.min(250, Math.max(50, Math.floor(autoAdvanceDelayMs * 0.35)))
-          : 0;
-
       const advance = () => {
         if (gameMode === 'adventure' && shouldComplete) {
           const prevCompletedCount = worldProgression.completedSessionsCount;
@@ -833,13 +835,13 @@ export const GameScreen: React.FC<GameScreenProps> = ({
       };
 
       if (autoAdvanceDelayMs > 0) {
-        if (flightDelay > 0) {
+        if (shotFlightMs > 0) {
           flightTimerRef.current = setTimeout(() => {
             // Phase 3 & 4: Arrow hits target -> impact reaction and feedback!
             setShotPhase('impact');
             setTargetHitState(outcome);
             playImpactSound();
-          }, flightDelay);
+          }, shotFlightMs);
         } else {
           setShotPhase('impact');
           setTargetHitState(outcome);
@@ -865,7 +867,7 @@ export const GameScreen: React.FC<GameScreenProps> = ({
       storage,
       maxArrows,
       autoAdvanceDelayMs,
-      shotFlightDurationMs,
+      shotFlightMs,
       onAnswerSubmit,
       onNextQuestion,
       onSessionComplete,
@@ -1794,6 +1796,7 @@ export const GameScreen: React.FC<GameScreenProps> = ({
                 data-element={activeShot.element}
                 data-outcome={activeShot.outcome}
                 data-effect={playerRewards.equippedCosmetics.arrowEffect}
+                style={{ '--shot-flight-duration': `${shotFlightMs}ms` } as React.CSSProperties}
                 aria-hidden="true"
               >
                 <div
