@@ -3,6 +3,7 @@ import type {
   DailySession,
   SkillProfile,
   Skill,
+  AnimationSpeed,
   AttemptSummaryStats,
   PracticeRecommendation,
   WorldProgressionState,
@@ -18,6 +19,7 @@ export interface ParentPublic {
 
 export interface ChildPublicProfile {
   disabledSkills?: Skill[];
+  animationSpeed?: AnimationSpeed;
   id: string;
   name: string;
   avatar: string;
@@ -321,6 +323,7 @@ export class MathArcherApiClient {
       avatar?: string;
       grade?: string;
       disabledSkills?: Skill[];
+      animationSpeed?: AnimationSpeed;
     }
   ): Promise<{ child: ChildPublicProfile }> {
     const res = await this.fetchFn(

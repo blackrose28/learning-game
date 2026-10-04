@@ -992,11 +992,11 @@
 
 /* Flying Trajectory Animations */
 .flying-arrow.outcome-hit {
-  animation: fly-straight-to-target 0.22s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+  animation: fly-straight-to-target var(--shot-flight-duration, 250ms) cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
 }
 
 .flying-arrow.outcome-miss {
-  animation: fly-miss-target 0.24s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+  animation: fly-miss-target var(--shot-flight-duration, 250ms) cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
 }
 
 @keyframes fly-straight-to-target {

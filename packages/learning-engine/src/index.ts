@@ -10,6 +10,7 @@ export * from './history';
 export * from './dashboard';
 export * from './world';
 export * from './rewards';
+export * from './gameSpeed';
 
 export interface EngineInfo {
   name: string;

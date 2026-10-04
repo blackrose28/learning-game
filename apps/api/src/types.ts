@@ -2,6 +2,7 @@ import type {
   Attempt,
   SkillProfile,
   Skill,
+  AnimationSpeed,
   DailySession,
   AttemptSummaryStats,
   PracticeRecommendation,
@@ -33,6 +34,7 @@ export interface ParentPublic {
 
 export interface ChildProfileRecord {
   disabled_skills?: string;
+  animation_speed?: AnimationSpeed;
   id: string;
   name: string;
   parent_id?: string | null;
@@ -45,6 +47,7 @@ export interface ChildProfileRecord {
 
 export interface ChildPublicProfile {
   disabledSkills?: Skill[];
+  animationSpeed?: AnimationSpeed;
   id: string;
   name: string;
   avatar: string;
@@ -125,6 +128,7 @@ export interface ParentCreateChildRequest {
 
 export interface ParentUpdateChildRequest {
   disabledSkills?: Skill[];
+  animationSpeed?: AnimationSpeed;
   name?: string;
   pin?: string;
   avatar?: string;

@@ -92,3 +92,20 @@ applies it in production before deploying; for manual deployment, run
 `pnpm db:migrate:remote` first. Existing
 children start with all skills on. Cloud preferences are included in child
 profiles, so they also apply when the child logs in on another device.
+
+## Per-child animation speed
+
+In Parent Dashboard, select a child and choose **Fast**, **Normal**, or **Slow**
+under **Animation speed**. Changes save automatically to that child’s profile
+and sync across devices. All characters use the selected speed for projectile
+flight and the pause before the next question. Existing and new children default
+to Fast.
+
+| Speed  | Projectile flight | Next question after answer |
+| ------ | ----------------- | -------------------------- |
+| Fast   | 250 ms            | 750 ms                     |
+| Normal | 500 ms            | 1400 ms                    |
+| Slow   | 1000 ms           | 2400 ms                    |
+
+Migration `0005_animation_speed.sql` stores the preference; the deployment workflow
+applies it before deploying the API and frontend.

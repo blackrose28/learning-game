@@ -924,3 +924,19 @@
   height: 20px;
   accent-color: #2563eb;
 }
+
+.animation-speed-control {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  font-weight: 600;
+}
+.animation-speed-control select {
+  min-height: 44px;
+  padding: 0.5rem 1rem;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  font: inherit;
+  background: white;
+  color: #0f172a;
+}

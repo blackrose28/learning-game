@@ -1,6 +1,9 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import {
   getAllSkills,
+  ANIMATION_SPEEDS,
+  isAnimationSpeed,
+  type AnimationSpeed,
   type Skill,
   loadParentDashboard,
   computeParentDashboardData,
@@ -17,6 +20,7 @@ import { useSafeAuth } from '../context/AuthContext';
 import { hydratePlayerProgress } from '../sync';
 import type { ChildPublicProfile, MathArcherApiClient } from '../api/client';
 import { loadDisabledSkills, saveDisabledSkills } from '../skillPreferences';
+import { loadAnimationSpeed, saveAnimationSpeed } from '../speedPreferences';
 import './ParentDashboard.css';
 
 export interface ParentDashboardProps {
@@ -273,6 +277,43 @@ export const ParentDashboard: React.FC<ParentDashboardProps> = ({
     setLocalDisabledSkills(loadDisabledSkills(effectivePlayerId, storageAdapter));
     setSkillFeedback(null);
   }, [effectivePlayerId, storageAdapter]);
+
+  const [localAnimationSpeed, setLocalAnimationSpeed] = useState<AnimationSpeed>(() =>
+    loadAnimationSpeed(effectivePlayerId, storageAdapter)
+  );
+  const [isSavingSpeed, setIsSavingSpeed] = useState(false);
+  const [speedFeedback, setSpeedFeedback] = useState<string | null>(null);
+  const animationSpeed = selectedChildObj?.animationSpeed ?? localAnimationSpeed;
+  useEffect(() => {
+    setLocalAnimationSpeed(loadAnimationSpeed(effectivePlayerId, storageAdapter));
+    setSpeedFeedback(null);
+  }, [effectivePlayerId, storageAdapter]);
+
+  const changeAnimationSpeed = async (next: AnimationSpeed) => {
+    const targetId = effectivePlayerId;
+    setIsSavingSpeed(true);
+    setSpeedFeedback(null);
+    try {
+      if (authContext) {
+        await authContext.updateChild(targetId, { animationSpeed: next });
+      } else if (activeApiClient) {
+        await activeApiClient.updateChildProfile(targetId, { animationSpeed: next });
+      }
+      saveAnimationSpeed(targetId, next, storageAdapter);
+      if (currentChildRef.current === targetId) {
+        setLocalAnimationSpeed(next);
+        setSpeedFeedback('Animation speed saved.');
+      }
+    } catch (err) {
+      if (currentChildRef.current === targetId) {
+        setSpeedFeedback(
+          err instanceof Error ? err.message : 'Unable to save speed. Please try again.'
+        );
+      }
+    } finally {
+      setIsSavingSpeed(false);
+    }
+  };
 
   const toggleSkill = async (skill: Skill) => {
     const targetId = effectivePlayerId;
@@ -780,6 +821,34 @@ export const ParentDashboard: React.FC<ParentDashboardProps> = ({
         </div>
       )}
 
+      <section className="practice-skills-panel" aria-labelledby="animation-speed-title">
+        <h2 id="animation-speed-title">Animation speed</h2>
+        <p>
+          Choose how quickly arrows, spells, and other projectiles fly for{' '}
+          {selectedChildObj?.name || 'this child'}, and how soon the next question appears.
+        </p>
+        <label className="animation-speed-control">
+          Speed
+          <select
+            aria-label="Animation speed"
+            value={animationSpeed}
+            disabled={useSample || isSavingSpeed || isHydrating || isSavingSkills}
+            onChange={(event) => {
+              const value = event.target.value;
+              if (isAnimationSpeed(value)) void changeAnimationSpeed(value);
+            }}
+          >
+            {Object.entries(ANIMATION_SPEEDS).map(([value, preset]) => (
+              <option key={value} value={value}>
+                {preset.label}
+              </option>
+            ))}
+          </select>
+        </label>
+        {useSample && <p>Switch to real data to change animation speed.</p>}
+        {speedFeedback && <p role="status">{speedFeedback}</p>}
+      </section>
+
       <section className="practice-skills-panel" aria-labelledby="practice-skills-title">
         <h2 id="practice-skills-title">Practice skills</h2>
         <p>
@@ -804,6 +873,7 @@ export const ParentDashboard: React.FC<ParentDashboardProps> = ({
                     disabled={
                       useSample ||
                       isSavingSkills ||
+                      isSavingSpeed ||
                       isHydrating ||
                       (enabled && disabledSkills.length === getAllSkills().length - 1)
                     }

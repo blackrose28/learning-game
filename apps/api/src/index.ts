@@ -1,3 +1,4 @@
+import { isAnimationSpeed } from '@math-archer/learning-engine';
 import type {
   Env,
   ErrorResponse,
@@ -359,6 +360,7 @@ export default {
               avatar: childRecord.avatar || 'archer-1',
               grade: childRecord.grade || '1st Grade',
               disabledSkills: JSON.parse(childRecord.disabled_skills || '[]'),
+              animationSpeed: childRecord.animation_speed || 'fast',
               parentId,
               hasPin: Boolean(childRecord.pin && childRecord.pin.trim()),
             },
@@ -402,6 +404,7 @@ export default {
                   avatar: child.avatar,
                   grade: child.grade,
                   disabledSkills: JSON.parse(child.disabled_skills || '[]'),
+                  animationSpeed: child.animation_speed || 'fast',
                   parentId: child.parent_id ?? undefined,
                   hasPin: Boolean(child.pin),
                 }
@@ -479,6 +482,9 @@ export default {
             return errorResponse('MALFORMED_JSON', 'Request body must be valid JSON', 400);
           }
 
+          if (body.animationSpeed !== undefined && !isAnimationSpeed(body.animationSpeed)) {
+            return errorResponse('INVALID_SPEED', 'Choose Fast, Normal, or Slow', 400);
+          }
           if (body.disabledSkills !== undefined) {
             const skills = getAllSkills().map((s) => s.id);
             if (

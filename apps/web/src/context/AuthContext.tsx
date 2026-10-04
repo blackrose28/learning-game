@@ -1,4 +1,4 @@
-import type { Skill } from '@math-archer/learning-engine';
+import type { Skill, AnimationSpeed } from '@math-archer/learning-engine';
 import React, { createContext, useContext, useState, useEffect, useCallback, useMemo } from 'react';
 import {
   MathArcherApiClient,
@@ -54,6 +54,7 @@ export interface AuthContextValue {
       avatar?: string;
       grade?: string;
       disabledSkills?: Skill[];
+      animationSpeed?: AnimationSpeed;
     }
   ) => Promise<ChildPublicProfile>;
   deleteChild: (childId: string) => Promise<boolean>;
@@ -158,6 +159,7 @@ export const AuthProvider: React.FC<{
           matching.avatar !== current.avatar ||
           matching.grade !== current.grade ||
           matching.hasPin !== current.hasPin ||
+          matching.animationSpeed !== current.animationSpeed ||
           JSON.stringify(matching.disabledSkills ?? []) !==
             JSON.stringify(current.disabledSkills ?? []) ||
           matching.parentId !== current.parentId
@@ -541,6 +543,7 @@ export const AuthProvider: React.FC<{
         avatar?: string;
         grade?: string;
         disabledSkills?: Skill[];
+        animationSpeed?: AnimationSpeed;
       }
     ): Promise<ChildPublicProfile> => {
       setIsLoading(true);
@@ -552,8 +555,12 @@ export const AuthProvider: React.FC<{
         setIsLoading(false);
         return res.child;
       } catch (err: unknown) {
-        if (err instanceof ApiError || data.disabledSkills !== undefined) {
-          setError(err instanceof Error ? err.message : 'Unable to save practice skills');
+        if (
+          err instanceof ApiError ||
+          data.disabledSkills !== undefined ||
+          data.animationSpeed !== undefined
+        ) {
+          setError(err instanceof Error ? err.message : 'Unable to save child preferences');
           setIsLoading(false);
           throw err;
         }

@@ -1,4 +1,4 @@
-import { CHARACTER_PROFILES } from '@math-archer/learning-engine';
+import { ANIMATION_SPEEDS, CHARACTER_PROFILES } from '@math-archer/learning-engine';
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import {
   type Question,
@@ -51,6 +51,7 @@ import {
   switchTarget,
 } from '@math-archer/learning-engine';
 import { loadDisabledSkills, enabledSkills } from '../skillPreferences';
+import { loadAnimationSpeed } from '../speedPreferences';
 import './GameScreen.css';
 import { SyncManager, type SyncState } from '../sync';
 import { CharacterGraphic } from './CharacterGraphic';
@@ -90,7 +91,7 @@ export interface GameScreenProps {
 
   /**
    * Delay in milliseconds before advancing to the next question after an answer is chosen.
-   * Defaults to 750ms. Set to 0 in tests for synchronous transitions.
+   * Defaults to the child’s speed preference (750ms for Fast). Set to 0 in tests for synchronous transitions.
    */
   autoAdvanceDelayMs?: number;
 
@@ -101,7 +102,7 @@ export interface GameScreenProps {
 
   /**
    * Optional flight duration in milliseconds for the arrow projectile.
-   * If omitted, defaults to min(250, autoAdvanceDelayMs * 0.35).
+   * Defaults to the child’s speed preference. Explicit auto-advance delays keep proportional flight timing.
    */
   shotFlightDurationMs?: number;
 
@@ -224,7 +225,7 @@ export const GameScreen: React.FC<GameScreenProps> = ({
   mode = 'adventure',
   initialProfile,
   maxArrows = 50,
-  autoAdvanceDelayMs = 750,
+  autoAdvanceDelayMs: autoAdvanceDelayOverride,
   initialArrowIndex = 1,
   shotFlightDurationMs,
   storage,
@@ -254,6 +255,16 @@ export const GameScreen: React.FC<GameScreenProps> = ({
   const childPreferences =
     auth?.availableChildren.find((c) => c.id === playerId) ??
     (auth?.activeChild.id === playerId ? auth.activeChild : undefined);
+  const speed = childPreferences?.animationSpeed ?? loadAnimationSpeed(playerId, storage);
+  const timings = ANIMATION_SPEEDS[speed];
+  const autoAdvanceDelayMs = autoAdvanceDelayOverride ?? timings.advanceMs;
+  const flightDelay =
+    autoAdvanceDelayMs > 0
+      ? (shotFlightDurationMs ??
+        (autoAdvanceDelayOverride !== undefined
+          ? Math.min(250, Math.max(50, Math.floor(autoAdvanceDelayMs * 0.35)))
+          : timings.flightMs))
+      : 0;
   const enabledKey = enabledSkills(
     childPreferences?.disabledSkills ?? loadDisabledSkills(playerId, storage)
   ).join(',');
@@ -793,13 +804,6 @@ export const GameScreen: React.FC<GameScreenProps> = ({
         setRewardToast(`🏆 Achievement: ${ach.title}! (+${ach.xpReward} XP)`);
       }
 
-      const flightDelay =
-        autoAdvanceDelayMs > 0
-          ? shotFlightDurationMs !== undefined
-            ? shotFlightDurationMs
-            : Math.min(250, Math.max(50, Math.floor(autoAdvanceDelayMs * 0.35)))
-          : 0;
-
       const advance = () => {
         if (gameMode === 'adventure' && shouldComplete) {
           const prevCompletedCount = worldProgression.completedSessionsCount;
@@ -912,7 +916,7 @@ export const GameScreen: React.FC<GameScreenProps> = ({
       storage,
       maxArrows,
       autoAdvanceDelayMs,
-      shotFlightDurationMs,
+      flightDelay,
       onAnswerSubmit,
       onNextQuestion,
       onSessionComplete,
@@ -1863,6 +1867,7 @@ export const GameScreen: React.FC<GameScreenProps> = ({
               <div
                 className={`flying-arrow character-${activeCharacter} element-${activeShot.element} outcome-${activeShot.outcome} phase-${shotPhase}`}
                 data-testid="flying-arrow"
+                style={{ '--shot-flight-duration': `${flightDelay}ms` } as React.CSSProperties}
                 data-character={activeCharacter}
                 data-element={activeShot.element}
                 data-outcome={activeShot.outcome}
@@ -2471,4 +2476,3 @@ export const GameScreen: React.FC<GameScreenProps> = ({
     </main>
   );
 };
-
