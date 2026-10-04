@@ -10,7 +10,7 @@ import {
   type Skill,
   type SelectionCategory,
   createEmptyProfile,
-  selectNextQuestionWithDistractors,
+  selectNextQuestionWithDistractors as selectQuestion,
   recordAttempt,
   formatExpression,
   startDailySession,
@@ -49,6 +49,7 @@ import {
   switchCharacter,
   switchTarget,
 } from '@math-archer/learning-engine';
+import { loadDisabledSkills, enabledSkills } from '../skillPreferences';
 import './GameScreen.css';
 import { SyncManager, type SyncState } from '../sync';
 import { CharacterGraphic } from './CharacterGraphic';
@@ -258,6 +259,23 @@ export const GameScreen: React.FC<GameScreenProps> = ({
   // Game mode (Adventure vs Training, Task 4.2 & Task 4.3)
   const [gameMode, setGameMode] = useState<GameMode>(mode);
   const auth = useSafeAuth();
+  const childPreferences =
+    auth?.availableChildren.find((c) => c.id === playerId) ??
+    (auth?.activeChild.id === playerId ? auth.activeChild : undefined);
+  const enabledKey = enabledSkills(
+    childPreferences?.disabledSkills ?? loadDisabledSkills(playerId, storage)
+  ).join(',');
+  const practiceSkills = React.useMemo(() => enabledKey.split(',') as Skill[], [enabledKey]);
+  const selectNextQuestionWithDistractors = useCallback(
+    (p: SkillProfile, options?: Parameters<typeof selectQuestion>[1]) => {
+      const requested = options?.allowedSkills?.filter((s) => practiceSkills.includes(s));
+      return selectQuestion(p, {
+        ...options,
+        allowedSkills: requested?.length ? requested : practiceSkills,
+      });
+    },
+    [practiceSkills]
+  );
 
   // World Progression & Active Realm State (Task 9.3)
   const [worldProgression, setWorldProgression] = useState(() =>
@@ -295,10 +313,8 @@ export const GameScreen: React.FC<GameScreenProps> = ({
   const playerRewardsRef = useRef<PlayerRewardsState>(playerRewards);
   playerRewardsRef.current = playerRewards;
 
-  const activeCharacter: CharacterType =
-    playerRewards.equippedCosmetics?.character || 'archer';
-  const activeTarget: TargetType =
-    playerRewards.equippedCosmetics?.target || 'archery_target';
+  const activeCharacter: CharacterType = playerRewards.equippedCosmetics?.character || 'archer';
+  const activeTarget: TargetType = playerRewards.equippedCosmetics?.target || 'archery_target';
 
   const handleSwitchCharacter = (char: CharacterType) => {
     const current = playerRewardsRef.current;
@@ -357,7 +373,11 @@ export const GameScreen: React.FC<GameScreenProps> = ({
 
   // Deliberate training skill focus and session stats (Task 4.3)
   const [selectedTrainingSkill, setSelectedTrainingSkill] = useState<Skill | 'all'>(() => {
-    return initialTrainingSkill ?? 'all';
+    return initialTrainingSkill &&
+      initialTrainingSkill !== 'all' &&
+      practiceSkills.includes(initialTrainingSkill)
+      ? initialTrainingSkill
+      : 'all';
   });
   const [trainingCount, setTrainingCount] = useState<number>(0);
   const [trainingHits, setTrainingHits] = useState<number>(0);
@@ -385,7 +405,7 @@ export const GameScreen: React.FC<GameScreenProps> = ({
 
   // Initial question generated from the skill profile (or preset initialQuestion for specific tests)
   const [question, setQuestion] = useState<Question>(() => {
-    if (initialQuestion) return initialQuestion;
+    if (initialQuestion && practiceSkills.includes(initialQuestion.skill)) return initialQuestion;
     const initialProf =
       initialProfile ?? loadProfile(playerId, storage) ?? createEmptyProfile(playerId);
     const allowedSkills =
@@ -396,6 +416,21 @@ export const GameScreen: React.FC<GameScreenProps> = ({
       allowedSkills: allowedSkills.length > 0 ? allowedSkills : undefined,
     });
   });
+
+  useEffect(() => {
+    if (selectedTrainingSkill !== 'all' && !practiceSkills.includes(selectedTrainingSkill)) {
+      setSelectedTrainingSkill('all');
+    }
+    if (!practiceSkills.includes(question.skill)) {
+      setQuestion(selectNextQuestionWithDistractors(profile));
+    }
+  }, [
+    practiceSkills,
+    selectedTrainingSkill,
+    question.skill,
+    profile,
+    selectNextQuestionWithDistractors,
+  ]);
 
   // Recent skills history for anti-hammering safeguard (Task 1.6 & Task 3.4)
   const [recentSkills, setRecentSkills] = useState<Skill[]>(() => [question.skill]);
@@ -463,7 +498,10 @@ export const GameScreen: React.FC<GameScreenProps> = ({
   }, []);
 
   // Weak skills detected in player profile for deliberate practice (Task 4.3)
-  const weakSkills = React.useMemo(() => getWeakSkills(profile), [profile]);
+  const weakSkills = React.useMemo(
+    () => getWeakSkills(profile).filter((s) => practiceSkills.includes(s)),
+    [profile, practiceSkills]
+  );
 
   const isHelpAvailable = isMake10Eligible(question);
   const make10Decomposition: Make10Decomposition | null = React.useMemo(() => {
@@ -516,7 +554,15 @@ export const GameScreen: React.FC<GameScreenProps> = ({
         }
       }
     },
-    [onModeChange, selectedTrainingSkill, profile, session.status, session.arrowsUsed, maxArrows]
+    [
+      onModeChange,
+      selectedTrainingSkill,
+      profile,
+      session.status,
+      session.arrowsUsed,
+      maxArrows,
+      selectNextQuestionWithDistractors,
+    ]
   );
 
   const handleSelectTrainingSkill = useCallback(
@@ -544,7 +590,14 @@ export const GameScreen: React.FC<GameScreenProps> = ({
       questionStartTimeRef.current = Date.now();
       onNextQuestion?.(nextQ);
     },
-    [isTransitioning, profile, gameMode, onTrainingSkillChange, onNextQuestion]
+    [
+      isTransitioning,
+      profile,
+      gameMode,
+      onTrainingSkillChange,
+      onNextQuestion,
+      selectNextQuestionWithDistractors,
+    ]
   );
 
   const questionStartTimeRef = useRef<number>(Date.now());
@@ -606,6 +659,7 @@ export const GameScreen: React.FC<GameScreenProps> = ({
       playerId,
       storage,
       onProfileChange,
+      selectNextQuestionWithDistractors,
       onNextQuestion,
       gameMode,
       selectedTrainingSkill,
@@ -825,8 +879,7 @@ export const GameScreen: React.FC<GameScreenProps> = ({
       };
 
       const playImpactSound = () => {
-        const targetToPlay =
-          playerRewardsRef.current.equippedCosmetics?.target || 'archery_target';
+        const targetToPlay = playerRewardsRef.current.equippedCosmetics?.target || 'archery_target';
         if (targetToPlay === 'dummy') {
           audioFx.playDummyHit(outcome, choice.element);
         } else {
@@ -872,6 +925,7 @@ export const GameScreen: React.FC<GameScreenProps> = ({
       onNextQuestion,
       onSessionComplete,
       onProfileChange,
+      selectNextQuestionWithDistractors,
       arrowIndex,
       highestHintLevelUsed,
       gameMode,
@@ -1668,19 +1722,21 @@ export const GameScreen: React.FC<GameScreenProps> = ({
               disabled={isTransitioning}
             >
               <option value="all">🎯 All Skills (Adaptive Mix)</option>
-              {Object.values(SKILL_DEFINITIONS).map((def) => {
-                const p = profile.skills[def.id];
-                const isWeakSkill = p && p.attempts > 0 && p.masteryLevel === 'weak';
-                return (
-                  <option key={def.id} value={def.id}>
-                    {isWeakSkill ? '⚠️ ' : ''}
-                    {def.name}
-                    {p && p.attempts > 0
-                      ? ` (${p.masteryLevel}, ${Math.round(p.score * 100)}%)`
-                      : ''}
-                  </option>
-                );
-              })}
+              {Object.values(SKILL_DEFINITIONS)
+                .filter((def) => practiceSkills.includes(def.id))
+                .map((def) => {
+                  const p = profile.skills[def.id];
+                  const isWeakSkill = p && p.attempts > 0 && p.masteryLevel === 'weak';
+                  return (
+                    <option key={def.id} value={def.id}>
+                      {isWeakSkill ? '⚠️ ' : ''}
+                      {def.name}
+                      {p && p.attempts > 0
+                        ? ` (${p.masteryLevel}, ${Math.round(p.score * 100)}%)`
+                        : ''}
+                    </option>
+                  );
+                })}
             </select>
 
             {selectedTrainingSkill !== 'all' && (
@@ -1715,7 +1771,11 @@ export const GameScreen: React.FC<GameScreenProps> = ({
           >
             {/* Quick Hero & Target Switcher Bar */}
             <div className="range-switcher-bar" data-testid="range-switcher-bar">
-              <div className="switcher-group character-switcher" role="group" aria-label="Hero Selection">
+              <div
+                className="switcher-group character-switcher"
+                role="group"
+                aria-label="Hero Selection"
+              >
                 <button
                   type="button"
                   className={`switcher-pill ${activeCharacter === 'archer' ? 'active' : ''}`}
@@ -1736,7 +1796,11 @@ export const GameScreen: React.FC<GameScreenProps> = ({
                 </button>
               </div>
 
-              <div className="switcher-group target-switcher" role="group" aria-label="Target Selection">
+              <div
+                className="switcher-group target-switcher"
+                role="group"
+                aria-label="Target Selection"
+              >
                 <button
                   type="button"
                   className={`switcher-pill ${activeTarget === 'archery_target' ? 'active' : ''}`}
@@ -2015,10 +2079,7 @@ export const GameScreen: React.FC<GameScreenProps> = ({
             {gameMode === 'adventure' ? (
               <>
                 <div className="progress-text" data-testid="arrow-counter">
-                  <span
-                    role="img"
-                    aria-label={activeCharacter === 'wizard' ? 'spell' : 'arrow'}
-                  >
+                  <span role="img" aria-label={activeCharacter === 'wizard' ? 'spell' : 'arrow'}>
                     {activeCharacter === 'wizard' ? '🔮' : '🏹'}
                   </span>
                   <span>

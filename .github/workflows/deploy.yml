@@ -75,7 +75,7 @@ jobs:
             echo '::error::Add CLOUDFLARE_API_TOKEN and CLOUDFLARE_ACCOUNT_ID in repository Settings > Secrets and variables > Actions.'
             exit 1
           fi
-      - name: Deploy Worker and frontend
+      - name: Apply database migrations and deploy Worker and frontend
         uses: cloudflare/wrangler-action@v3
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
@@ -83,6 +83,8 @@ jobs:
           wranglerVersion: 4.144.0
           packageManager: pnpm
           workingDirectory: apps/api
-          command: deploy
+          command: |
+            d1 migrations apply math-archer-db --remote
+            deploy
       - name: Record live URL
         run: echo 'Game deployed to https://learn.chuonglv.site' >> "$GITHUB_STEP_SUMMARY"

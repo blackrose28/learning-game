@@ -494,7 +494,9 @@ export async function saveWorldProgressionToDb(
     progression.unlockedAreaIds ??
     existing?.unlockedAreaIds ??
     computeUnlockedAreas(completedSessionsCount);
-  const activeAreaId = (progression.activeAreaId ?? existing?.activeAreaId ?? 'castle') as WorldAreaId;
+  const activeAreaId = (progression.activeAreaId ??
+    existing?.activeAreaId ??
+    'castle') as WorldAreaId;
   const lastUnlockedAreaId = unlockedAreaIds[unlockedAreaIds.length - 1] ?? 'castle';
   const now = progression.updatedAt ?? new Date().toISOString();
 
@@ -520,7 +522,6 @@ export async function saveWorldProgressionToDb(
     updatedAt: now,
   };
 }
-
 
 export async function loadPlayerRewardsFromDb(
   db: D1Database,
@@ -618,7 +619,9 @@ export async function savePlayerRewardsToDb(
   const currentStreak = rewards.currentStreak ?? existing?.currentStreak ?? 0;
   const bestStreak = Math.max(rewards.bestStreak ?? existing?.bestStreak ?? 0, currentStreak);
   const lastActiveDate =
-    rewards.lastActiveDate !== undefined ? rewards.lastActiveDate : (existing?.lastActiveDate ?? null);
+    rewards.lastActiveDate !== undefined
+      ? rewards.lastActiveDate
+      : (existing?.lastActiveDate ?? null);
 
   const unlockedCosmetics = Array.from(
     new Set([...(existing?.unlockedCosmeticIds ?? []), ...(rewards.unlockedCosmeticIds ?? [])])
@@ -628,7 +631,10 @@ export async function savePlayerRewardsToDb(
     ...(rewards.equippedCosmetics ?? {}),
   };
   const unlockedAchievements = Array.from(
-    new Set([...(existing?.unlockedAchievementIds ?? []), ...(rewards.unlockedAchievementIds ?? [])])
+    new Set([
+      ...(existing?.unlockedAchievementIds ?? []),
+      ...(rewards.unlockedAchievementIds ?? []),
+    ])
   );
   const achievementProgress = {
     ...(existing?.achievementProgress ?? {}),
@@ -839,7 +845,9 @@ export async function getChildrenForParent(
 ): Promise<ChildPublicProfile[]> {
   // In Math Archer, there is only one parent role; all child profiles belong to the parent.
   const rows = await db
-    .prepare(`SELECT id, name, avatar, grade, pin, parent_id FROM players ORDER BY created_at ASC`)
+    .prepare(
+      `SELECT id, name, avatar, grade, pin, parent_id, disabled_skills FROM players ORDER BY created_at ASC`
+    )
     .all<{
       id: string;
       name: string;
@@ -847,6 +855,7 @@ export async function getChildrenForParent(
       grade: string;
       pin: string | null;
       parent_id: string | null;
+      disabled_skills: string;
     }>();
 
   if (!rows.results) return [];
@@ -856,6 +865,7 @@ export async function getChildrenForParent(
     name: r.name,
     avatar: r.avatar || 'archer-1',
     grade: r.grade || '1st Grade',
+    disabledSkills: JSON.parse(r.disabled_skills || '[]'),
     parentId: r.parent_id ?? undefined,
     hasPin: Boolean(r.pin && r.pin.trim()),
   }));
@@ -873,7 +883,9 @@ export async function getChildProfile(
 
 export async function getAllPublicChildProfiles(db: D1Database): Promise<ChildPublicProfile[]> {
   const rows = await db
-    .prepare(`SELECT id, name, avatar, grade, pin, parent_id FROM players ORDER BY name ASC`)
+    .prepare(
+      `SELECT id, name, avatar, grade, pin, parent_id, disabled_skills FROM players ORDER BY name ASC`
+    )
     .all<{
       id: string;
       name: string;
@@ -881,6 +893,7 @@ export async function getAllPublicChildProfiles(db: D1Database): Promise<ChildPu
       grade: string;
       pin: string | null;
       parent_id: string | null;
+      disabled_skills: string;
     }>();
 
   if (!rows.results) return [];
@@ -890,6 +903,7 @@ export async function getAllPublicChildProfiles(db: D1Database): Promise<ChildPu
     name: r.name,
     avatar: r.avatar || 'archer-1',
     grade: r.grade || '1st Grade',
+    disabledSkills: JSON.parse(r.disabled_skills || '[]'),
     parentId: r.parent_id ?? undefined,
     hasPin: Boolean(r.pin && r.pin.trim()),
   }));
@@ -913,7 +927,13 @@ export async function updateChildProfile(
   db: D1Database,
   childId: string,
   _parentId?: string,
-  updates: { name?: string; pin?: string; avatar?: string; grade?: string } = {}
+  updates: {
+    name?: string;
+    pin?: string;
+    avatar?: string;
+    grade?: string;
+    disabledSkills?: Skill[];
+  } = {}
 ): Promise<ChildPublicProfile | null> {
   const current = await getChildProfile(db, childId);
   if (!current) return null;
@@ -922,15 +942,16 @@ export async function updateChildProfile(
   const pin = updates.pin !== undefined ? updates.pin.trim() || null : current.pin;
   const avatar = updates.avatar !== undefined ? updates.avatar : current.avatar;
   const grade = updates.grade !== undefined ? updates.grade : current.grade;
+  const disabledSkills = updates.disabledSkills ?? JSON.parse(current.disabled_skills || '[]');
   const now = new Date().toISOString();
 
   await db
     .prepare(
       `UPDATE players
-       SET name = ?, pin = ?, avatar = ?, grade = ?, updated_at = ?
+       SET name = ?, pin = ?, avatar = ?, grade = ?, disabled_skills = ?, updated_at = ?
        WHERE id = ?`
     )
-    .bind(name, pin, avatar, grade, now, childId)
+    .bind(name, pin, avatar, grade, JSON.stringify(disabledSkills), now, childId)
     .run();
 
   return {
@@ -938,6 +959,7 @@ export async function updateChildProfile(
     name,
     avatar,
     grade,
+    disabledSkills,
     parentId: current.parent_id ?? undefined,
     hasPin: Boolean(pin),
   };

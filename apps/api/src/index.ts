@@ -38,6 +38,7 @@ import {
   extractBearerToken,
   type TokenPayload,
 } from './auth';
+import { getAllSkills } from '@math-archer/learning-engine';
 import type { Attempt, DailySession } from '@math-archer/learning-engine';
 
 const CORS_HEADERS: Record<string, string> = {
@@ -357,6 +358,7 @@ export default {
               name: childRecord.name,
               avatar: childRecord.avatar || 'archer-1',
               grade: childRecord.grade || '1st Grade',
+              disabledSkills: JSON.parse(childRecord.disabled_skills || '[]'),
               parentId,
               hasPin: Boolean(childRecord.pin && childRecord.pin.trim()),
             },
@@ -399,6 +401,7 @@ export default {
                   name: child.name,
                   avatar: child.avatar,
                   grade: child.grade,
+                  disabledSkills: JSON.parse(child.disabled_skills || '[]'),
                   parentId: child.parent_id ?? undefined,
                   hasPin: Boolean(child.pin),
                 }
@@ -476,6 +479,21 @@ export default {
             return errorResponse('MALFORMED_JSON', 'Request body must be valid JSON', 400);
           }
 
+          if (body.disabledSkills !== undefined) {
+            const skills = getAllSkills().map((s) => s.id);
+            if (
+              !Array.isArray(body.disabledSkills) ||
+              body.disabledSkills.some((s) => !skills.includes(s)) ||
+              new Set(body.disabledSkills).size !== body.disabledSkills.length ||
+              body.disabledSkills.length >= skills.length
+            ) {
+              return errorResponse(
+                'INVALID_SKILLS',
+                'Choose valid skills and keep at least one enabled',
+                400
+              );
+            }
+          }
           const updated = await updateChildProfile(env.DB, childId, parentId, body);
           if (!updated) {
             return errorResponse('NOT_FOUND', 'Child profile not found', 404);

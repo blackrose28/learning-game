@@ -35,6 +35,9 @@ export function createTestD1Database(applyMigration = true): D1Database {
       const migration3 = fs.readFileSync(migration3Path, 'utf8');
       sqlite.exec(migration3);
     }
+    sqlite.exec(
+      fs.readFileSync(path.resolve(__dirname, '../migrations/0004_skill_preferences.sql'), 'utf8')
+    );
   }
 
   const createPreparedStatement = (

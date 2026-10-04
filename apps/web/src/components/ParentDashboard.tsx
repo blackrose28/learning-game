@@ -1,5 +1,7 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import {
+  getAllSkills,
+  type Skill,
   loadParentDashboard,
   computeParentDashboardData,
   createSimulatedProfile,
@@ -14,6 +16,7 @@ import {
 import { useSafeAuth } from '../context/AuthContext';
 import { hydratePlayerProgress } from '../sync';
 import type { ChildPublicProfile, MathArcherApiClient } from '../api/client';
+import { loadDisabledSkills, saveDisabledSkills } from '../skillPreferences';
 import './ParentDashboard.css';
 
 export interface ParentDashboardProps {
@@ -262,6 +265,44 @@ export const ParentDashboard: React.FC<ParentDashboardProps> = ({
   const effectivePlayerId = selectedChildId || authContext?.activeChild?.id || playerId;
   const selectedChildObj = authContext?.availableChildren.find((c) => c.id === effectivePlayerId);
 
+  const [localDisabledSkills, setLocalDisabledSkills] = useState<Skill[]>([]);
+  const [isSavingSkills, setIsSavingSkills] = useState(false);
+  const [skillFeedback, setSkillFeedback] = useState<string | null>(null);
+  const disabledSkills = selectedChildObj?.disabledSkills ?? localDisabledSkills;
+  useEffect(() => {
+    setLocalDisabledSkills(loadDisabledSkills(effectivePlayerId, storageAdapter));
+    setSkillFeedback(null);
+  }, [effectivePlayerId, storageAdapter]);
+
+  const toggleSkill = async (skill: Skill) => {
+    const targetId = effectivePlayerId;
+    const next = disabledSkills.includes(skill)
+      ? disabledSkills.filter((s) => s !== skill)
+      : [...disabledSkills, skill];
+    if (next.length >= getAllSkills().length) return;
+    setIsSavingSkills(true);
+    setSkillFeedback(null);
+    try {
+      if (authContext) {
+        await authContext.updateChild(targetId, { disabledSkills: next });
+      } else if (activeApiClient) {
+        await activeApiClient.updateChildProfile(targetId, { disabledSkills: next });
+      }
+      saveDisabledSkills(targetId, next, storageAdapter);
+      if (currentChildRef.current === targetId) {
+        setLocalDisabledSkills(next);
+        setSkillFeedback('Practice skills saved.');
+      }
+    } catch (err) {
+      if (currentChildRef.current === targetId)
+        setSkillFeedback(
+          err instanceof Error ? err.message : 'Unable to save skills. Please try again.'
+        );
+    } finally {
+      setIsSavingSkills(false);
+    }
+  };
+
   const handleEnableAllRewards = async () => {
     setIsEnablingRewards(true);
     setDevActionFeedback(null);
@@ -316,9 +357,7 @@ export const ParentDashboard: React.FC<ParentDashboardProps> = ({
   const triggerHydration = useCallback(
     async (targetId: string) => {
       const canHydrate = Boolean(
-        apiClient ||
-        (authContext && authContext.isAuthenticated) ||
-        activeApiClient?.getAuthToken()
+        apiClient || (authContext && authContext.isAuthenticated) || activeApiClient?.getAuthToken()
       );
 
       if (!activeApiClient || !canHydrate || useSample) {
@@ -740,6 +779,45 @@ export const ParentDashboard: React.FC<ParentDashboardProps> = ({
           </div>
         </div>
       )}
+
+      <section className="practice-skills-panel" aria-labelledby="practice-skills-title">
+        <h2 id="practice-skills-title">Practice skills</h2>
+        <p>
+          Turn off mastered skills for {selectedChildObj?.name || 'this child'}. Progress is kept,
+          and you can turn them back on anytime. Keep at least one skill on.
+        </p>
+        <div className="practice-skills-list">
+          {getAllSkills().map((skill) => {
+            const enabled = !disabledSkills.includes(skill.id);
+            return (
+              <label key={skill.id} className="practice-skill-row">
+                <span>
+                  <strong>{skill.name}</strong>
+                  <small>{skill.description}</small>
+                </span>
+                <span className="practice-skill-control">
+                  <input
+                    type="checkbox"
+                    role="switch"
+                    aria-label={skill.name}
+                    checked={enabled}
+                    disabled={
+                      useSample ||
+                      isSavingSkills ||
+                      isHydrating ||
+                      (enabled && disabledSkills.length === getAllSkills().length - 1)
+                    }
+                    onChange={() => void toggleSkill(skill.id)}
+                  />
+                  {enabled ? 'On' : 'Off'}
+                </span>
+              </label>
+            );
+          })}
+        </div>
+        {useSample && <p>Switch to real data to change practice skills.</p>}
+        {skillFeedback && <p role="status">{skillFeedback}</p>}
+      </section>
 
       {/* Manage Profiles Modal */}
       {showManageModal && (

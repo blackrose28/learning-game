@@ -1,3 +1,4 @@
+import type { Skill } from '@math-archer/learning-engine';
 import React, { createContext, useContext, useState, useEffect, useCallback, useMemo } from 'react';
 import {
   MathArcherApiClient,
@@ -47,7 +48,13 @@ export interface AuthContextValue {
   }) => Promise<ChildPublicProfile>;
   updateChild: (
     childId: string,
-    data: { name?: string; pin?: string; avatar?: string; grade?: string }
+    data: {
+      name?: string;
+      pin?: string;
+      avatar?: string;
+      grade?: string;
+      disabledSkills?: Skill[];
+    }
   ) => Promise<ChildPublicProfile>;
   deleteChild: (childId: string) => Promise<boolean>;
 }
@@ -151,6 +158,8 @@ export const AuthProvider: React.FC<{
           matching.avatar !== current.avatar ||
           matching.grade !== current.grade ||
           matching.hasPin !== current.hasPin ||
+          JSON.stringify(matching.disabledSkills ?? []) !==
+            JSON.stringify(current.disabledSkills ?? []) ||
           matching.parentId !== current.parentId
         ) {
           return matching;
@@ -526,7 +535,13 @@ export const AuthProvider: React.FC<{
   const updateChild = useCallback(
     async (
       childId: string,
-      data: { name?: string; pin?: string; avatar?: string; grade?: string }
+      data: {
+        name?: string;
+        pin?: string;
+        avatar?: string;
+        grade?: string;
+        disabledSkills?: Skill[];
+      }
     ): Promise<ChildPublicProfile> => {
       setIsLoading(true);
       setError(null);
@@ -537,8 +552,8 @@ export const AuthProvider: React.FC<{
         setIsLoading(false);
         return res.child;
       } catch (err: unknown) {
-        if (err instanceof ApiError) {
-          setError(err.message);
+        if (err instanceof ApiError || data.disabledSkills !== undefined) {
+          setError(err instanceof Error ? err.message : 'Unable to save practice skills');
           setIsLoading(false);
           throw err;
         }

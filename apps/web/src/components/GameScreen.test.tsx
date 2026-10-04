@@ -2,6 +2,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent, act } from '@testing-library/react';
 import { GameScreen, type GameMode } from './GameScreen';
 import {
+  getAllSkills,
   type Question,
   type SkillProfile,
   createMemoryStorage,
@@ -1816,4 +1817,43 @@ describe('Task 5.1 — Build attempt history', () => {
       syncManager.destroy();
     });
   });
+});
+
+describe('Parent practice preferences', () => {
+  it.each(['adventure', 'training', 'challenge'] as const)(
+    'restricts initial and subsequent questions in %s',
+    (mode) => {
+      const storage = createMemoryStorage();
+      storage.setItem(
+        'math_archer_disabled_skills_player-local',
+        JSON.stringify(
+          getAllSkills()
+            .map((s) => s.id)
+            .filter((s) => s !== 'cross_10_subtraction')
+        )
+      );
+      render(
+        <GameScreen
+          mode={mode}
+          storage={storage}
+          initialTrainingSkill="addition_within_10"
+          autoAdvanceDelayMs={0}
+        />
+      );
+      for (let i = 0; i < 8; i++) {
+        const expression = screen.getByTestId('question-expression').textContent!;
+        expect(expression).toContain('-');
+        const nums = expression.match(/\d+/g)!.map(Number);
+        expect(nums[0]).toBeGreaterThan(10);
+        expect(nums[0] - nums[1]).toBeLessThan(10);
+        fireEvent.click(screen.getByTestId('choice-fire'));
+      }
+      if (mode === 'training') {
+        expect(
+          screen.queryByRole('option', { name: /Addition within 10/ })
+        ).not.toBeInTheDocument();
+        expect(screen.getByTestId('training-skill-select')).toHaveValue('all');
+      }
+    }
+  );
 });

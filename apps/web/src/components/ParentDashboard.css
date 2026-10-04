@@ -881,3 +881,46 @@
   font-size: 13px;
   margin-bottom: 14px;
 }
+
+.practice-skills-panel {
+  padding: 24px;
+  margin-bottom: 24px;
+  background: #fff;
+  border: 1px solid #e2e8f0;
+  border-radius: 16px;
+}
+.practice-skills-panel h2 {
+  margin: 0 0 8px;
+}
+.practice-skills-panel p {
+  color: #475569;
+}
+.practice-skills-list {
+  display: grid;
+  gap: 8px;
+}
+.practice-skill-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 12px;
+  background: #f8fafc;
+  border-radius: 8px;
+}
+.practice-skill-row small {
+  display: block;
+  color: #64748b;
+  margin-top: 4px;
+}
+.practice-skill-control {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  white-space: nowrap;
+}
+.practice-skill-control input {
+  width: 20px;
+  height: 20px;
+  accent-color: #2563eb;
+}

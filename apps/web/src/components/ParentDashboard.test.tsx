@@ -3,6 +3,7 @@ import { render, screen, fireEvent, waitFor, act } from '@testing-library/react'
 import { ParentDashboard } from './ParentDashboard';
 import { AuthProvider } from '../context/AuthContext';
 import {
+  getAllSkills,
   saveDailySession,
   saveAttempt,
   saveProfile,
@@ -846,10 +847,10 @@ describe('ParentDashboard Component (Task 5.2)', () => {
         fetchFn: async (url, init) => {
           if (String(url).includes('/api/progress/rewards') && init?.method === 'PUT') {
             pushedPayload = JSON.parse(init.body as string);
-            return new Response(
-              JSON.stringify({ success: true, rewards: pushedPayload }),
-              { status: 200, headers: { 'Content-Type': 'application/json' } }
-            );
+            return new Response(JSON.stringify({ success: true, rewards: pushedPayload }), {
+              status: 200,
+              headers: { 'Content-Type': 'application/json' },
+            });
           }
           return new Response(JSON.stringify({}), {
             status: 200,
@@ -858,13 +859,7 @@ describe('ParentDashboard Component (Task 5.2)', () => {
         },
       });
 
-      render(
-        <ParentDashboard
-          playerId={playerId}
-          apiClient={mockApiClient}
-          showDevTools={true}
-        />
-      );
+      render(<ParentDashboard playerId={playerId} apiClient={mockApiClient} showDevTools={true} />);
 
       const btn = screen.getByTestId('enable-all-rewards-btn');
       await act(async () => {
@@ -876,5 +871,65 @@ describe('ParentDashboard Component (Task 5.2)', () => {
       expect(payload.unlockedCosmeticIds.length).toBe(COSMETIC_ITEMS.length);
       expect(payload.level).toBe(30);
     });
+  });
+});
+
+describe('Practice skill switches', () => {
+  it('saves switches per child, survives reopening, and keeps progress', async () => {
+    saveProfile(
+      createSimulatedProfile({ playerId: 'child-a', skills: { addition_within_10: 'mastered' } })
+    );
+    const view = render(<ParentDashboard playerId="child-a" />);
+    const toggle = screen.getByRole('switch', { name: 'Addition within 10' });
+    expect(screen.getAllByRole('switch')).toHaveLength(getAllSkills().length);
+    fireEvent.click(toggle);
+    await waitFor(() => expect(toggle).not.toBeChecked());
+    view.rerender(<ParentDashboard playerId="child-b" />);
+    await waitFor(() =>
+      expect(screen.getByRole('switch', { name: 'Addition within 10' })).toBeChecked()
+    );
+    view.unmount();
+    render(<ParentDashboard playerId="child-a" />);
+    expect(screen.getByRole('switch', { name: 'Addition within 10' })).not.toBeChecked();
+    expect(
+      JSON.parse(localStorage.getItem('math_archer_profile_child-a')!).skills.addition_within_10
+        .masteryLevel
+    ).toBe('mastered');
+    fireEvent.click(screen.getByRole('switch', { name: 'Addition within 10' }));
+    await waitFor(() =>
+      expect(screen.getByRole('switch', { name: 'Addition within 10' })).toBeChecked()
+    );
+  });
+
+  it('protects the last enabled skill and disables editing in sample mode', () => {
+    localStorage.setItem(
+      'math_archer_disabled_skills_player-local',
+      JSON.stringify(
+        getAllSkills()
+          .map((s) => s.id)
+          .filter((s) => s !== 'make_10')
+      )
+    );
+    render(<ParentDashboard />);
+    expect(screen.getByRole('switch', { name: 'Make 10' })).toBeDisabled();
+    expect(screen.getByRole('switch', { name: 'Basic addition' })).not.toBeDisabled();
+    fireEvent.click(screen.getByTestId('toggle-sample-data-btn'));
+    screen.getAllByRole('switch').forEach((toggle) => expect(toggle).toBeDisabled());
+  });
+
+  it('shows a save failure without changing the skill', async () => {
+    const apiClient = new MathArcherApiClient({
+      fetchFn: async () =>
+        new Response(JSON.stringify({ message: 'Unable to save skills' }), { status: 500 }),
+    });
+    render(<ParentDashboard apiClient={apiClient} />);
+    await waitFor(() =>
+      expect(screen.getByRole('switch', { name: 'Addition within 10' })).not.toBeDisabled()
+    );
+    fireEvent.click(screen.getByRole('switch', { name: 'Addition within 10' }));
+    await waitFor(() =>
+      expect(screen.getByRole('status')).toHaveTextContent('Unable to save skills')
+    );
+    expect(screen.getByRole('switch', { name: 'Addition within 10' })).toBeChecked();
   });
 });

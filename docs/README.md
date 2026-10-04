@@ -66,8 +66,7 @@ Before the first deployment, add these repository secrets in GitHub under
 | `CLOUDFLARE_ACCOUNT_ID` | The Cloudflare account ID that owns the `math-archer` Worker and `math-archer-db` database.                                                                                                |
 
 Wrangler uses the existing custom domain and D1 binding in
-`apps/api/wrangler.jsonc`. Database migrations are a separate operation;
-apply any required schema changes with `pnpm db:migrate:remote` before deploying
+`apps/api/wrangler.jsonc`. The deployment workflow applies pending database migrations before deploying
 code that needs them. Existing Worker secrets remain managed in Cloudflare.
 
 To redeploy `main` without a new commit, open **Actions → Check and deploy → Run
@@ -77,3 +76,19 @@ workflow** and select `main`. Check the run's summary for the live URL.
 
 - **[math-archer-plan.md](../math-archer-plan.md)**: Comprehensive game specifications, curriculum levels, and multi-phase roadmap.
 - **[MVP Boundary & Scope](mvp-boundary.md)**: Frozen MVP definition, in-scope requirements, and explicitly deferred features.
+
+## Parent practice skills
+
+In Parent Dashboard, select a child and use the **Practice skills** switches to
+turn any of the seven curriculum skills on or off. Changes save automatically
+for that child and apply to Adventure, Training, and Challenge. Disabled skills
+are removed from the training focus menu. Existing progress stays available,
+and switching a skill back on resumes practice. At least one skill must remain
+on. Sample preview does not allow changes. Cloud save failures leave the current
+settings unchanged and display an error so you can retry.
+
+Apply `0004_skill_preferences.sql` with `pnpm db:migrate` locally. GitHub Actions
+applies it in production before deploying; for manual deployment, run
+`pnpm db:migrate:remote` first. Existing
+children start with all skills on. Cloud preferences are included in child
+profiles, so they also apply when the child logs in on another device.

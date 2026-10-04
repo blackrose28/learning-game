@@ -2,6 +2,7 @@ import type {
   Attempt,
   DailySession,
   SkillProfile,
+  Skill,
   AttemptSummaryStats,
   PracticeRecommendation,
   WorldProgressionState,
@@ -16,6 +17,7 @@ export interface ParentPublic {
 }
 
 export interface ChildPublicProfile {
+  disabledSkills?: Skill[];
   id: string;
   name: string;
   avatar: string;
@@ -148,9 +150,7 @@ export class MathArcherApiClient {
     const headers: Record<string, string> = { ...extraHeaders };
     const token =
       this.token ||
-      (typeof localStorage !== 'undefined'
-        ? localStorage.getItem('math_archer_auth_token')
-        : null);
+      (typeof localStorage !== 'undefined' ? localStorage.getItem('math_archer_auth_token') : null);
     if (token) {
       headers['Authorization'] = `Bearer ${token}`;
     }
@@ -320,6 +320,7 @@ export class MathArcherApiClient {
       pin?: string;
       avatar?: string;
       grade?: string;
+      disabledSkills?: Skill[];
     }
   ): Promise<{ child: ChildPublicProfile }> {
     const res = await this.fetchFn(
