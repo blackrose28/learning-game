@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest';
 import { render, screen, fireEvent, act } from '@testing-library/react';
-import { audioFx, AUDIO_MUTED_STORAGE_KEY } from './AudioFx';
+import { audioFx, AudioManager, AUDIO_MUTED_STORAGE_KEY } from './AudioFx';
 import { App } from '../App';
 
 describe('Item 6: Procedural Audio Mute Setting Persistence', () => {
@@ -12,6 +12,7 @@ describe('Item 6: Procedural Audio Mute Setting Persistence', () => {
 
   afterEach(() => {
     audioFx.setMuted(false);
+    vi.unstubAllGlobals();
   });
 
   it('initializes as unmuted by default when localStorage is empty', () => {
@@ -86,6 +87,15 @@ describe('Item 6: Procedural Audio Mute Setting Persistence', () => {
       currentTime: 10,
       sampleRate: 44100,
       destination: {},
+      createDynamicsCompressor: vi.fn().mockReturnValue({
+        connect: vi.fn(),
+        threshold: {},
+        knee: {},
+        ratio: {},
+        attack: {},
+        release: {},
+      }),
+      createConvolver: vi.fn().mockReturnValue({ connect: vi.fn(), buffer: null }),
       createOscillator: vi.fn().mockReturnValue(fakeOsc),
       createGain: vi.fn().mockReturnValue(fakeGain),
       createBiquadFilter: vi.fn().mockReturnValue(fakeFilter),
@@ -102,20 +112,25 @@ describe('Item 6: Procedural Audio Mute Setting Persistence', () => {
     };
 
     // Attach mock AudioContext to window
-    (window as unknown as { AudioContext: unknown }).AudioContext = vi.fn().mockImplementation(() => fakeCtx);
+    vi.stubGlobal(
+      'AudioContext',
+      vi.fn().mockImplementation(() => fakeCtx)
+    );
+
+    const manager = new AudioManager();
 
     // Muted
-    audioFx.setMuted(true);
-    audioFx.playBowRelease('fire');
-    audioFx.playArrowFlight('fire');
-    audioFx.playTargetHit('hit', 'fire');
+    manager.setMuted(true);
+    manager.playBowRelease('fire');
+    manager.playArrowFlight('fire');
+    manager.playTargetHit('hit', 'fire');
 
     // Should not interact with audio context when muted
     expect(fakeCtx.createOscillator).not.toHaveBeenCalled();
 
     // Unmuted
-    audioFx.setMuted(false);
-    audioFx.playBowRelease('fire');
+    manager.setMuted(false);
+    manager.playBowRelease('fire');
     expect(fakeCtx.createOscillator).toHaveBeenCalled();
   });
 

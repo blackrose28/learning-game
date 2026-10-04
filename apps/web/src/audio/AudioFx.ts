@@ -1,9 +1,8 @@
 /**
  * AudioFx - Procedural Web Audio API Sound Synthesizer for Math Archer
  *
- * Generates crisp, realistic archery sound effects using the native browser
- * Web Audio API with zero external audio assets, zero latency, and complete
- * offline capability.
+ * Layered transients, material textures, and elemental accents synthesized
+ * locally with Web Audio. No downloaded assets; works offline.
  */
 
 import type { ElementType, CharacterType } from '@math-archer/learning-engine';
@@ -12,8 +11,11 @@ export const AUDIO_MUTED_STORAGE_KEY = 'math_archer_audio_muted';
 
 export type AudioMuteListener = (isMuted: boolean) => void;
 
-class AudioManager {
+export class AudioManager {
   private audioCtx: AudioContext | null = null;
+  private mix: GainNode | null = null;
+  private master: GainNode | null = null;
+  private noiseBuffer: AudioBuffer | null = null;
   private isMuted: boolean = false;
   private listeners: Set<AudioMuteListener> = new Set();
 
@@ -59,6 +61,12 @@ class AudioManager {
 
   public setMuted(muted: boolean): void {
     this.isMuted = muted;
+    if (this.master && this.audioCtx) {
+      const now = this.audioCtx.currentTime;
+      this.master.gain.cancelScheduledValues(now);
+      this.master.gain.setValueAtTime(this.master.gain.value, now);
+      this.master.gain.linearRampToValueAtTime(muted ? 0 : 0.72, now + 0.015);
+    }
     if (typeof window !== 'undefined' && window.localStorage) {
       try {
         window.localStorage.setItem(AUDIO_MUTED_STORAGE_KEY, String(muted));
@@ -91,503 +99,284 @@ class AudioManager {
     }
   }
 
-  /**
-   * Bowstring release twang - distinct acoustic signature per element
-   */
+  /** A shared mix keeps simultaneous release, flight, and impact layers controlled. */
+  private getMix(ctx: AudioContext): GainNode {
+    if (this.mix) return this.mix;
+    const input = ctx.createGain();
+    const highpass = ctx.createBiquadFilter();
+    highpass.type = 'highpass';
+    highpass.frequency.value = 35;
+    const compressor = ctx.createDynamicsCompressor();
+    compressor.threshold.value = -16;
+    compressor.knee.value = 12;
+    compressor.ratio.value = 4;
+    compressor.attack.value = 0.003;
+    compressor.release.value = 0.12;
+    const master = ctx.createGain();
+    master.gain.value = this.isMuted ? 0 : 0.72;
+    input.connect(highpass);
+    highpass.connect(compressor);
+    compressor.connect(master);
+    master.connect(ctx.destination);
+
+    // Quiet, short stereo room reflections give body without obscuring the attack.
+    const room = ctx.createConvolver();
+    const impulse = ctx.createBuffer(2, Math.ceil(ctx.sampleRate * 0.22), ctx.sampleRate);
+    for (let channel = 0; channel < 2; channel++) {
+      const data = impulse.getChannelData(channel);
+      let smooth = 0;
+      for (let i = 0; i < data.length; i++) {
+        smooth = smooth * 0.6 + (Math.random() * 2 - 1) * 0.4;
+        const time = i / ctx.sampleRate;
+        data[i] = time < 0.012 ? 0 : smooth * Math.exp(-time * 32);
+      }
+    }
+    room.buffer = impulse;
+    const wet = ctx.createGain();
+    wet.gain.value = 0.09;
+    input.connect(room);
+    room.connect(wet);
+    wet.connect(compressor);
+    this.master = master;
+    this.mix = input;
+    return input;
+  }
+
+  private play(effect: (ctx: AudioContext, now: number) => void): void {
+    if (this.isMuted) return;
+    const ctx = this.getContext();
+    if (!ctx) return;
+    try {
+      this.getMix(ctx);
+      effect(ctx, ctx.currentTime);
+    } catch {
+      // Audio may be unavailable in restricted browsers; gameplay still continues.
+    }
+  }
+
+  private envelope(
+    gain: GainNode,
+    start: number,
+    duration: number,
+    level: number,
+    attack = 0.002
+  ): void {
+    gain.gain.setValueAtTime(0, start);
+    gain.gain.linearRampToValueAtTime(level, start + attack);
+    gain.gain.exponentialRampToValueAtTime(0.0001, start + duration - 0.008);
+    gain.gain.linearRampToValueAtTime(0, start + duration);
+  }
+
+  private tone(
+    ctx: AudioContext,
+    start: number,
+    frequency: number,
+    endFrequency: number,
+    duration: number,
+    level: number,
+    type: OscillatorType = 'sine',
+    attack = 0.002
+  ): void {
+    const source = ctx.createOscillator();
+    const gain = ctx.createGain();
+    source.type = type;
+    source.frequency.setValueAtTime(frequency, start);
+    source.frequency.exponentialRampToValueAtTime(endFrequency, start + duration * 0.7);
+    this.envelope(gain, start, duration, level, attack);
+    source.connect(gain);
+    gain.connect(this.getMix(ctx));
+    source.onended = () => {
+      source.disconnect();
+      gain.disconnect();
+    };
+    source.start(start);
+    source.stop(start + duration);
+  }
+
+  private noise(
+    ctx: AudioContext,
+    start: number,
+    duration: number,
+    frequency: number,
+    endFrequency: number,
+    level: number,
+    type: BiquadFilterType = 'bandpass',
+    attack = 0.002,
+    q = 0.7
+  ): void {
+    // Reuse full-band noise; random offsets make repeated attacks subtly different.
+    if (!this.noiseBuffer) {
+      this.noiseBuffer = ctx.createBuffer(1, ctx.sampleRate, ctx.sampleRate);
+      const data = this.noiseBuffer.getChannelData(0);
+      for (let i = 0; i < data.length; i++) data[i] = Math.random() * 2 - 1;
+    }
+    const source = ctx.createBufferSource();
+    source.buffer = this.noiseBuffer;
+    const filter = ctx.createBiquadFilter();
+    filter.type = type;
+    filter.Q.value = q;
+    filter.frequency.setValueAtTime(frequency, start);
+    filter.frequency.exponentialRampToValueAtTime(endFrequency, start + duration);
+    const gain = ctx.createGain();
+    this.envelope(gain, start, duration, level, attack);
+    source.connect(filter);
+    filter.connect(gain);
+    gain.connect(this.getMix(ctx));
+    source.onended = () => {
+      source.disconnect();
+      filter.disconnect();
+      gain.disconnect();
+    };
+    source.start(start, Math.random() * (1 - duration));
+    source.stop(start + duration);
+  }
+
+  /** Texture is separate from success feedback so every element reads as a hit. */
+  private elementImpact(ctx: AudioContext, now: number, element: ElementType, strength = 1): void {
+    if (element === 'fire') {
+      this.noise(ctx, now, 0.2, 2600, 650, 0.26 * strength, 'lowpass');
+      this.tone(ctx, now, 180, 75, 0.18, 0.16 * strength);
+      for (let i = 0; i < 3; i++) {
+        this.noise(ctx, now + 0.035 + i * 0.035, 0.025, 4200, 2200, 0.1 * strength);
+      }
+    } else if (element === 'ice') {
+      this.noise(ctx, now, 0.07, 5500, 2800, 0.18 * strength, 'highpass');
+      [1568, 2349, 3520].forEach((frequency, i) => {
+        this.tone(ctx, now + i * 0.014, frequency, frequency, 0.24 - i * 0.04, 0.075 * strength);
+      });
+    } else if (element === 'wind') {
+      this.noise(ctx, now, 0.24, 2400, 800, 0.27 * strength, 'bandpass', 0.015, 1.3);
+      this.tone(ctx, now + 0.015, 740, 1046, 0.15, 0.045 * strength);
+    } else {
+      this.tone(ctx, now, 110, 55, 0.24, 0.23 * strength);
+      this.noise(ctx, now, 0.18, 1600, 380, 0.3 * strength, 'lowpass');
+      this.noise(ctx, now + 0.04, 0.12, 3000, 900, 0.13 * strength);
+    }
+  }
+
+  /** A stable ascending major interval communicates success, without a pitch slide. */
+  private success(ctx: AudioContext, now: number): void {
+    [1046.5, 1318.51, 1568].forEach((frequency, i) => {
+      const start = now + 0.035 + i * 0.045;
+      this.tone(ctx, start, frequency, frequency, 0.28, 0.085, 'sine', 0.004);
+      this.tone(ctx, start, frequency * 2, frequency * 2, 0.16, 0.018, 'sine', 0.004);
+    });
+  }
+
   public playBowRelease(element: ElementType = 'fire'): void {
-    if (this.isMuted) return;
-    const ctx = this.getContext();
-    if (!ctx) return;
-
-    try {
-      const now = ctx.currentTime;
-
-      // Base bowstring snap oscillator
-      const osc = ctx.createOscillator();
-      const gain = ctx.createGain();
-      osc.type = 'triangle';
-
-      // Pitch glide tailored to element
-      const baseFreq =
-        element === 'ice' ? 270 : element === 'wind' ? 220 : element === 'earth' ? 135 : 195; // fire default
-
-      osc.frequency.setValueAtTime(baseFreq * 1.5, now);
-      osc.frequency.exponentialRampToValueAtTime(baseFreq, now + 0.04);
-      osc.frequency.exponentialRampToValueAtTime(baseFreq * 0.7, now + 0.18);
-
-      // Low-pass filter for organic wooden bow vibration
-      const filter = ctx.createBiquadFilter();
-      filter.type = 'lowpass';
-      filter.frequency.setValueAtTime(
-        element === 'ice' ? 1200 : element === 'earth' ? 500 : 800,
-        now
-      );
-      filter.frequency.exponentialRampToValueAtTime(250, now + 0.18);
-
-      gain.gain.setValueAtTime(0.35, now);
-      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.2);
-
-      osc.connect(filter);
-      filter.connect(gain);
-      gain.connect(ctx.destination);
-
-      osc.start(now);
-      osc.stop(now + 0.22);
-
-      // Distinct elemental overtone layer
-      if (element === 'fire') {
-        // Fire: snappy thermal crackle noise burst
-        const crackleSize = Math.floor(ctx.sampleRate * 0.06);
-        const crackleBuf = ctx.createBuffer(1, crackleSize, ctx.sampleRate);
-        const data = crackleBuf.getChannelData(0);
-        for (let i = 0; i < crackleSize; i++) data[i] = (Math.random() * 2 - 1) * 0.5;
-        const crackle = ctx.createBufferSource();
-        crackle.buffer = crackleBuf;
-        const cFilter = ctx.createBiquadFilter();
-        cFilter.type = 'bandpass';
-        cFilter.frequency.setValueAtTime(1800, now);
-        const cGain = ctx.createGain();
-        cGain.gain.setValueAtTime(0.2, now);
-        cGain.gain.exponentialRampToValueAtTime(0.001, now + 0.06);
-        crackle.connect(cFilter);
-        cFilter.connect(cGain);
-        cGain.connect(ctx.destination);
-        crackle.start(now);
-        crackle.stop(now + 0.07);
-      } else if (element === 'ice') {
-        // Ice: crystalline chime & glassy ping overtone
-        const iceChime = ctx.createOscillator();
-        const iceGain = ctx.createGain();
-        iceChime.type = 'sine';
-        iceChime.frequency.setValueAtTime(1080, now);
-        iceChime.frequency.exponentialRampToValueAtTime(860, now + 0.15);
-        iceGain.gain.setValueAtTime(0.25, now);
-        iceGain.gain.exponentialRampToValueAtTime(0.001, now + 0.16);
-        iceChime.connect(iceGain);
-        iceGain.connect(ctx.destination);
-        iceChime.start(now);
-        iceChime.stop(now + 0.17);
-      } else if (element === 'wind') {
-        // Wind: aerodynamic whistling zephyr flutter
-        const windOsc = ctx.createOscillator();
-        const windGain = ctx.createGain();
-        windOsc.type = 'sine';
-        windOsc.frequency.setValueAtTime(440, now);
-        windOsc.frequency.linearRampToValueAtTime(660, now + 0.08);
-        windOsc.frequency.exponentialRampToValueAtTime(330, now + 0.16);
-        windGain.gain.setValueAtTime(0.18, now);
-        windGain.gain.exponentialRampToValueAtTime(0.001, now + 0.18);
-        windOsc.connect(windGain);
-        windGain.connect(ctx.destination);
-        windOsc.start(now);
-        windOsc.stop(now + 0.19);
-      } else if (element === 'earth') {
-        // Earth: deep resonant wooden body thrum
-        const earthSub = ctx.createOscillator();
-        const earthGain = ctx.createGain();
-        earthSub.type = 'sine';
-        earthSub.frequency.setValueAtTime(75, now);
-        earthSub.frequency.exponentialRampToValueAtTime(45, now + 0.22);
-        earthGain.gain.setValueAtTime(0.4, now);
-        earthGain.gain.exponentialRampToValueAtTime(0.001, now + 0.24);
-        earthSub.connect(earthGain);
-        earthGain.connect(ctx.destination);
-        earthSub.start(now);
-        earthSub.stop(now + 0.25);
-      }
-    } catch {
-      // Graceful silence on audio restriction
-    }
+    this.play((ctx, now) => {
+      const pitch =
+        (element === 'earth' ? 0.85 : element === 'ice' ? 1.12 : 1) * (0.98 + Math.random() * 0.04);
+      // String snap, taut string harmonics, and the wooden bow body.
+      this.noise(ctx, now, 0.035, 4200, 1800, 0.32, 'highpass');
+      this.tone(ctx, now, 340 * pitch, 245 * pitch, 0.16, 0.2, 'triangle');
+      this.tone(ctx, now, 680 * pitch, 490 * pitch, 0.09, 0.055, 'triangle');
+      this.tone(ctx, now, 155 * pitch, 120 * pitch, 0.12, 0.12);
+      this.elementImpact(ctx, now + 0.012, element, 0.3);
+    });
   }
 
-  /**
-   * Arrow in-flight aerodynamic whoosh - distinct sound per element
-   */
   public playArrowFlight(element: ElementType = 'fire'): void {
-    if (this.isMuted) return;
-    const ctx = this.getContext();
-    if (!ctx) return;
-
-    try {
-      const now = ctx.currentTime;
-      const duration = 0.18;
-      const bufferSize = Math.floor(ctx.sampleRate * duration);
-      const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
-      const data = buffer.getChannelData(0);
-
-      for (let i = 0; i < bufferSize; i++) {
-        data[i] = Math.random() * 2 - 1;
-      }
-
-      const noise = ctx.createBufferSource();
-      noise.buffer = buffer;
-
-      const filter = ctx.createBiquadFilter();
-      filter.type = 'bandpass';
-
-      // Element-specific flight acoustics
-      if (element === 'fire') {
-        // Roaring flame sizzle
-        filter.Q.value = 2.5;
-        filter.frequency.setValueAtTime(1400, now);
-        filter.frequency.exponentialRampToValueAtTime(500, now + 0.16);
-      } else if (element === 'ice') {
-        // Glassy high whistling shimmer
-        filter.Q.value = 4.5;
-        filter.frequency.setValueAtTime(2400, now);
-        filter.frequency.exponentialRampToValueAtTime(1200, now + 0.16);
-      } else if (element === 'wind') {
-        // Rapid streamlined fluttering vortex
-        filter.Q.value = 5.0;
-        filter.frequency.setValueAtTime(1800, now);
-        filter.frequency.exponentialRampToValueAtTime(700, now + 0.16);
-      } else {
-        // Earth: Low resonant aerodynamic hum
-        filter.Q.value = 1.8;
-        filter.frequency.setValueAtTime(800, now);
-        filter.frequency.exponentialRampToValueAtTime(320, now + 0.16);
-      }
-
-      const gain = ctx.createGain();
-      gain.gain.setValueAtTime(0.01, now);
-      gain.gain.linearRampToValueAtTime(0.2, now + 0.04);
-      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.17);
-
-      noise.connect(filter);
-      filter.connect(gain);
-      gain.connect(ctx.destination);
-
-      noise.start(now);
-      noise.stop(now + 0.18);
-    } catch {
-      // Gracefully ignore
-    }
+    this.play((ctx, now) => {
+      const frequency = element === 'ice' ? 3600 : element === 'earth' ? 1500 : 2600;
+      this.noise(ctx, now, 0.22, frequency, frequency * 0.35, 0.18, 'bandpass', 0.025, 1.1);
+      this.noise(ctx, now, 0.16, 6500, 2800, 0.065, 'highpass', 0.015);
+      if (element === 'ice') this.tone(ctx, now, 1760, 1320, 0.16, 0.035, 'sine', 0.015);
+      if (element === 'fire') this.noise(ctx, now, 0.18, 1200, 450, 0.11, 'lowpass', 0.015);
+      if (element === 'wind')
+        this.noise(ctx, now + 0.025, 0.2, 3800, 1200, 0.1, 'bandpass', 0.02, 2);
+      if (element === 'earth') this.tone(ctx, now, 160, 100, 0.18, 0.045, 'sine', 0.015);
+    });
   }
 
-  /**
-   * Target impact: solid wooden thwack and golden bullseye chime on hit,
-   * with distinct elemental impact layer (fire combustion, ice crystal shatter,
-   * wind vortex release, earth rubble rumble) or distinct miss deflection.
-   */
+  private impact(outcome: 'hit' | 'miss', element: ElementType, dummy: boolean): void {
+    this.play((ctx, now) => {
+      if (outcome === 'miss') {
+        // A quiet passing swish stays clearly distinct from a successful strike.
+        const frequency = element === 'ice' ? 3600 : element === 'earth' ? 1500 : 2400;
+        this.noise(ctx, now, 0.2, frequency, 700, 0.16, 'bandpass', 0.025);
+        this.noise(ctx, now + 0.04, 0.08, 2200, 1200, 0.05, 'highpass', 0.01);
+        return;
+      }
+      const pitch = 0.97 + Math.random() * 0.06;
+      // Bright contact transient + audible midrange body, even on small speakers.
+      this.noise(ctx, now, 0.045, 5200, 1800, 0.42, 'lowpass');
+      this.tone(ctx, now, (dummy ? 185 : 220) * pitch, 95 * pitch, 0.14, 0.32);
+      this.tone(
+        ctx,
+        now + 0.003,
+        (dummy ? 390 : 520) * pitch,
+        (dummy ? 340 : 460) * pitch,
+        0.095,
+        0.14,
+        'triangle'
+      );
+      if (dummy) {
+        // Burlap/straw crunch, replacing the old descending spring boing.
+        this.noise(ctx, now + 0.006, 0.12, 2800, 900, 0.3, 'bandpass');
+      } else {
+        this.noise(ctx, now + 0.004, 0.09, 1800, 650, 0.23, 'bandpass');
+        this.tone(ctx, now, 780 * pitch, 730 * pitch, 0.12, 0.055);
+      }
+      this.elementImpact(ctx, now + 0.008, element, 0.65);
+      this.success(ctx, now);
+    });
+  }
+
   public playTargetHit(outcome: 'hit' | 'miss', element: ElementType = 'fire'): void {
-    if (this.isMuted) return;
-    const ctx = this.getContext();
-    if (!ctx) return;
-
-    try {
-      const now = ctx.currentTime;
-
-      if (outcome === 'hit') {
-        // 1. Kinetic wooden "Thud / Thwack"
-        const thudOsc = ctx.createOscillator();
-        const thudGain = ctx.createGain();
-        thudOsc.type = 'sine';
-        thudOsc.frequency.setValueAtTime(160, now);
-        thudOsc.frequency.exponentialRampToValueAtTime(50, now + 0.12);
-
-        thudGain.gain.setValueAtTime(0.5, now);
-        thudGain.gain.exponentialRampToValueAtTime(0.001, now + 0.14);
-
-        thudOsc.connect(thudGain);
-        thudGain.connect(ctx.destination);
-        thudOsc.start(now);
-        thudOsc.stop(now + 0.15);
-
-        // 2. Solid target board impact noise
-        const bufferSize = Math.floor(ctx.sampleRate * 0.08);
-        const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
-        const data = buffer.getChannelData(0);
-        for (let i = 0; i < bufferSize; i++) {
-          data[i] = Math.random() * 2 - 1;
-        }
-        const impactNoise = ctx.createBufferSource();
-        impactNoise.buffer = buffer;
-
-        const noiseFilter = ctx.createBiquadFilter();
-        noiseFilter.type = 'lowpass';
-        noiseFilter.frequency.setValueAtTime(600, now);
-        noiseFilter.frequency.exponentialRampToValueAtTime(150, now + 0.08);
-
-        const noiseGain = ctx.createGain();
-        noiseGain.gain.setValueAtTime(0.4, now);
-        noiseGain.gain.exponentialRampToValueAtTime(0.001, now + 0.08);
-
-        impactNoise.connect(noiseFilter);
-        noiseFilter.connect(noiseGain);
-        noiseGain.connect(ctx.destination);
-        impactNoise.start(now);
-        impactNoise.stop(now + 0.09);
-
-        // 3. Golden Bullseye Resonant Chime
-        const chimeOsc = ctx.createOscillator();
-        const chimeGain = ctx.createGain();
-        chimeOsc.type = 'sine';
-        chimeOsc.frequency.setValueAtTime(880, now + 0.02); // A5 note
-        chimeOsc.frequency.exponentialRampToValueAtTime(1174.66, now + 0.06); // D6 note
-
-        chimeGain.gain.setValueAtTime(0.001, now);
-        chimeGain.gain.linearRampToValueAtTime(0.25, now + 0.04);
-        chimeGain.gain.exponentialRampToValueAtTime(0.001, now + 0.35);
-
-        chimeOsc.connect(chimeGain);
-        chimeGain.connect(ctx.destination);
-        chimeOsc.start(now + 0.02);
-        chimeOsc.stop(now + 0.36);
-
-        // 4. Distinct Elemental Hit Reaction Sound Layer
-        if (element === 'fire') {
-          // Fire burst combustion "whoomp"
-          const fireOsc = ctx.createOscillator();
-          const fireGain = ctx.createGain();
-          fireOsc.type = 'sine';
-          fireOsc.frequency.setValueAtTime(260, now);
-          fireOsc.frequency.exponentialRampToValueAtTime(60, now + 0.18);
-          fireGain.gain.setValueAtTime(0.3, now);
-          fireGain.gain.exponentialRampToValueAtTime(0.001, now + 0.2);
-          fireOsc.connect(fireGain);
-          fireGain.connect(ctx.destination);
-          fireOsc.start(now);
-          fireOsc.stop(now + 0.22);
-        } else if (element === 'ice') {
-          // Ice shatter crystal sparkles
-          const iceShard = ctx.createOscillator();
-          const iceGain = ctx.createGain();
-          iceShard.type = 'sine';
-          iceShard.frequency.setValueAtTime(1760, now + 0.01);
-          iceShard.frequency.exponentialRampToValueAtTime(2349, now + 0.08);
-          iceGain.gain.setValueAtTime(0.22, now + 0.01);
-          iceGain.gain.exponentialRampToValueAtTime(0.001, now + 0.24);
-          iceShard.connect(iceGain);
-          iceGain.connect(ctx.destination);
-          iceShard.start(now + 0.01);
-          iceShard.stop(now + 0.25);
-        } else if (element === 'wind') {
-          // Wind vortex disperse rush
-          const windRush = ctx.createOscillator();
-          const windGain = ctx.createGain();
-          windRush.type = 'triangle';
-          windRush.frequency.setValueAtTime(520, now + 0.02);
-          windRush.frequency.exponentialRampToValueAtTime(880, now + 0.1);
-          windGain.gain.setValueAtTime(0.18, now + 0.02);
-          windGain.gain.exponentialRampToValueAtTime(0.001, now + 0.22);
-          windRush.connect(windGain);
-          windGain.connect(ctx.destination);
-          windRush.start(now + 0.02);
-          windRush.stop(now + 0.23);
-        } else if (element === 'earth') {
-          // Earth seismic impact thud
-          const earthSub = ctx.createOscillator();
-          const earthGain = ctx.createGain();
-          earthSub.type = 'sine';
-          earthSub.frequency.setValueAtTime(60, now);
-          earthSub.frequency.exponentialRampToValueAtTime(30, now + 0.25);
-          earthGain.gain.setValueAtTime(0.5, now);
-          earthGain.gain.exponentialRampToValueAtTime(0.001, now + 0.28);
-          earthSub.connect(earthGain);
-          earthGain.connect(ctx.destination);
-          earthSub.start(now);
-          earthSub.stop(now + 0.3);
-        }
-      } else {
-        // Miss: Deflection glancing ricochet with elemental acoustic character
-        const deflectOsc = ctx.createOscillator();
-        const deflectGain = ctx.createGain();
-        deflectOsc.type = 'triangle';
-
-        const missFreq =
-          element === 'ice' ? 520 : element === 'wind' ? 380 : element === 'earth' ? 180 : 320; // fire default
-
-        deflectOsc.frequency.setValueAtTime(missFreq, now);
-        deflectOsc.frequency.exponentialRampToValueAtTime(missFreq * 0.35, now + 0.16);
-
-        deflectGain.gain.setValueAtTime(0.25, now);
-        deflectGain.gain.exponentialRampToValueAtTime(0.001, now + 0.18);
-
-        deflectOsc.connect(deflectGain);
-        deflectGain.connect(ctx.destination);
-        deflectOsc.start(now);
-        deflectOsc.stop(now + 0.2);
-      }
-    } catch {
-      // Gracefully ignore
-    }
+    this.impact(outcome, element, false);
   }
 
-  /**
-   * Wizard magic cast - sparkling arcane chime and soaring energy whoosh
-   */
+  public playDummyHit(outcome: 'hit' | 'miss', element: ElementType = 'fire'): void {
+    this.impact(outcome, element, true);
+  }
+
   public playCharacterAttack(character: CharacterType, element: ElementType = 'fire'): void {
     if (character === 'wizard') return this.playMagicCast(element);
     if (character === 'archer') return this.playBowRelease(element);
-    if (this.isMuted) return;
-    const ctx = this.getContext();
-    if (!ctx) return;
-    try {
-      const now = ctx.currentTime;
-      const oscillator = ctx.createOscillator();
-      const gain = ctx.createGain();
-      const gunner = character === 'gunner';
-      const base =
-        element === 'ice' ? 480 : element === 'wind' ? 380 : element === 'earth' ? 160 : 280;
-      oscillator.type = gunner ? 'square' : 'triangle';
-      oscillator.frequency.setValueAtTime(base * (gunner ? 2 : 1.5), now);
-      oscillator.frequency.exponentialRampToValueAtTime(
-        gunner ? 55 : 90,
-        now + (gunner ? 0.09 : 0.25)
-      );
-      gain.gain.setValueAtTime(gunner ? 0.12 : 0.2, now);
-      gain.gain.exponentialRampToValueAtTime(0.001, now + (gunner ? 0.12 : 0.28));
-      oscillator.connect(gain);
-      gain.connect(ctx.destination);
-      oscillator.start(now);
-      oscillator.stop(now + 0.3);
-    } catch {
-      // Audio is optional when the browser does not support synthesis.
-    }
+    this.play((ctx, now) => {
+      if (character === 'gunner') {
+        // Sharp muzzle crack, a compact low body, and a metallic mechanism tick.
+        this.noise(ctx, now, 0.04, 6500, 2200, 0.42, 'highpass');
+        this.noise(ctx, now, 0.1, 2800, 450, 0.3, 'lowpass');
+        this.tone(ctx, now, 165, 65, 0.12, 0.22);
+        this.noise(ctx, now + 0.055, 0.035, 3400, 1800, 0.12);
+      } else {
+        // Axe release: broad air sweep and a short resonant handle accent.
+        this.noise(ctx, now, 0.23, 1200, 3200, 0.28, 'bandpass', 0.025);
+        this.noise(ctx, now + 0.025, 0.16, 5200, 1800, 0.1, 'highpass', 0.015);
+        this.tone(ctx, now, 240, 150, 0.13, 0.12, 'triangle');
+      }
+      this.elementImpact(ctx, now + 0.012, element, 0.3);
+    });
   }
 
   public playMagicCast(element: ElementType = 'fire'): void {
-    if (this.isMuted) return;
-    const ctx = this.getContext();
-    if (!ctx) return;
-
-    try {
-      const now = ctx.currentTime;
-
-      // 1. Ascending Arcane Tone
-      const toneOsc = ctx.createOscillator();
-      const toneGain = ctx.createGain();
-      toneOsc.type = 'sine';
-
-      const baseFreq =
+    this.play((ctx, now) => {
+      const root =
         element === 'ice'
           ? 659.25
           : element === 'wind'
             ? 587.33
             : element === 'earth'
               ? 329.63
-              : 440; // E5, D5, E4, A4
-
-      toneOsc.frequency.setValueAtTime(baseFreq, now);
-      toneOsc.frequency.exponentialRampToValueAtTime(baseFreq * 2, now + 0.14);
-
-      toneGain.gain.setValueAtTime(0.01, now);
-      toneGain.gain.linearRampToValueAtTime(0.3, now + 0.04);
-      toneGain.gain.exponentialRampToValueAtTime(0.001, now + 0.22);
-
-      toneOsc.connect(toneGain);
-      toneGain.connect(ctx.destination);
-      toneOsc.start(now);
-      toneOsc.stop(now + 0.24);
-
-      // 2. Crystalline Sparkle Shimmer
-      const chimeOsc = ctx.createOscillator();
-      const chimeGain = ctx.createGain();
-      chimeOsc.type = 'triangle';
-      chimeOsc.frequency.setValueAtTime(baseFreq * 3, now + 0.03);
-      chimeOsc.frequency.exponentialRampToValueAtTime(baseFreq * 1.5, now + 0.18);
-
-      chimeGain.gain.setValueAtTime(0.18, now + 0.03);
-      chimeGain.gain.exponentialRampToValueAtTime(0.001, now + 0.2);
-
-      chimeOsc.connect(chimeGain);
-      chimeGain.connect(ctx.destination);
-      chimeOsc.start(now + 0.03);
-      chimeOsc.stop(now + 0.22);
-    } catch {
-      // Gracefully ignore
-    }
-  }
-
-  /**
-   * Training Dummy impact - punchy straw/wood thud with spring wobble boing
-   */
-  public playDummyHit(outcome: 'hit' | 'miss', element: ElementType = 'fire'): void {
-    if (this.isMuted) return;
-    const ctx = this.getContext();
-    if (!ctx) return;
-
-    try {
-      const now = ctx.currentTime;
-
-      if (outcome === 'hit') {
-        // 1. Deep Burlap & Straw Punch
-        const thudOsc = ctx.createOscillator();
-        const thudGain = ctx.createGain();
-        thudOsc.type = 'triangle';
-        thudOsc.frequency.setValueAtTime(140, now);
-        thudOsc.frequency.exponentialRampToValueAtTime(38, now + 0.16);
-
-        thudGain.gain.setValueAtTime(0.6, now);
-        thudGain.gain.exponentialRampToValueAtTime(0.001, now + 0.18);
-
-        thudOsc.connect(thudGain);
-        thudGain.connect(ctx.destination);
-        thudOsc.start(now);
-        thudOsc.stop(now + 0.2);
-
-        // 2. Coiled Spring Wobble Boing
-        const springOsc = ctx.createOscillator();
-        const springGain = ctx.createGain();
-        springOsc.type = 'sine';
-        springOsc.frequency.setValueAtTime(280, now + 0.04);
-        springOsc.frequency.linearRampToValueAtTime(360, now + 0.09);
-        springOsc.frequency.linearRampToValueAtTime(240, now + 0.16);
-        springOsc.frequency.linearRampToValueAtTime(300, now + 0.22);
-        springOsc.frequency.exponentialRampToValueAtTime(180, now + 0.35);
-
-        springGain.gain.setValueAtTime(0.01, now);
-        springGain.gain.linearRampToValueAtTime(0.28, now + 0.06);
-        springGain.gain.exponentialRampToValueAtTime(0.001, now + 0.36);
-
-        springOsc.connect(springGain);
-        springGain.connect(ctx.destination);
-        springOsc.start(now + 0.04);
-        springOsc.stop(now + 0.38);
-
-        // 3. Elemental Impact Layer
-        if (element === 'fire') {
-          const fireBurst = ctx.createOscillator();
-          const fireGain = ctx.createGain();
-          fireBurst.type = 'sine';
-          fireBurst.frequency.setValueAtTime(220, now);
-          fireBurst.frequency.exponentialRampToValueAtTime(50, now + 0.15);
-          fireGain.gain.setValueAtTime(0.25, now);
-          fireGain.gain.exponentialRampToValueAtTime(0.001, now + 0.18);
-          fireBurst.connect(fireGain);
-          fireGain.connect(ctx.destination);
-          fireBurst.start(now);
-          fireBurst.stop(now + 0.2);
-        } else if (element === 'ice') {
-          const iceCrack = ctx.createOscillator();
-          const iceGain = ctx.createGain();
-          iceCrack.type = 'sine';
-          iceCrack.frequency.setValueAtTime(1400, now + 0.02);
-          iceCrack.frequency.exponentialRampToValueAtTime(1900, now + 0.1);
-          iceGain.gain.setValueAtTime(0.2, now + 0.02);
-          iceGain.gain.exponentialRampToValueAtTime(0.001, now + 0.2);
-          iceCrack.connect(iceGain);
-          iceGain.connect(ctx.destination);
-          iceCrack.start(now + 0.02);
-          iceCrack.stop(now + 0.22);
-        }
-      } else {
-        // Miss: Wind whoosh passing dummy with light straw rattle
-        const missOsc = ctx.createOscillator();
-        const missGain = ctx.createGain();
-        missOsc.type = 'triangle';
-        missOsc.frequency.setValueAtTime(260, now);
-        missOsc.frequency.exponentialRampToValueAtTime(100, now + 0.15);
-        missGain.gain.setValueAtTime(0.2, now);
-        missGain.gain.exponentialRampToValueAtTime(0.001, now + 0.16);
-        missOsc.connect(missGain);
-        missGain.connect(ctx.destination);
-        missOsc.start(now);
-        missOsc.stop(now + 0.18);
-      }
-    } catch {
-      // Gracefully ignore
-    }
+              : 440;
+      this.noise(ctx, now, 0.26, 850, 4200, 0.22, 'bandpass', 0.045, 1.2);
+      this.tone(ctx, now, root, root * 2, 0.23, 0.13, 'sine', 0.025);
+      [1, 1.5, 2, 3].forEach((ratio, i) => {
+        this.tone(
+          ctx,
+          now + 0.025 + i * 0.03,
+          root * ratio * 2,
+          root * ratio * 2,
+          0.27,
+          0.065 / (1 + i * 0.3),
+          'sine',
+          0.004
+        );
+      });
+      this.elementImpact(ctx, now + 0.025, element, 0.35);
+    });
   }
 }
 
