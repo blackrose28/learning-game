@@ -513,7 +513,8 @@ export const COSMETIC_ITEMS: readonly CosmeticItem[] = [
     },
     wizardWeaponName: 'Phoenix Flame Wing Staff',
     wizardWeaponIcon: '🪶',
-    wizardWeaponDesc: 'Sweeping staff crowned with a rebirth phoenix feather radiating solar warmth.',
+    wizardWeaponDesc:
+      'Sweeping staff crowned with a rebirth phoenix feather radiating solar warmth.',
   },
   {
     id: 'bow_master_elemental',
@@ -592,7 +593,8 @@ export const COSMETIC_ITEMS: readonly CosmeticItem[] = [
     },
     wizardWeaponName: 'Infinity Rod of Wisdom',
     wizardWeaponIcon: '♾️',
-    wizardWeaponDesc: 'Transcendent rod of eternal math knowledge channeling pure cosmic starlight.',
+    wizardWeaponDesc:
+      'Transcendent rod of eternal math knowledge channeling pure cosmic starlight.',
   },
 
   // ==========================================
@@ -1143,6 +1145,42 @@ export const COSMETIC_ITEMS: readonly CosmeticItem[] = [
 // --- ACHIEVEMENTS / TROPHIES (35) ---
 // ==========================================
 export const ACHIEVEMENTS: readonly Achievement[] = [
+  {
+    id: 'ach_first_bullet',
+    title: 'First Shot',
+    description: 'Fire your first elemental bullet as the Gunner.',
+    icon: '🔫',
+    xpReward: 25,
+    badgeColor: '#0891b2',
+    category: 'exploration',
+  },
+  {
+    id: 'ach_first_axe',
+    title: 'First Throw',
+    description: 'Throw your first elemental axe as the Warrior.',
+    icon: '🪓',
+    xpReward: 25,
+    badgeColor: '#ea580c',
+    category: 'exploration',
+  },
+  {
+    id: 'ach_bullets_50',
+    title: 'Sure Shot',
+    description: 'Fire 50 elemental bullets as the Gunner.',
+    icon: '🔫',
+    xpReward: 100,
+    badgeColor: '#0891b2',
+    category: 'mastery',
+  },
+  {
+    id: 'ach_axes_50',
+    title: 'Axe Adept',
+    description: 'Throw 50 elemental axes as the Warrior.',
+    icon: '🪓',
+    xpReward: 100,
+    badgeColor: '#ea580c',
+    category: 'mastery',
+  },
   // --- Exploration & World ---
   {
     id: 'ach_first_arrow',
@@ -1165,7 +1203,7 @@ export const ACHIEVEMENTS: readonly Achievement[] = [
   {
     id: 'ach_character_switch',
     title: 'Master of Disguise',
-    description: 'Switch between the Archer and the Wizard.',
+    description: 'Switch between the Archer, Wizard, Gunner, and Warrior.',
     icon: '🔄',
     xpReward: 50,
     badgeColor: '#06b6d4',

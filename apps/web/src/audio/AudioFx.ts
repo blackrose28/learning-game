@@ -6,7 +6,7 @@
  * offline capability.
  */
 
-import type { ElementType } from '@math-archer/learning-engine';
+import type { ElementType, CharacterType } from '@math-archer/learning-engine';
 
 export const AUDIO_MUTED_STORAGE_KEY = 'math_archer_audio_muted';
 
@@ -416,6 +416,36 @@ class AudioManager {
   /**
    * Wizard magic cast - sparkling arcane chime and soaring energy whoosh
    */
+  public playCharacterAttack(character: CharacterType, element: ElementType = 'fire'): void {
+    if (character === 'wizard') return this.playMagicCast(element);
+    if (character === 'archer') return this.playBowRelease(element);
+    if (this.isMuted) return;
+    const ctx = this.getContext();
+    if (!ctx) return;
+    try {
+      const now = ctx.currentTime;
+      const oscillator = ctx.createOscillator();
+      const gain = ctx.createGain();
+      const gunner = character === 'gunner';
+      const base =
+        element === 'ice' ? 480 : element === 'wind' ? 380 : element === 'earth' ? 160 : 280;
+      oscillator.type = gunner ? 'square' : 'triangle';
+      oscillator.frequency.setValueAtTime(base * (gunner ? 2 : 1.5), now);
+      oscillator.frequency.exponentialRampToValueAtTime(
+        gunner ? 55 : 90,
+        now + (gunner ? 0.09 : 0.25)
+      );
+      gain.gain.setValueAtTime(gunner ? 0.12 : 0.2, now);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + (gunner ? 0.12 : 0.28));
+      oscillator.connect(gain);
+      gain.connect(ctx.destination);
+      oscillator.start(now);
+      oscillator.stop(now + 0.3);
+    } catch {
+      // Audio is optional when the browser does not support synthesis.
+    }
+  }
+
   public playMagicCast(element: ElementType = 'fire'): void {
     if (this.isMuted) return;
     const ctx = this.getContext();
@@ -430,7 +460,13 @@ class AudioManager {
       toneOsc.type = 'sine';
 
       const baseFreq =
-        element === 'ice' ? 659.25 : element === 'wind' ? 587.33 : element === 'earth' ? 329.63 : 440; // E5, D5, E4, A4
+        element === 'ice'
+          ? 659.25
+          : element === 'wind'
+            ? 587.33
+            : element === 'earth'
+              ? 329.63
+              : 440; // E5, D5, E4, A4
 
       toneOsc.frequency.setValueAtTime(baseFreq, now);
       toneOsc.frequency.exponentialRampToValueAtTime(baseFreq * 2, now + 0.14);

@@ -1,3 +1,4 @@
+import { CHARACTER_PROFILES, getCharacterCosmetic } from '@math-archer/learning-engine';
 import React, { useState } from 'react';
 import {
   type SessionStorageAdapter,
@@ -60,6 +61,7 @@ export const RewardsScreen: React.FC<RewardsScreenProps> = ({
   const [testShotActive, setTestShotActive] = useState(false);
 
   const activeCharacter: CharacterType = rewardsState.equippedCosmetics?.character || 'archer';
+  const hero = CHARACTER_PROFILES[activeCharacter];
   const activeTarget: TargetType = rewardsState.equippedCosmetics?.target || 'archery_target';
 
   const handleSwitchCharacter = (char: CharacterType) => {
@@ -200,10 +202,7 @@ export const RewardsScreen: React.FC<RewardsScreenProps> = ({
       {/* Main Single-Screen Arena Layout (Left: Hero Stage & Stats; Right: Armory Vault) */}
       <div className="armory-arena-layout">
         {/* Left Column: Hero Showcase Stage & Kingdom Inspection */}
-        <section
-          className="hero-showcase-stage armory-stage-column"
-          data-testid="rewards-showcase"
-        >
+        <section className="hero-showcase-stage armory-stage-column" data-testid="rewards-showcase">
           <div className="stage-header">
             <div className="stage-header-title-group">
               {onBackToGame && (
@@ -223,7 +222,11 @@ export const RewardsScreen: React.FC<RewardsScreenProps> = ({
 
             <div className="stage-header-controls">
               <div className="stage-switchers-row" data-testid="stage-switchers-row">
-                <div className="switcher-group character-switcher" role="group" aria-label="Hero Selection">
+                <div
+                  className="switcher-group character-switcher"
+                  role="group"
+                  aria-label="Hero Selection"
+                >
                   <button
                     type="button"
                     className={`switcher-pill ${activeCharacter === 'archer' ? 'active' : ''}`}
@@ -242,9 +245,25 @@ export const RewardsScreen: React.FC<RewardsScreenProps> = ({
                   >
                     🧙‍♂️ Wizard
                   </button>
+                  {(['gunner', 'warrior'] as const).map((character) => (
+                    <button
+                      key={character}
+                      type="button"
+                      className={`switcher-pill ${activeCharacter === character ? 'active' : ''}`}
+                      data-testid={`rewards-switch-${character}`}
+                      onClick={() => handleSwitchCharacter(character)}
+                      title={`Play as ${CHARACTER_PROFILES[character].name}`}
+                    >
+                      {CHARACTER_PROFILES[character].icon} {CHARACTER_PROFILES[character].name}
+                    </button>
+                  ))}
                 </div>
 
-                <div className="switcher-group target-switcher" role="group" aria-label="Target Selection">
+                <div
+                  className="switcher-group target-switcher"
+                  role="group"
+                  aria-label="Target Selection"
+                >
                   <button
                     type="button"
                     className={`switcher-pill ${activeTarget === 'archery_target' ? 'active' : ''}`}
@@ -296,9 +315,9 @@ export const RewardsScreen: React.FC<RewardsScreenProps> = ({
                 className="stage-test-shot-btn"
                 data-testid="btn-test-shot"
                 onClick={handleTriggerTestShot}
-                title={activeCharacter === 'wizard' ? "Test fire equipped staff and spell effect" : "Test fire equipped bow and arrow effect"}
+                title={`Test ${hero.action.toLowerCase()} equipped ${hero.weapon.toLowerCase()} and ${hero.projectile} effect`}
               >
-                {activeCharacter === 'wizard' ? '🔮 Test Cast' : '🏹 Test Shot'}
+                {`${hero.icon} Test ${hero.action}`}
               </button>
             </div>
           </div>
@@ -346,7 +365,7 @@ export const RewardsScreen: React.FC<RewardsScreenProps> = ({
                   className="stage-archer-preview"
                   data-testid="stage-archer-preview"
                   onClick={handleTriggerTestShot}
-                  title={activeCharacter === 'wizard' ? "Click wizard to test cast" : "Click archer to test shoot"}
+                  title={`Click ${hero.name.toLowerCase()} to test ${hero.action.toLowerCase()}`}
                   role="button"
                   tabIndex={0}
                   onKeyDown={(e) => {
@@ -376,7 +395,9 @@ export const RewardsScreen: React.FC<RewardsScreenProps> = ({
                   <TargetGraphic
                     target={activeTarget}
                     character={activeCharacter}
-                    expression={activeTarget === 'dummy' ? '🪵 Practice Dummy' : '🎯 Royal Bullseye'}
+                    expression={
+                      activeTarget === 'dummy' ? '🪵 Practice Dummy' : '🎯 Royal Bullseye'
+                    }
                     hitState={testShotActive ? 'hit' : 'idle'}
                     activeElement="fire"
                     equippedEffect={rewardsState.equippedCosmetics.arrowEffect}
@@ -418,13 +439,13 @@ export const RewardsScreen: React.FC<RewardsScreenProps> = ({
                   className="equipped-badge-chip"
                   data-testid="badge-equipped-bow"
                   onClick={() => setActiveCategory('bow')}
-                  title={activeCharacter === 'wizard' ? "Equipped Staff (Click to browse staves)" : "Equipped Bow (Click to browse bows)"}
+                  title={`Equipped ${hero.weapon} (Click to browse)`}
                 >
-                  <span className="chip-icon">{activeCharacter === 'wizard' ? (bowItem?.wizardWeaponIcon ?? '🔮') : '🏹'}</span>
+                  <span className="chip-icon">
+                    {bowItem ? getCharacterCosmetic(bowItem, activeCharacter).icon : hero.icon}
+                  </span>
                   <span className="chip-text">
-                    {activeCharacter === 'wizard'
-                      ? (bowItem?.wizardWeaponName ?? bowItem?.name ?? 'Apprentice Oak Wand')
-                      : (bowItem?.name ?? 'Recurve Bow')}
+                    {bowItem ? getCharacterCosmetic(bowItem, activeCharacter).name : hero.weapon}
                   </span>
                 </button>
                 <button
@@ -432,10 +453,14 @@ export const RewardsScreen: React.FC<RewardsScreenProps> = ({
                   className="equipped-badge-chip"
                   data-testid="badge-equipped-effect"
                   onClick={() => setActiveCategory('arrow_effect')}
-                  title="Equipped Arrow Effect (Click to browse effects)"
+                  title={`Equipped ${hero.projectile} effect (Click to browse effects)`}
                 >
                   <span className="chip-icon">{effectItem?.icon ?? '🎯'}</span>
-                  <span className="chip-text">{effectItem?.name ?? 'Classic Arrow'}</span>
+                  <span className="chip-text">
+                    {effectItem
+                      ? getCharacterCosmetic(effectItem, activeCharacter).name
+                      : `Classic ${hero.projectile}`}
+                  </span>
                 </button>
                 <button
                   type="button"
@@ -490,7 +515,7 @@ export const RewardsScreen: React.FC<RewardsScreenProps> = ({
               data-testid="tab-cat-bow"
               onClick={() => setActiveCategory('bow')}
             >
-              {activeCharacter === 'wizard' ? '🔮 Staves & Wands' : '🏹 Bow Skins'}
+              {`${hero.icon} ${hero.weapons}`}
             </button>
             <button
               type="button"
@@ -498,7 +523,7 @@ export const RewardsScreen: React.FC<RewardsScreenProps> = ({
               data-testid="tab-cat-effects"
               onClick={() => setActiveCategory('arrow_effect')}
             >
-              {activeCharacter === 'wizard' ? '✨ Spell Effects' : '✨ Arrow Effects'}
+              {`✨ ${hero.effects}`}
             </button>
             <button
               type="button"
@@ -524,19 +549,11 @@ export const RewardsScreen: React.FC<RewardsScreenProps> = ({
               {getCosmeticsByCategory(activeCategory).map((item) => {
                 const equipped = isEquipped(item);
                 const unlocked = isUnlocked(item);
-                const isBow = item.category === 'bow';
-                const itemName =
-                  activeCharacter === 'wizard' && isBow && item.wizardWeaponName
-                    ? item.wizardWeaponName
-                    : item.name;
-                const itemIcon =
-                  activeCharacter === 'wizard' && isBow && item.wizardWeaponIcon
-                    ? item.wizardWeaponIcon
-                    : item.icon;
-                const itemDesc =
-                  activeCharacter === 'wizard' && isBow && item.wizardWeaponDesc
-                    ? item.wizardWeaponDesc
-                    : item.description;
+                const {
+                  name: itemName,
+                  icon: itemIcon,
+                  description: itemDesc,
+                } = getCharacterCosmetic(item, activeCharacter);
 
                 return (
                   <div

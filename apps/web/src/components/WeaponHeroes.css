@@ -1,0 +1,63 @@
+.character-switcher {
+  flex-wrap: wrap;
+}
+.weapon-projectile .arrow-vector-svg {
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+.character-switcher .switcher-pill.active[data-testid*='gunner'] {
+  background: #cffafe;
+  color: #155e75;
+  border-color: #0891b2;
+}
+.character-switcher .switcher-pill.active[data-testid*='warrior'] {
+  background: #ffedd5;
+  color: #9a3412;
+  border-color: #ea580c;
+}
+.weapon-charge {
+  animation: weapon-charge-pulse 0.6s ease-in-out infinite alternate;
+}
+.spinning-axe {
+  animation: axe-spin 0.28s linear infinite;
+}
+.flying-arrow.character-gunner .flying-arrow-trail {
+  height: 5px;
+}
+.arrow-button.character-gunner {
+  border-radius: 16px 28px 28px 16px;
+}
+.arrow-button.character-warrior {
+  border-width: 3px;
+}
+@keyframes axe-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+@keyframes weapon-charge-pulse {
+  to {
+    opacity: 0.35;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .spinning-axe,
+  .weapon-charge {
+    animation: none;
+  }
+}
+
+.range-switcher-bar,
+.stage-switchers-row {
+  flex-wrap: wrap;
+}
+.gunner-choice-emblem,
+.warrior-choice-emblem {
+  position: absolute;
+  top: 5px;
+  right: 8px;
+  opacity: 0.4;
+  font-size: 22px;
+  pointer-events: none;
+}

@@ -20,7 +20,7 @@ export interface CosmeticPreviewStyle {
   particleType?: string;
 }
 
-export type CharacterType = 'archer' | 'wizard';
+export type CharacterType = 'archer' | 'wizard' | 'gunner' | 'warrior';
 
 export type TargetType = 'archery_target' | 'dummy';
 

@@ -1,3 +1,4 @@
+import { CHARACTER_PROFILES } from '@math-archer/learning-engine';
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import {
   type Question,
@@ -314,6 +315,7 @@ export const GameScreen: React.FC<GameScreenProps> = ({
   playerRewardsRef.current = playerRewards;
 
   const activeCharacter: CharacterType = playerRewards.equippedCosmetics?.character || 'archer';
+  const hero = CHARACTER_PROFILES[activeCharacter];
   const activeTarget: TargetType = playerRewards.equippedCosmetics?.target || 'archery_target';
 
   const handleSwitchCharacter = (char: CharacterType) => {
@@ -324,11 +326,7 @@ export const GameScreen: React.FC<GameScreenProps> = ({
     setPlayerRewards(next);
     savePlayerRewards(next, storage);
     auth?.apiClient.updatePlayerRewards(next, playerId).catch(() => {});
-    if (char === 'wizard') {
-      audioFx.playMagicCast('fire');
-    } else {
-      audioFx.playBowRelease('fire');
-    }
+    audioFx.playCharacterAttack(char, 'fire');
   };
 
   const handleSwitchTarget = (t: TargetType) => {
@@ -692,11 +690,7 @@ export const GameScreen: React.FC<GameScreenProps> = ({
       const currentTarget = currentRewards.equippedCosmetics?.target || 'archery_target';
 
       // Procedural audio effects (Task 9.1 & 9.2)
-      if (currentChar === 'wizard') {
-        audioFx.playMagicCast(choice.element);
-      } else {
-        audioFx.playBowRelease(choice.element);
-      }
+      audioFx.playCharacterAttack(currentChar, choice.element);
       audioFx.playArrowFlight(choice.element);
 
       const attempt: Attempt = {
@@ -1369,7 +1363,8 @@ export const GameScreen: React.FC<GameScreenProps> = ({
             data-testid="session-complete-notice"
             style={{ color: '#4b5563', fontSize: 14, margin: '8px 0 16px' }}
           >
-            All daily arrows used for today. Come back tomorrow for 50 new arrows!
+            All daily {hero.plural.toLowerCase()} used for today. Come back tomorrow for {maxArrows}{' '}
+            new {hero.plural.toLowerCase()}!
           </p>
 
           {/* Rewards & Level Progression Summary (Task 9.4) */}
@@ -1794,6 +1789,18 @@ export const GameScreen: React.FC<GameScreenProps> = ({
                 >
                   🧙‍♂️ Wizard
                 </button>
+                {(['gunner', 'warrior'] as const).map((character) => (
+                  <button
+                    key={character}
+                    type="button"
+                    className={`switcher-pill ${activeCharacter === character ? 'active' : ''}`}
+                    data-testid={`btn-switch-${character}`}
+                    onClick={() => handleSwitchCharacter(character)}
+                    title={`Play as ${CHARACTER_PROFILES[character].name}`}
+                  >
+                    {CHARACTER_PROFILES[character].icon} {CHARACTER_PROFILES[character].name}
+                  </button>
+                ))}
               </div>
 
               <div
@@ -1843,13 +1850,15 @@ export const GameScreen: React.FC<GameScreenProps> = ({
                   data-character={activeCharacter}
                   aria-hidden="true"
                 >
-                  {activeCharacter === 'wizard' ? '✨' : ELEMENT_INFO[activeShot.element].icon}
+                  {activeCharacter === 'wizard'
+                    ? '✨'
+                    : activeCharacter === 'archer'
+                      ? ELEMENT_INFO[activeShot.element].icon
+                      : hero.icon}
                 </span>
               )}
             </div>
-            <span className="game-title-badge">
-              {activeCharacter === 'wizard' ? 'Math Wizard' : 'Math Archer'}
-            </span>
+            <span className="game-title-badge">{`Math ${hero.name}`}</span>
 
             {/* Flying Elemental Arrow / Spell Projectile */}
             {activeShot && shotPhase !== 'idle' && (
@@ -1966,21 +1975,13 @@ export const GameScreen: React.FC<GameScreenProps> = ({
           {/* 2x2 Elemental Answer Choices - The Archer's Quiver / Wizard's Spellbook */}
           <div className="quiver-section" data-testid="quiver-section">
             <div className="quiver-header" aria-hidden="true">
-              <span className="quiver-badge">
-                {activeCharacter === 'wizard' ? "🔮 WIZARD'S SPELLBOOK" : "🏹 ARCHER'S QUIVER"}
-              </span>
-              <span className="quiver-hint">
-                {activeCharacter === 'wizard'
-                  ? 'Channel a spell to cast at the target'
-                  : 'Draw an arrow to loose at the target'}
-              </span>
+              <span className="quiver-badge">{`${hero.icon} ${hero.inventory}`}</span>
+              <span className="quiver-hint">{hero.hint}</span>
             </div>
             <div
               className="answers-grid"
               role="group"
-              aria-label={
-                activeCharacter === 'wizard' ? 'Elemental spell choices' : 'Elemental arrow choices'
-              }
+              aria-label={`Elemental ${hero.projectile} choices`}
             >
               {question.choices.map((choice, index) => {
                 const isSelected = selectedChoice?.element === choice.element;
@@ -2020,16 +2021,16 @@ export const GameScreen: React.FC<GameScreenProps> = ({
                     data-controller-focus={isControllerFocused ? 'true' : undefined}
                     disabled={isTransitioning}
                     onClick={() => handleSelectChoice(choice)}
-                    aria-label={
-                      activeCharacter === 'wizard'
-                        ? `${info.label} spell, value ${choice.value}`
-                        : `${info.label} arrow, value ${choice.value}`
-                    }
+                    aria-label={`${info.label} ${hero.projectile}, value ${choice.value}`}
                   >
                     {activeCharacter === 'wizard' ? (
                       <div className="wizard-spell-gem" aria-hidden="true" />
-                    ) : (
+                    ) : activeCharacter === 'archer' ? (
                       <div className="arrow-fletching-notch" aria-hidden="true" />
+                    ) : (
+                      <div className={`${activeCharacter}-choice-emblem`} aria-hidden="true">
+                        {hero.icon}
+                      </div>
                     )}
 
                     {/* Top meta row: element icon, name badge, and input shortcuts */}
@@ -2041,7 +2042,9 @@ export const GameScreen: React.FC<GameScreenProps> = ({
                         <div className="element-label-group">
                           <span className="element-label">{info.label}</span>
                           <span className="element-type-badge">
-                            {activeCharacter === 'wizard' ? `${info.label} Spell` : profile.name}
+                            {activeCharacter === 'archer'
+                              ? profile.name
+                              : `${info.label} ${hero.projectile[0].toUpperCase()}${hero.projectile.slice(1)}`}
                           </span>
                         </div>
                       </div>
@@ -2079,8 +2082,8 @@ export const GameScreen: React.FC<GameScreenProps> = ({
             {gameMode === 'adventure' ? (
               <>
                 <div className="progress-text" data-testid="arrow-counter">
-                  <span role="img" aria-label={activeCharacter === 'wizard' ? 'spell' : 'arrow'}>
-                    {activeCharacter === 'wizard' ? '🔮' : '🏹'}
+                  <span role="img" aria-label={hero.projectile}>
+                    {hero.icon}
                   </span>
                   <span>
                     {arrowIndex} / {maxArrows}
@@ -2105,9 +2108,7 @@ export const GameScreen: React.FC<GameScreenProps> = ({
                   <span>Practice #{trainingCount + 1}</span>
                 </div>
                 <span className="training-unlimited-badge" data-testid="training-unlimited-badge">
-                  {activeCharacter === 'wizard'
-                    ? '♾️ Unlimited Spells (0 Daily Spells Used)'
-                    : '♾️ Unlimited Arrows (0 Daily Arrows Used)'}
+                  {`♾️ Unlimited ${hero.plural} (0 Daily ${hero.plural} Used)`}
                 </span>
                 <div className="training-session-stats" data-testid="training-session-stats">
                   Hits: <strong>{trainingHits}</strong> / {trainingCount}

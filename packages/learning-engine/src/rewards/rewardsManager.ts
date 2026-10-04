@@ -1,3 +1,4 @@
+import { isCharacterType } from './characters';
 import type { SessionStorageAdapter } from '../session/types';
 import { getDefaultStorage } from '../session/storage';
 import { getCompletedSessionsCount } from '../world/progression';
@@ -31,8 +32,16 @@ export function getRewardsStorageKey(playerId: string = 'player-local'): string 
 }
 
 export function getLevelTitle(level: number, character: CharacterType = 'archer'): string {
+  if (character === 'gunner' || character === 'warrior') {
+    const ranks = ['Novice', 'Apprentice', 'Royal', 'Master', 'Legendary', 'Divine'];
+    return `${ranks[Math.min(5, Math.floor((Math.max(1, level) - 1) / 5))]} ${character === 'gunner' ? 'Gunner' : 'Warrior'}`;
+  }
   if (character === 'wizard') {
-    return WIZARD_LEVEL_TITLES[level] || LEVEL_THRESHOLDS.find((t) => t.level === level)?.title || 'Novice Conjurer';
+    return (
+      WIZARD_LEVEL_TITLES[level] ||
+      LEVEL_THRESHOLDS.find((t) => t.level === level)?.title ||
+      'Novice Conjurer'
+    );
   }
   return LEVEL_THRESHOLDS.find((t) => t.level === level)?.title || 'Novice Archer';
 }
@@ -208,8 +217,9 @@ export function loadPlayerRewards(
       : [];
     const mergedUnlocks = Array.from(new Set([...existingUnlocks, ...computedUnlocks]));
 
-    const character: CharacterType =
-      parsed.equippedCosmetics?.character === 'wizard' ? 'wizard' : 'archer';
+    const character: CharacterType = isCharacterType(parsed.equippedCosmetics?.character)
+      ? parsed.equippedCosmetics.character
+      : 'archer';
     const target: TargetType =
       parsed.equippedCosmetics?.target === 'dummy' ? 'dummy' : 'archery_target';
 
@@ -340,6 +350,13 @@ export function awardAttemptRewards(
     updatedAchProgress['spells_cast'] = (updatedAchProgress['spells_cast'] || 0) + 1;
     if (updatedAchProgress['spells_cast'] >= 50) {
       tryUnlockAch('ach_spells_50');
+    }
+  } else if (activeChar === 'gunner' || activeChar === 'warrior') {
+    const counter = activeChar === 'gunner' ? 'bullets_fired' : 'axes_thrown';
+    tryUnlockAch(activeChar === 'gunner' ? 'ach_first_bullet' : 'ach_first_axe');
+    updatedAchProgress[counter] = (updatedAchProgress[counter] || 0) + 1;
+    if (updatedAchProgress[counter] >= 50) {
+      tryUnlockAch(activeChar === 'gunner' ? 'ach_bullets_50' : 'ach_axes_50');
     }
   } else {
     tryUnlockAch('ach_first_arrow');
@@ -691,12 +708,7 @@ export function awardSessionCompleteRewards(
 }
 
 export type EquippableCategoryKey =
-  | 'outfit'
-  | 'bow'
-  | 'arrowEffect'
-  | 'castleBanner'
-  | 'castleStatue'
-  | 'castleGround';
+  'outfit' | 'bow' | 'arrowEffect' | 'castleBanner' | 'castleStatue' | 'castleGround';
 
 /**
  * Equips an unlocked cosmetic item.
@@ -724,7 +736,7 @@ export function equipCosmetic(
 }
 
 /**
- * Switches the active player character ('archer' or 'wizard').
+ * Switches the active player character (Archer, Wizard, Gunner, or Warrior).
  * Unlocks the 'Master of Disguise' achievement on first switch.
  */
 export function switchCharacter(
@@ -803,7 +815,10 @@ export function switchTarget(
     currentLevelXp: levelInfo.currentLevelXp,
     nextLevelXp: levelInfo.nextLevelXp,
     levelProgressPct: levelInfo.levelProgressPct,
-    levelTitle: getLevelTitle(levelInfo.level, currentState.equippedCosmetics.character || 'archer'),
+    levelTitle: getLevelTitle(
+      levelInfo.level,
+      currentState.equippedCosmetics.character || 'archer'
+    ),
     equippedCosmetics: updatedEquipped,
     unlockedAchievementIds: newAchievements,
     achievementProgress: updatedAchProgress,
