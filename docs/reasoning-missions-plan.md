@@ -209,10 +209,11 @@ PR should link this plan and update the relevant checkboxes and handoff notes.
 
 ### M0 — Content specification and baseline
 
-- [ ] Write reviewed Vietnamese templates, solution steps, hints, and misconception
-  choices for the five original examples.
-- [ ] Define easy prerequisites and independent transfer variants for each family.
-- [ ] Sketch the question panel, step choices, explanation, and card placement for
+- [x] Draft Vietnamese templates, solution steps, hints, and misconception choices
+  for the five original examples in [M0 Teaching Specification](reasoning-missions-content.md).
+- [ ] Complete parent review of Vietnamese wording and teaching clarity.
+- [x] Define easy prerequisites and independent transfer variants for each family.
+- [x] Sketch the question panel, step choices, explanation, and card placement for
   phone, desktop, and controller input.
 - [ ] Establish a short baseline: ask the child to interpret and plan easy problems
   before calculating; record where assistance is needed.
@@ -368,3 +369,4 @@ Keep completed work checked; revise decisions when evidence changes the plan.
 | Date | Milestone | Result / evidence | Next action |
 | --- | --- | --- | --- |
 | 2026-10-05 | Planning | Repository inspected; parent reports strong calculation and difficulty with wording/planning. No implementation or child pilot completed. | M0 content specification, then M1 contracts and persistence. |
+| 2026-10-05 | M0 content draft | Teaching specification added for all five families with checked answers, hint ladders, candidate misconceptions, transfer variants, and interaction sketches. Parent review and child baseline remain pending. | M1 instruction-chain task contracts and persistence; gather baseline observations when available. |

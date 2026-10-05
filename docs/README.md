@@ -92,6 +92,7 @@ The banner is disabled in local Vite development.
 - **[math-archer-plan.md](../math-archer-plan.md)**: Comprehensive game specifications, curriculum levels, and multi-phase roadmap.
 - **[MVP Boundary & Scope](mvp-boundary.md)**: Frozen MVP definition, in-scope requirements, and explicitly deferred features.
 - **[Reasoning Missions Plan](reasoning-missions-plan.md)**: Post-MVP plan for Vietnamese problem comprehension, choosing solution steps, and all five story/puzzle families, with phased checklists and completion criteria.
+- **[Reasoning Missions Teaching Specification](reasoning-missions-content.md)**: M0 Vietnamese teaching flows, hint ladders, prerequisites, transfer questions, interaction sketches, and a baseline observation sheet.
 
 ## Parent practice skills
 
