@@ -40,18 +40,23 @@ Parameters: `{ first, firstGap, gapStep, shown, target }`. Gap k (term k to term
 `firstGap + (k − 1) × gapStep`, so the original is `{ 0, 2, 2, 5, 7 }`: gaps +2, +4, +6,
 +8, +10, +12.
 
-A finite list fits many rules, so **every prompt states the rule**: “mỗi bước tăng nhiều
-hơn bước trước _k_ đơn vị”. The school wording is the original sentence plus that rule.
-The plain wording puts the rule first (“Mỗi bước tăng nhiều hơn bước trước 2 đơn vị. Các
-số đầu là 3; 5; 9; 15; 23. Số ở vị trí thứ 7 là số nào?” → 45). An unstated-rule variant is
-not offered, because the declared rule is what makes 42 the checked answer.
+A finite list fits many rules, so **every prompt declares the kind of rule** (“mỗi bước
+tăng nhiều hơn bước trước một số đơn vị không đổi”) but **never the number**: the child
+works out the increase from the listed gaps. Four to five listed terms give three to four
+gaps, enough to read the increase and check it. The school wording is the original
+sentence plus that rule. The plain wording puts the rule first (“Mỗi bước tăng nhiều hơn
+bước trước một số đơn vị không đổi. Các số đầu là 3; 5; 9; 15; 23. Số ở vị trí thứ 7 là
+số nào?” → 45). The first hint and the step feedback also leave the increase unnamed; only
+the worked hint spells it out. An unstated-rule variant is not offered, because the
+declared rule is what makes 42 the checked answer.
 
 | Stage      | Range                                                                            |
 | ---------- | -------------------------------------------------------------------------------- |
-| `easy`     | start 0–9, first gap 1–3, gap step 1–2, 4–5 terms listed, one term past the list |
-| `standard` | start 0–20, first gap 1–4, gap step 1–3, 4–5 listed, one or two terms past       |
+| `easy`     | start 0–9, first gap 1–3, gap step 1–3, 4–5 terms listed, one term past the list |
+| `standard` | start 0–20, first gap 1–4, gap step 1–4, 4–5 listed, one or two terms past       |
 
-Every term is within 99.
+Every term is within 99: the start is capped by the total of the gaps. The increase varies
+across missions; only the parent's original (0; 2; 6; 12; 20) uses 2.
 
 Guided steps (independent shows only the last):
 
@@ -67,7 +72,7 @@ Guided steps (independent shows only the last):
 
 The diagram numbers every term: `Thứ 1: 0 | Thứ 2: 2 (+2) | … | Thứ 6: ? (+□) | Thứ 7: ? (+□)`.
 The listed terms and their gaps are visible; the missing terms and gaps stay blank until
-the matching step is answered, and independent mode has no diagram. Hints: the rule,
+the matching step is answered, and independent mode has no diagram. Hints: look at the gaps,
 then the numbered table with blanks, then the worked extension.
 
 ## Maximum sum from digit cards (`max_sum_digit_cards_v1`)

@@ -153,7 +153,7 @@ cho bạn 1 chục viên. Trước hai việc ấy, hộp có bao nhiêu viên b
 
 > Viết số thứ 7 vào dãy số có quy luật sau: 0; 2; 6; 12; 20; …
 
-Intended rule: gaps are consecutive positive even numbers. Continue +10, +12,
+Intended rule: each gap is the same amount bigger than the one before (here consecutive positive even numbers, so +2). The prompt declares this kind of rule without naming the +2. Continue +10, +12,
 giving term 6 = 30 and term 7 = **42**. This is one specified rule, not a claim
 that a finite list uniquely determines its continuation.
 
@@ -168,17 +168,17 @@ that a finite list uniquely determines its continuation.
 
 Hints:
 
-1. “Con thử tính mỗi số hơn số ngay trước nó bao nhiêu. Bài này dùng các bước tăng là số chẵn liên tiếp.”
+1. “Con thử tính mỗi số hơn số ngay trước nó bao nhiêu. Rồi xem các bước tăng hơn kém nhau bao nhiêu.”
 2. Show numbered terms 1–7 and gap labels +2, +4, +6, +8, blank, blank.
 3. “Sau 20, cộng 10 được 30 là số thứ 6. Cộng tiếp 12 được 42 là số thứ 7.”
 
 Prerequisites: numbered positions, subtraction to find gaps, and addition within 100. Teach constant-gap patterns first, then increasing gaps; hold wording simple.
 
-Independent, with rule stated: “Các bước tăng là số chẵn liên tiếp: 1; 3; 7;
-13; 21; … Điền số thứ 7.” → **43**.
+Independent, with the kind of rule declared: “Các số đầu là 1; 3; 7; 13; 21. Mỗi bước
+tăng nhiều hơn bước trước một số đơn vị không đổi. Điền số thứ 7.” → **43**.
 
-Held-out transfer, with rule stated: “Mỗi bước tăng nhiều hơn bước trước 2 đơn
-vị. Các số đầu là 3; 5; 9; 15; 23. Số ở vị trí thứ 7 là số nào?” → **45**.
+Held-out transfer, with the kind of rule declared: “Mỗi bước tăng nhiều hơn bước trước
+một số đơn vị không đổi. Các số đầu là 3; 5; 9; 15; 23. Số ở vị trí thứ 7 là số nào?” → **45**.
 
 ## 5. Maximum sum from digit cards: `max_sum_digit_cards`
 

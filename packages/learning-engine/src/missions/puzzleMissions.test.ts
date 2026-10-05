@@ -89,7 +89,7 @@ describe('growing-gap sequences', () => {
     expect(mission.solution.gaps).toEqual([2, 4, 6, 8, 10, 12]);
     expect(mission.solution.answer).toBe(42);
     expect(mission.prompt).toBe(
-      'Viết số thứ 7 vào dãy số có quy luật sau: 0; 2; 6; 12; 20; … Quy luật: mỗi bước tăng nhiều hơn bước trước 2 đơn vị.'
+      'Viết số thứ 7 vào dãy số có quy luật sau: 0; 2; 6; 12; 20; … Quy luật: mỗi bước tăng nhiều hơn bước trước một số đơn vị không đổi.'
     );
   });
 
@@ -106,7 +106,7 @@ describe('growing-gap sequences', () => {
     });
     expect(transfer.solution.answer).toBe(45);
     expect(transfer.prompt).toBe(
-      'Mỗi bước tăng nhiều hơn bước trước 2 đơn vị. Các số đầu là 3; 5; 9; 15; 23. Số ở vị trí thứ 7 là số nào?'
+      'Mỗi bước tăng nhiều hơn bước trước một số đơn vị không đổi. Các số đầu là 3; 5; 9; 15; 23. Số ở vị trí thứ 7 là số nào?'
     );
   });
 
@@ -135,6 +135,19 @@ describe('growing-gap sequences', () => {
       'next_gap',
       'final',
     ]);
+  });
+
+  it('declares the kind of rule but never names the increase, which varies', () => {
+    const steps = new Set<number>();
+    for (const seed of seeds) {
+      const mission = generateGrowingGapSequence({ seed });
+      steps.add(mission.parameters.gapStep);
+      const prompt = `${mission.prompt} ${getMissionHint(mission, 'strategy')}`;
+      expect(prompt).toContain('một số đơn vị không đổi');
+      expect(prompt).not.toMatch(new RegExp(`bước trước ${mission.parameters.gapStep} đơn vị`));
+      expect(getMissionStepFeedback(mission, 'next_gap')).not.toMatch(/\d/);
+    }
+    expect([...steps].sort()).toEqual([1, 2, 3, 4]);
   });
 
   it('offers the planned misconceptions as distractors', () => {
@@ -202,9 +215,9 @@ describe('growing-gap sequences', () => {
     expect(getMissionDiagram({ ...mission, support: 'independent' }, [])).toBeNull();
   });
 
-  it('has a hint ladder that states the rule and only reveals the answer last', () => {
+  it('has a hint ladder that never names the increase and only reveals the answer last', () => {
     const mission = generateGrowingGapSequence({ seed: 1, parameters: original });
-    expect(getMissionHint(mission, 'strategy')).toContain('nhiều hơn bước trước 2 đơn vị');
+    expect(getMissionHint(mission, 'strategy')).toContain('hơn kém nhau bao nhiêu');
     expect(getMissionHint(mission, 'strategy')).not.toContain('42');
     expect(getMissionHint(mission, 'partial')).not.toContain('42');
     expect(getMissionHint(mission, 'partial')).toContain('Thứ 6: □');

@@ -63,8 +63,9 @@ Content rules:
   “whenever you see ‘cho’, subtract”; the unknown-start example requires addition.
 - Use multiple Vietnamese phrasings and familiar objects, with the same underlying
   relationships. Include held-out wording for checking transfer.
-- Finite sequences admit multiple rules. State the intended growing-gap rule in
-  introductory practice; use a consistent, reviewed rule for later puzzles.
+- Finite sequences admit multiple rules. Declare the kind of growing-gap rule
+  (the gap grows by a constant amount) but not the amount, which the child infers from
+  the listed gaps and which varies between missions.
 - For digit cards, accept every valid arrangement with the optimal total, not
   just one pair of numbers. Do not reuse cards. Exclude zero in the initial bank;
   any later zero variant must enforce valid two-digit numbers.

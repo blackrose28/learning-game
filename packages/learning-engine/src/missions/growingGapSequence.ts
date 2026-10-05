@@ -44,7 +44,7 @@ export function solveGrowingGapSequence(parameters: GrowingGapSequenceParameters
   if (
     !isInt(first, 0, 20) ||
     !isInt(firstGap, 1, 4) ||
-    !isInt(gapStep, 1, 3) ||
+    !isInt(gapStep, 1, 4) ||
     !isInt(shown, 4, 5) ||
     !isInt(target, shown + 1, shown + 2)
   ) {
@@ -65,23 +65,19 @@ function randomParameters(
   pick: (min: number, max: number) => number,
   stage: 'easy' | 'standard'
 ): GrowingGapSequenceParameters {
-  if (stage === 'easy') {
-    const shown = pick(4, 5);
-    return {
-      first: pick(0, 9),
-      firstGap: pick(1, 3),
-      gapStep: pick(1, 2),
-      shown,
-      target: shown + 1,
-    };
-  }
+  const easy = stage === 'easy';
   const shown = pick(4, 5);
+  const target = easy ? shown + 1 : shown + pick(1, 2);
+  const firstGap = pick(1, easy ? 3 : 4);
+  const gapStep = pick(1, easy ? 3 : 4);
+  // The gaps add up to a fixed total, so cap the start to keep every term within MAX_TERM.
+  const span = (target - 1) * firstGap + (gapStep * (target - 1) * (target - 2)) / 2;
   return {
-    first: pick(0, 20),
-    firstGap: pick(1, 4),
-    gapStep: pick(1, 3),
+    first: pick(0, Math.min(easy ? 9 : 20, MAX_TERM - span)),
+    firstGap,
+    gapStep,
     shown,
-    target: shown + pick(1, 2),
+    target,
   };
 }
 
@@ -191,7 +187,8 @@ export function generateGrowingGapSequence(
   });
 
   const listed = terms.slice(0, shown).join('; ');
-  const rule = `mỗi bước tăng nhiều hơn bước trước ${gapStep} đơn vị`;
+  // The rule is declared but its number is not: the child works out the increase from the gaps.
+  const rule = 'mỗi bước tăng nhiều hơn bước trước một số đơn vị không đổi';
   const prompt =
     wording === 'school'
       ? `Viết số thứ ${target} vào dãy số có quy luật sau: ${listed}; … Quy luật: ${rule}.`
@@ -217,11 +214,11 @@ export function getGrowingGapSequenceHint(
   mission: GrowingGapSequenceMission,
   level: MissionHintLevel
 ): string {
-  const { gapStep, shown, target } = mission.parameters;
+  const { shown, target } = mission.parameters;
   const { terms, gaps, answer } = mission.solution;
   switch (level) {
     case 'strategy':
-      return `Con thử tính mỗi số hơn số ngay trước nó bao nhiêu. Bài này có quy luật: mỗi bước tăng nhiều hơn bước trước ${gapStep} đơn vị.`;
+      return 'Con thử tính mỗi số hơn số ngay trước nó bao nhiêu, rồi xem các bước tăng hơn kém nhau bao nhiêu.';
     case 'partial': {
       const cells = terms.map((term, index) => {
         const known = index < shown;
@@ -246,17 +243,16 @@ export function getGrowingGapSequenceHint(
 }
 
 export function getGrowingGapSequenceFeedback(
-  mission: GrowingGapSequenceMission,
+  _mission: GrowingGapSequenceMission,
   stepId: MissionStepId
 ): string {
-  const { gapStep } = mission.parameters;
   switch (stepId) {
     case 'term_position':
       return 'Số thứ mấy là vị trí trong dãy, tính từ số đầu tiên là số thứ 1. Vị trí khác với giá trị của số.';
     case 'observe_gap':
       return 'Lấy số sau trừ số ngay trước nó để biết nó tăng thêm bao nhiêu.';
     case 'next_gap':
-      return `Mỗi bước tăng nhiều hơn bước trước ${gapStep} đơn vị. Nhìn bước tăng gần nhất rồi tăng thêm ${gapStep}.`;
+      return 'Các bước tăng hơn kém nhau một số đơn vị như nhau. Tìm số đó, rồi cộng vào bước tăng gần nhất.';
     case 'next_term':
       return 'Lấy số vừa có, cộng với bước tăng vừa tìm được.';
     default:
