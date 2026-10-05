@@ -3,7 +3,7 @@ import { render, screen, fireEvent } from '@testing-library/react';
 import { WorldMap } from './WorldMap';
 import { RewardsScreen } from './RewardsScreen';
 import { App } from '../App';
-import { saveDailySession } from '@math-archer/learning-engine';
+import { getTodayDateString, saveDailySession } from '@math-archer/learning-engine';
 
 describe('Single-Screen Redesign: World Map & Royal Armory', () => {
   beforeEach(() => {
@@ -52,7 +52,7 @@ describe('Single-Screen Redesign: World Map & Royal Armory', () => {
     });
 
     it('updates the left-column inspection stage when selecting different realm cards', () => {
-      const today = new Date().toISOString().slice(0, 10);
+      const today = getTodayDateString();
       saveDailySession({
         id: 'session-1',
         playerId: 'player-single-screen-test',
@@ -82,7 +82,7 @@ describe('Single-Screen Redesign: World Map & Royal Armory', () => {
     });
 
     it('triggers travel action from both the stage action row and the card button', () => {
-      const today = new Date().toISOString().slice(0, 10);
+      const today = getTodayDateString();
       saveDailySession({
         id: 'session-1',
         playerId: 'player-single-screen-test',

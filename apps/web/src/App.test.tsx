@@ -2,7 +2,7 @@ import { describe, it, expect, beforeEach } from 'vitest';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { App } from './App';
 import { saveReasoningSettings } from './reasoningPreferences';
-import { saveAttempt, saveDailySession } from '@math-archer/learning-engine';
+import { getTodayDateString, saveAttempt, saveDailySession } from '@math-archer/learning-engine';
 
 beforeEach(() => {
   localStorage.clear();
@@ -98,7 +98,7 @@ describe('App navigation and Progress & History View', () => {
 
   it('displays stored attempts and sessions in Progress & History tab', () => {
     // Seed some attempts and sessions in localStorage
-    const today = new Date().toISOString().slice(0, 10);
+    const today = getTodayDateString();
     saveDailySession({
       id: 'session-app-test',
       playerId: 'player-local',

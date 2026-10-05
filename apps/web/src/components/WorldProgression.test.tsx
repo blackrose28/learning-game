@@ -4,6 +4,7 @@ import { WorldMap } from './WorldMap';
 import { RangeBackdrop } from './RangeBackdrop';
 import { GameScreen } from './GameScreen';
 import {
+  getTodayDateString,
   saveDailySession,
   type Question,
   type WorldProgressionState,
@@ -69,7 +70,7 @@ describe('Task 9.3 — World Progression', () => {
 
     it('unlocks Fire Village when 1 session is completed, and allows travel', () => {
       // Seed 1 completed session in localStorage
-      const today = new Date().toISOString().slice(0, 10);
+      const today = getTodayDateString();
       saveDailySession({
         id: 'session-1',
         playerId: 'player-test',
@@ -136,7 +137,7 @@ describe('Task 9.3 — World Progression', () => {
     });
 
     it('pushes world progression to apiClient when selecting an unlocked realm in standalone WorldMap', async () => {
-      const today = new Date().toISOString().slice(0, 10);
+      const today = getTodayDateString();
       saveDailySession({
         id: 'session-1',
         playerId: 'player-test',
