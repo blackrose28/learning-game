@@ -96,6 +96,8 @@ The banner is disabled in local Vite development.
 - **[Reasoning Missions Engine Contracts](reasoning-missions-engine.md)**: Implemented M1 instruction-chain contracts, local evidence/resume behavior, D1/API persistence, and versioned mission evidence.
 - **[Reasoning Training Pilot](reasoning-missions-training.md)**: Playable M2 instruction-chain Training, controls, saved progress, and child observation procedure.
 - **[Reasoning Missions Browser Integration](reasoning-missions-browser.md)**: Completed M1 offline sync, per-child opt-in, progress hydration, and parent conflict recovery.
+- **[Reasoning Missions Stories](reasoning-missions-stories.md)**: M3 daily collection and unknown-start families, bounds, distractors, and visuals.
+- **[Reasoning Missions Puzzles](reasoning-missions-puzzles.md)**: M4 growing-gap sequences and digit-card sums, including the card-placement board and arrangement evidence.
 
 ## Parent practice skills
 

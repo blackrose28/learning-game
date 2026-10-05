@@ -1,11 +1,18 @@
 import type { Question } from '../questions/types';
 
 export type MissionSupport = 'guided' | 'independent';
-export type MissionFamily = 'instruction_chain' | 'daily_collection' | 'unknown_start';
+export type MissionFamily =
+  | 'instruction_chain'
+  | 'daily_collection'
+  | 'unknown_start'
+  | 'growing_gap_sequence'
+  | 'max_sum_digit_cards';
 export const MISSION_FAMILIES: readonly MissionFamily[] = [
   'instruction_chain',
   'daily_collection',
   'unknown_start',
+  'growing_gap_sequence',
+  'max_sum_digit_cards',
 ];
 export type MissionObjective =
   | 'successor_vocabulary'
@@ -21,6 +28,13 @@ export type MissionObjective =
   | 'dozen_vocabulary'
   | 'find_unknown'
   | 'reverse_changes'
+  | 'term_position'
+  | 'gap_observation'
+  | 'extend_rule'
+  | 'place_value'
+  | 'choose_cards'
+  | 'tens_placement'
+  | 'maximize_sum'
   | 'calculation'
   | 'calculation_over_20';
 export type MissionStepId =
@@ -35,6 +49,13 @@ export type MissionStepId =
   | 'dozen_value'
   | 'find_unknown'
   | 'reverse_plan'
+  | 'term_position'
+  | 'observe_gap'
+  | 'next_gap'
+  | 'next_term'
+  | 'place_value'
+  | 'choose_cards'
+  | 'tens_cards'
   | 'final';
 export type MissionHintLevel = 'strategy' | 'partial' | 'worked';
 
@@ -55,9 +76,16 @@ export interface MissionStep {
   objective: MissionObjective;
   prompt: string;
   dependsOn: MissionStepId[];
+  /** `cards` steps are answered by placing digit cards; their `choices` are empty. */
+  input?: 'choice' | 'cards';
+  /** The digit-card bank, in the order the problem lists it. Only on `cards` steps. */
+  cards?: number[];
   choices: MissionChoice[];
   correctChoiceId: string;
-  /** Equivalent valid plans (for example, add-backs in either order). Includes correctChoiceId. */
+  /**
+   * Equivalent valid plans (for example, add-backs in either order, or every optimal card
+   * arrangement). Includes correctChoiceId.
+   */
   acceptedChoiceIds?: string[];
 }
 
@@ -180,6 +208,41 @@ export interface UnknownStartMissionV2 extends MissionBase<'unknown_start'> {
 
 export type UnknownStartMission = UnknownStartMissionV1 | UnknownStartMissionV2;
 
+export interface GrowingGapSequenceParameters {
+  /** Term 1. */
+  first: number;
+  /** The gap from term 1 to term 2. */
+  firstGap: number;
+  /** Each gap is this much bigger than the one before. */
+  gapStep: number;
+  /** How many leading terms the problem lists. */
+  shown: number;
+  /** The position asked for: one or two terms past the listed ones. */
+  target: number;
+}
+
+/** Internal definition. Render through getMissionView to avoid revealing solutions. */
+export interface GrowingGapSequenceMission extends MissionBase<'growing_gap_sequence'> {
+  templateId: 'growing_gap_sequence_v1';
+  parameters: GrowingGapSequenceParameters;
+  /** Terms 1 through target, and the gaps between them (one fewer). */
+  solution: { terms: number[]; gaps: number[]; answer: number };
+}
+
+export interface MaxSumDigitCardsParameters {
+  name: string;
+  /** Four or five distinct digits 1–9, in the order the problem lists them. */
+  cards: number[];
+}
+
+/** Internal definition. Render through getMissionView to avoid revealing solutions. */
+export interface MaxSumDigitCardsMission extends MissionBase<'max_sum_digit_cards'> {
+  templateId: 'max_sum_digit_cards_v1';
+  parameters: MaxSumDigitCardsParameters;
+  /** The best total, found by trying every arrangement, and the first arrangement reaching it. */
+  solution: { answer: number; arrangement: string };
+}
+
 /** Guided-only visual support. Cells for unanswered steps stay blank; independent has none. */
 export interface MissionDiagram {
   caption: string;
@@ -187,7 +250,11 @@ export interface MissionDiagram {
 }
 
 export type ReasoningMission =
-  InstructionChainMission | DailyCollectionMission | UnknownStartMission;
+  | InstructionChainMission
+  | DailyCollectionMission
+  | UnknownStartMission
+  | GrowingGapSequenceMission
+  | MaxSumDigitCardsMission;
 
 export type LearningTask =
   | { kind: 'arithmetic'; schemaVersion: 1; question: Question }

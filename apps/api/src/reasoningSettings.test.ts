@@ -73,7 +73,13 @@ describe('per-child reasoning opt-in', () => {
       );
     const all = {
       schemaVersion: 1,
-      enabledFamilies: ['instruction_chain', 'daily_collection', 'unknown_start'],
+      enabledFamilies: [
+        'instruction_chain',
+        'daily_collection',
+        'unknown_start',
+        'growing_gap_sequence',
+        'max_sum_digit_cards',
+      ],
     };
     expect(await (await update(all)).json()).toMatchObject({ child: { reasoningSettings: all } });
     const stories = { schemaVersion: 1, enabledFamilies: ['unknown_start'] };
@@ -81,7 +87,7 @@ describe('per-child reasoning opt-in', () => {
       child: { reasoningSettings: stories },
     });
     expect(
-      (await update({ schemaVersion: 1, enabledFamilies: ['growing_gap_sequence'] })).status
+      (await update({ schemaVersion: 1, enabledFamilies: ['multiplication_tables'] })).status
     ).toBe(400);
   });
 

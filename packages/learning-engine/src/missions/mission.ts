@@ -6,10 +6,22 @@ import {
   getDailyCollectionHint,
 } from './dailyCollection';
 import {
+  generateGrowingGapSequence,
+  getGrowingGapSequenceDiagram,
+  getGrowingGapSequenceFeedback,
+  getGrowingGapSequenceHint,
+} from './growingGapSequence';
+import {
   getInstructionChainFeedback,
   getInstructionChainHint,
   validateInstructionChain,
 } from './instructionChain';
+import {
+  generateMaxSumDigitCards,
+  getMaxSumDigitCardsDiagram,
+  getMaxSumDigitCardsFeedback,
+  getMaxSumDigitCardsHint,
+} from './maxSumDigitCards';
 import {
   generateUnknownStart,
   getUnknownStartDiagram,
@@ -23,6 +35,7 @@ import {
   getUnknownStartV2Hint,
 } from './unknownStartV2';
 import type {
+  MissionChoice,
   MissionDiagram,
   MissionHintLevel,
   MissionStep,
@@ -53,6 +66,16 @@ export function validateMission(value: unknown): value is ReasoningMission {
           canonical(value) ===
           canonical(generateUnknownStartV2({ ...options, parameters: mission.parameters }))
         );
+      case 'growing_gap_sequence_v1':
+        return (
+          canonical(value) ===
+          canonical(generateGrowingGapSequence({ ...options, parameters: mission.parameters }))
+        );
+      case 'max_sum_digit_cards_v1':
+        return (
+          canonical(value) ===
+          canonical(generateMaxSumDigitCards({ ...options, parameters: mission.parameters }))
+        );
       default:
         return validateInstructionChain(value);
     }
@@ -66,8 +89,22 @@ export function isAcceptedChoice(step: MissionStep, choiceId: string): boolean {
   return (step.acceptedChoiceIds ?? [step.correctChoiceId]).includes(choiceId);
 }
 
+export interface MissionView {
+  missionId: string;
+  prompt: string;
+  stepId: MissionStepId;
+  stepPrompt: string;
+  choices: MissionChoice[];
+  /** Present on card steps only: the bank to place from. `choices` is empty there. */
+  input?: 'cards';
+  cards?: number[];
+}
+
 /** The independent view contains no intermediate results, solution keys, or hints. */
-export function getMissionView(mission: ReasoningMission, stepId: MissionStepId = 'final') {
+export function getMissionView(
+  mission: ReasoningMission,
+  stepId: MissionStepId = 'final'
+): MissionView {
   const effectiveStep = mission.support === 'independent' ? 'final' : stepId;
   const step = mission.steps.find((item) => item.id === effectiveStep);
   if (!step) throw new Error('Unknown mission step');
@@ -77,11 +114,17 @@ export function getMissionView(mission: ReasoningMission, stepId: MissionStepId 
     stepId: step.id,
     stepPrompt: step.prompt,
     choices: step.choices.map((choice) => ({ ...choice })),
+    // Card steps are answered by placing the bank's cards; the bank is already in the problem.
+    ...(step.input === 'cards' ? { input: 'cards' as const, cards: [...(step.cards ?? [])] } : {}),
   };
 }
 
 export function getMissionHint(mission: ReasoningMission, level: MissionHintLevel): string {
   switch (mission.family) {
+    case 'growing_gap_sequence':
+      return getGrowingGapSequenceHint(mission, level);
+    case 'max_sum_digit_cards':
+      return getMaxSumDigitCardsHint(mission, level);
     case 'daily_collection':
       return getDailyCollectionHint(mission, level);
     case 'unknown_start':
@@ -96,6 +139,10 @@ export function getMissionHint(mission: ReasoningMission, level: MissionHintLeve
 /** Short, specific remediation shown after a wrong first response. */
 export function getMissionStepFeedback(mission: ReasoningMission, stepId: MissionStepId): string {
   switch (mission.family) {
+    case 'growing_gap_sequence':
+      return getGrowingGapSequenceFeedback(mission, stepId);
+    case 'max_sum_digit_cards':
+      return getMaxSumDigitCardsFeedback(mission, stepId);
     case 'daily_collection':
       return getDailyCollectionFeedback(mission, stepId);
     case 'unknown_start':
@@ -113,6 +160,10 @@ export function getMissionDiagram(
   completed: readonly MissionStepId[]
 ): MissionDiagram | null {
   switch (mission.family) {
+    case 'growing_gap_sequence':
+      return getGrowingGapSequenceDiagram(mission, completed);
+    case 'max_sum_digit_cards':
+      return getMaxSumDigitCardsDiagram(mission, completed);
     case 'daily_collection':
       return getDailyCollectionDiagram(mission, completed);
     case 'unknown_start':

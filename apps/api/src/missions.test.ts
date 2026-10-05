@@ -1,7 +1,9 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 import {
   generateDailyCollection,
+  generateGrowingGapSequence,
   generateInstructionChain,
+  generateMaxSumDigitCards,
   generateUnknownStart,
   recordMissionHint,
   recordMissionResponse,
@@ -157,6 +159,85 @@ describe('reasoning mission persistence and API', () => {
     const tampered = structuredClone(dailyDone);
     tampered.id = 'tampered';
     tampered.mission.solution.answer = 14;
+    expect((await put(env, childToken, tampered)).status).toBe(400);
+  });
+
+  it('stores and replays sequence and digit-card ledgers, validating every arrangement', async () => {
+    const sequence = generateGrowingGapSequence({
+      seed: 1,
+      parameters: { first: 0, firstGap: 2, gapStep: 2, shown: 5, target: 7 },
+    });
+    const cards = generateMaxSumDigitCards({
+      seed: 1,
+      parameters: { name: 'Hà', cards: [3, 2, 5, 4, 1] },
+    });
+    const play = (
+      mission: typeof sequence | typeof cards,
+      id: string,
+      override?: (stepId: string) => string | undefined
+    ) => {
+      let attempt = startMissionAttempt(mission, 'player-local', id, startedAt);
+      for (const step of mission.steps) {
+        attempt = recordMissionResponse(attempt, {
+          eventId: `${id}-${step.id}`,
+          stepId: step.id,
+          choiceId: override?.(step.id) ?? step.acceptedChoiceIds?.at(-1) ?? step.correctChoiceId,
+          timestamp: startedAt,
+          responseTimeMs: 1,
+        });
+      }
+      return attempt;
+    };
+    const sequenceDone = play(sequence, 'sequence');
+    const cardsDone = play(cards, 'cards');
+    // The arrangement is the stored evidence, so it comes back exactly as the child placed it.
+    expect(cardsDone.responses.at(-1)!.choiceId).toBe('cards:4-2-5-3');
+    for (const attempt of [sequenceDone, cardsDone]) {
+      expect(await (await put(env, childToken, attempt)).json()).toMatchObject({
+        disposition: 'created',
+        attempt,
+      });
+      const restored = await request(env, 'GET', `?attemptId=${attempt.id}`, childToken);
+      expect(((await restored.json()) as { attempt: MissionAttempt }).attempt).toEqual(attempt);
+    }
+    // The server replays the slots: a reused card, a card outside the bank, or a forged
+    // "correct" flag on a non-optimal arrangement are all rejected.
+    for (const choiceId of ['cards:5-5-4-3', 'cards:5-4-3-9']) {
+      const forged = structuredClone(cardsDone);
+      forged.id = `forged-${choiceId}`;
+      forged.responses.at(-1)!.choiceId = choiceId;
+      expect((await put(env, childToken, forged)).status).toBe(400);
+    }
+    const lie = structuredClone(cardsDone);
+    lie.id = 'lie';
+    lie.responses.at(-1)!.choiceId = 'cards:5-4-3-2';
+    expect((await put(env, childToken, lie)).status).toBe(400);
+    // A non-optimal first response followed by the right one is valid, assisted evidence.
+    const retried = startMissionAttempt(cards, 'player-local', 'retried', startedAt);
+    let attempt = retried;
+    for (const step of cards.steps.slice(0, -1)) {
+      attempt = recordMissionResponse(attempt, {
+        eventId: `retried-${step.id}`,
+        stepId: step.id,
+        choiceId: step.correctChoiceId,
+        timestamp: startedAt,
+        responseTimeMs: 1,
+      });
+    }
+    for (const [i, choiceId] of ['cards:5-4-3-2', 'cards:5-3-4-2'].entries()) {
+      attempt = recordMissionResponse(attempt, {
+        eventId: `retried-final-${i}`,
+        stepId: 'final',
+        choiceId,
+        timestamp: startedAt,
+        responseTimeMs: 1,
+      });
+    }
+    expect(attempt.responses.at(-2)).toMatchObject({ correct: false });
+    expect((await put(env, childToken, attempt)).status).toBe(200);
+    const tampered = structuredClone(sequenceDone);
+    tampered.id = 'tampered-sequence';
+    tampered.mission.solution.answer = 41;
     expect((await put(env, childToken, tampered)).status).toBe(400);
   });
 

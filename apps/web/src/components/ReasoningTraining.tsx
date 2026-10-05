@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import {
   compareMissionAttempts,
+  describeCardArrangement,
   getActiveMissionStep,
   getMissionDiagram,
   getMissionHint,
@@ -25,6 +26,7 @@ import {
 } from '../sync/missions';
 import { useGamepad, XboxButton } from '../input/useGamepad';
 import { createMission, familyLabels } from '../reasoningMissionFactory';
+import { DigitCardBoard } from './DigitCardBoard';
 import './ReasoningTraining.css';
 
 export interface ReasoningTrainingProps {
@@ -175,7 +177,10 @@ export function ReasoningTraining({
       });
       persist(next);
       const response = next.responses.at(-1)!;
-      const label = view!.choices.find((choice) => choice.id === choiceId)!.label;
+      const label =
+        view!.input === 'cards'
+          ? describeCardArrangement(choiceId)
+          : view!.choices.find((choice) => choice.id === choiceId)!.label;
       setFeedback({
         stepId,
         correct: response.correct,
@@ -335,6 +340,15 @@ export function ReasoningTraining({
           {view && (
             <>
               <h2>{view.stepPrompt}</h2>
+              {view.input === 'cards' && (
+                <DigitCardBoard
+                  // A new board after each response, so a retry starts from empty slots.
+                  key={attempt.responses.length}
+                  cards={view.cards ?? []}
+                  disabled={!!feedback || blocked}
+                  onSubmit={answer}
+                />
+              )}
               <div className="mission-choices">
                 {view.choices.map((choice, index) => (
                   <button
@@ -378,7 +392,9 @@ export function ReasoningTraining({
         {syncText}
       </p>
       <p className="mission-controls">
-        Chạm để chọn · Phím 1–4 hoặc Tab / Enter · Tay cầm: di chuyển, A chọn, B quay lại
+        {view?.input === 'cards'
+          ? 'Chạm để chọn thẻ rồi chọn ô · Tab / Enter · Tay cầm: di chuyển, A chọn, B quay lại'
+          : 'Chạm để chọn · Phím 1–4 hoặc Tab / Enter · Tay cầm: di chuyển, A chọn, B quay lại'}
       </p>
     </section>
   );

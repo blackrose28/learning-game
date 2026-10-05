@@ -86,5 +86,6 @@ observations have not been collected.
 
 M3 daily collection and unknown-start stories now use this loop: enable them in the
 same parent panel and choose the type in Training. See
-[M3 Stories](reasoning-missions-stories.md). Next content milestone: M4 sequences and
-digit cards.
+[M3 Stories](reasoning-missions-stories.md). The M4 growing-gap sequence and digit-card
+families use it too, with a card-placement board for the digit-card step; see
+[M4 Puzzles](reasoning-missions-puzzles.md). Next: M5 adaptive integration.

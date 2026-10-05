@@ -4,6 +4,8 @@ export * from './instructionChainV2';
 export * from './dailyCollection';
 export * from './unknownStart';
 export * from './unknownStartV2';
+export * from './growingGapSequence';
+export * from './maxSumDigitCards';
 export * from './mission';
 export * from './attempt';
 export * from './progress';

@@ -43,6 +43,13 @@ const labels: Record<MissionObjective, string> = {
   dozen_vocabulary: '“Chục” (dozens)',
   find_unknown: 'Finding what is asked (“lúc đầu”)',
   reverse_changes: 'Reversing the changes',
+  term_position: 'Term position (“số thứ …”)',
+  gap_observation: 'Finding the gap between terms',
+  extend_rule: 'Extending the growing-gap rule',
+  place_value: 'Place value (tens and units)',
+  choose_cards: 'Choosing which card to leave out',
+  tens_placement: 'Choosing the tens cards',
+  maximize_sum: 'Arranging cards for the largest total',
   calculation: 'Guided calculation up to 20',
   calculation_over_20: 'Guided calculation above 20',
 };
@@ -60,6 +67,14 @@ const families: Record<MissionFamily, { name: string; description: string }> = {
     name: 'Unknown starting amount',
     description:
       'Use “1 chục” and “còn lại” to work backwards, undoing both gains and losses, to “lúc đầu”.',
+  },
+  growing_gap_sequence: {
+    name: 'Growing-gap sequences',
+    description: 'Number the terms, find the gaps, and extend a rule whose gaps grow.',
+  },
+  max_sum_digit_cards: {
+    name: 'Digit-card sums',
+    description: 'Place digit cards in tens and units slots to make the largest total.',
   },
 };
 

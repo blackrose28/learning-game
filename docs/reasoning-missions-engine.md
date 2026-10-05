@@ -6,7 +6,9 @@ See [M1 Browser Sync and Parent Controls](reasoning-missions-browser.md).
 The player-facing Training mission screen is implemented in [M2 Training Pilot](reasoning-missions-training.md).
 The daily collection and unknown-start families added in M3 are described in
 [M3 Stories](reasoning-missions-stories.md); they widen the mission union and
-add `acceptedChoiceIds`, but leave the contracts below unchanged.
+add `acceptedChoiceIds`, but leave the contracts below unchanged. The M4 sequence and
+digit-card families ([M4 Puzzles](reasoning-missions-puzzles.md)) also add a `cards` step
+input whose response is a validated slot arrangement in `choiceId`.
 
 ## Task and template boundaries
 

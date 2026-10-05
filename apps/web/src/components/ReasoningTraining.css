@@ -136,3 +136,46 @@
   content: '→ ';
   color: #ffe183;
 }
+
+.digit-card-board {
+  margin-bottom: 1rem;
+}
+.digit-card-bank,
+.digit-card-row,
+.digit-card-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+}
+.digit-card-row {
+  margin: 0.5rem 0;
+}
+.digit-card-row strong {
+  min-width: 6.5rem;
+}
+.reasoning-training .digit-card,
+.reasoning-training .digit-card-slot {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-width: 56px;
+  min-height: 64px;
+  font-size: 1.6rem;
+  font-weight: 700;
+}
+.reasoning-training .digit-card-slot {
+  min-width: 88px;
+  border-style: dashed;
+}
+.digit-card-slot small {
+  font-size: 0.75rem;
+  font-weight: 400;
+}
+.digit-card-slot span {
+  min-height: 1.6em;
+}
+.digit-card-status {
+  font-size: 0.95rem;
+}

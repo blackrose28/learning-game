@@ -532,7 +532,7 @@ describe('families in progress and settings', () => {
       })
     ).toBe(false);
     expect(
-      isReasoningSettings({ schemaVersion: 1, enabledFamilies: ['growing_gap_sequence'] })
+      isReasoningSettings({ schemaVersion: 1, enabledFamilies: ['multiplication_tables'] })
     ).toBe(false);
   });
 });

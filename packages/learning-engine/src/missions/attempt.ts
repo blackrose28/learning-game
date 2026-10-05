@@ -1,5 +1,6 @@
 import type { SessionStorageAdapter } from '../session/types';
 import { getDefaultStorage } from '../session/storage';
+import { isValidCardArrangement } from './maxSumDigitCards';
 import { isAcceptedChoice, validateMission } from './mission';
 import type {
   MissionAttempt,
@@ -88,8 +89,12 @@ export function recordMissionResponse(
     throw new Error('Invalid mission response duration');
   }
   const step = attempt.mission.steps.find((item) => item.id === input.stepId)!;
-  if (!step.choices.some((choice) => choice.id === input.choiceId))
-    throw new Error('Unknown mission choice');
+  // A card step records the child's slots as the choice, so the arrangement itself is evidence.
+  const known =
+    step.input === 'cards'
+      ? isValidCardArrangement(step.cards ?? [], input.choiceId)
+      : step.choices.some((choice) => choice.id === input.choiceId);
+  if (!known) throw new Error('Unknown mission choice');
   const correct = isAcceptedChoice(step, input.choiceId);
   // Hints or earlier remediation make later responses assisted, including later steps.
   const assisted =
