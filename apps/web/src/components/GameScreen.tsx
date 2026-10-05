@@ -1856,7 +1856,7 @@ export const GameScreen: React.FC<GameScreenProps> = ({
                   equippedBow={playerRewards.equippedCosmetics.bow}
                 />
               </span>
-              {activeShot && shotPhase === 'shooting' && (
+              {activeShot && shotPhase === 'shooting' && activeCharacter !== 'gunner' && (
                 <span
                   className={`archer-arrow-nock element-${activeShot.element} ${activeCharacter === 'wizard' ? 'wizard-spell-spark' : ''}`}
                   data-testid="archer-arrow-nock"
