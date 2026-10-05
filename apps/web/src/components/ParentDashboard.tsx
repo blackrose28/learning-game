@@ -21,6 +21,7 @@ import { hydratePlayerProgress } from '../sync';
 import type { ChildPublicProfile, MathArcherApiClient } from '../api/client';
 import { loadDisabledSkills, saveDisabledSkills } from '../skillPreferences';
 import { loadAnimationSpeed, saveAnimationSpeed } from '../speedPreferences';
+import { ReasoningPanel } from './ReasoningPanel';
 import './ParentDashboard.css';
 
 export interface ParentDashboardProps {
@@ -888,6 +889,29 @@ export const ParentDashboard: React.FC<ParentDashboardProps> = ({
         {useSample && <p>Switch to real data to change practice skills.</p>}
         {skillFeedback && <p role="status">{skillFeedback}</p>}
       </section>
+
+      <ReasoningPanel
+        key={effectivePlayerId}
+        playerId={effectivePlayerId}
+        settings={selectedChildObj?.reasoningSettings}
+        storage={storageAdapter}
+        api={activeApiClient ?? undefined}
+        preview={useSample}
+        busy={isSavingSkills || isSavingSpeed || isHydrating}
+        update={
+          authContext
+            ? (settings) =>
+                authContext.updateChild(effectivePlayerId, { reasoningSettings: settings })
+            : activeApiClient
+              ? async (settings) =>
+                  (
+                    await activeApiClient.updateChildProfile(effectivePlayerId, {
+                      reasoningSettings: settings,
+                    })
+                  ).child
+              : undefined
+        }
+      />
 
       {/* Manage Profiles Modal */}
       {showManageModal && (

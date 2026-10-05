@@ -44,6 +44,9 @@ export function createTestD1Database(applyMigration = true): D1Database {
     sqlite.exec(
       fs.readFileSync(path.resolve(__dirname, '../migrations/0006_mission_attempts.sql'), 'utf8')
     );
+    sqlite.exec(
+      fs.readFileSync(path.resolve(__dirname, '../migrations/0007_reasoning_settings.sql'), 'utf8')
+    );
   }
 
   const createPreparedStatement = (

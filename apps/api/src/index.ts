@@ -1,4 +1,8 @@
-import { isAnimationSpeed, restoreMissionAttempt } from '@math-archer/learning-engine';
+import {
+  isAnimationSpeed,
+  isReasoningSettings,
+  restoreMissionAttempt,
+} from '@math-archer/learning-engine';
 import {
   getMissionAttemptFromDb,
   listMissionAttemptsFromDb,
@@ -368,6 +372,7 @@ export default {
               grade: childRecord.grade || '1st Grade',
               disabledSkills: JSON.parse(childRecord.disabled_skills || '[]'),
               animationSpeed: childRecord.animation_speed || 'fast',
+              reasoningSettings: JSON.parse(childRecord.reasoning_settings!),
               parentId,
               hasPin: Boolean(childRecord.pin && childRecord.pin.trim()),
             },
@@ -412,6 +417,7 @@ export default {
                   grade: child.grade,
                   disabledSkills: JSON.parse(child.disabled_skills || '[]'),
                   animationSpeed: child.animation_speed || 'fast',
+                  reasoningSettings: JSON.parse(child.reasoning_settings!),
                   parentId: child.parent_id ?? undefined,
                   hasPin: Boolean(child.pin),
                 }
@@ -491,6 +497,16 @@ export default {
 
           if (body.animationSpeed !== undefined && !isAnimationSpeed(body.animationSpeed)) {
             return errorResponse('INVALID_SPEED', 'Choose Fast, Normal, or Slow', 400);
+          }
+          if (
+            body.reasoningSettings !== undefined &&
+            !isReasoningSettings(body.reasoningSettings)
+          ) {
+            return errorResponse(
+              'INVALID_REASONING_SETTINGS',
+              'Choose valid reasoning mission families',
+              400
+            );
           }
           if (body.disabledSkills !== undefined) {
             const skills = getAllSkills().map((s) => s.id);

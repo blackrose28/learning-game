@@ -6,7 +6,7 @@ import type {
   DailySession,
   AttemptSummaryStats,
   PracticeRecommendation,
-  MissionAttempt,
+  ReasoningSettings,
 } from '@math-archer/learning-engine';
 
 export interface Env {
@@ -36,6 +36,7 @@ export interface ParentPublic {
 export interface ChildProfileRecord {
   disabled_skills?: string;
   animation_speed?: AnimationSpeed;
+  reasoning_settings?: string;
   id: string;
   name: string;
   parent_id?: string | null;
@@ -49,6 +50,7 @@ export interface ChildProfileRecord {
 export interface ChildPublicProfile {
   disabledSkills?: Skill[];
   animationSpeed?: AnimationSpeed;
+  reasoningSettings?: ReasoningSettings;
   id: string;
   name: string;
   avatar: string;
@@ -130,6 +132,7 @@ export interface ParentCreateChildRequest {
 export interface ParentUpdateChildRequest {
   disabledSkills?: Skill[];
   animationSpeed?: AnimationSpeed;
+  reasoningSettings?: ReasoningSettings;
   name?: string;
   pin?: string;
   avatar?: string;
@@ -180,23 +183,9 @@ export interface ErrorResponse {
   details?: unknown;
 }
 
-export interface StoredMissionAttempt {
-  attempt: MissionAttempt;
-  revision: number;
-}
-
-export interface MissionSaveRequest {
-  schemaVersion: 1;
-  attempt: MissionAttempt;
-}
-
-export interface MissionSaveResponse extends StoredMissionAttempt {
-  schemaVersion: 1;
-  disposition: 'created' | 'advanced' | 'unchanged' | 'stale';
-}
-
-export interface MissionAttemptPage {
-  schemaVersion: 1;
-  attempts: StoredMissionAttempt[];
-  nextCursor: { startedAt: string; attemptId: string } | null;
-}
+export type {
+  StoredMissionAttempt,
+  MissionSaveRequest,
+  MissionSaveResponse,
+  MissionAttemptPage,
+} from '@math-archer/learning-engine';

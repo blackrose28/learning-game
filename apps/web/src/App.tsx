@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import {
   getEngineInfo,
+  isReasoningSettings,
   solveExpression,
   getAllCurriculumLevels,
   getSkillsForLevel,
@@ -19,14 +20,15 @@ import { RewardsScreen } from './components/RewardsScreen';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import type { MathArcherApiClient } from './api/client';
 import { useGamepad, XboxButton } from './input/useGamepad';
-import { hydratePlayerProgress } from './sync';
+import { hydratePlayerProgress, syncMissionAttempts } from './sync';
+import { saveReasoningSettings } from './reasoningPreferences';
 import { audioFx } from './audio/AudioFx';
 import './App.css';
 
 const APP_TABS = ['game', 'world', 'rewards', 'dashboard', 'history', 'curriculum'] as const;
 
 export const AppContent: React.FC = () => {
-  const { activeChild, isParentUnlocked, apiClient, isAuthenticated } = useAuth();
+  const { activeChild, isParentUnlocked, apiClient, isAuthenticated, authToken } = useAuth();
   const [activeTab, setActiveTab] = useState<
     'game' | 'world' | 'rewards' | 'dashboard' | 'history' | 'curriculum'
   >('game');
@@ -77,6 +79,35 @@ export const AppContent: React.FC = () => {
       isMounted = false;
     };
   }, [activeChild.id, apiClient, isAuthenticated]);
+
+  useEffect(() => {
+    if (isReasoningSettings(activeChild.reasoningSettings)) {
+      try {
+        saveReasoningSettings(activeChild.id, activeChild.reasoningSettings);
+      } catch {
+        /* The authenticated profile still supplies preferences if local storage is unavailable. */
+      }
+    }
+  }, [activeChild.id, activeChild.reasoningSettings]);
+
+  useEffect(() => {
+    if (!isAuthenticated) return;
+    const sync = () => {
+      void syncMissionAttempts(activeChild.id, apiClient);
+    };
+    const visible = () => {
+      if (document.visibilityState === 'visible') sync();
+    };
+    sync();
+    window.addEventListener('online', sync);
+    window.addEventListener('focus', sync);
+    document.addEventListener('visibilitychange', visible);
+    return () => {
+      window.removeEventListener('online', sync);
+      window.removeEventListener('focus', sync);
+      document.removeEventListener('visibilitychange', visible);
+    };
+  }, [activeChild.id, apiClient, isAuthenticated, authToken]);
 
   const handleSwitchTab = (
     tab: 'game' | 'world' | 'rewards' | 'dashboard' | 'history' | 'curriculum'

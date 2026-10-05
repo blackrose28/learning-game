@@ -228,21 +228,25 @@ invent them or block unrelated engineering work while waiting for them.
       response types, first-response evidence summaries, and wrapping of validated legacy
       arithmetic questions. See [M1 Engine Contracts](reasoning-missions-engine.md).
 - [x] Finalize versioned server attempt payloads and append-only snapshot behavior.
-- [ ] Finalize reasoning progress aggregation and browser hydration boundaries.
+- [x] Finalize reasoning progress aggregation and browser hydration boundaries.
 - [x] Add deterministic instruction-chain generation and independent validation.
 - [x] Add mission-specific hints and meaningful, unique distractors.
 - [x] Implement resumable local mission state and validated evidence storage,
       including idempotent event retries and assistance tracking.
 - [x] Implement additive D1 migration, API validation, and idempotent server
       submission with revision-guarded updates and conflict preservation.
-- [ ] Implement browser sync payloads, offline queue retries, and conflict recovery.
-- [ ] Add per-child reasoning settings and versioned progress hydration; existing
+- [x] Implement browser sync payloads, offline queue retries, and conflict recovery.
+- [x] Add per-child reasoning settings and versioned progress hydration; existing
       children begin with reasoning disabled until the parent opts in.
-- [ ] Verify older profiles, queued arithmetic attempts, and disabled skill
+- [x] Verify older profiles, queued arithmetic attempts, and disabled skill
       preferences still load and behave correctly.
 
 Exit: one mission can be generated, answered, saved offline, synced, and restored
 without affecting arithmetic history or scoring.
+
+Engineering exit verified through the actual Worker/SQLite-backed D1 integration
+test and full regression suites. See [M1 Browser Sync and Parent Controls](reasoning-missions-browser.md).
+The playable mission interface and child teaching review remain M2/M0 work.
 
 ### M2 — Complete instruction-chain Training pilot
 
@@ -372,9 +376,10 @@ Update this section after each milestone with the implementation commit/PR,
 checks run, concrete observations, unresolved issues, and next unchecked task.
 Keep completed work checked; revise decisions when evidence changes the plan.
 
-| Date       | Milestone             | Result / evidence                                                                                                                                                                                                                                                                                                     | Next action                                                                                                                |
-| ---------- | --------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------- |
-| 2026-10-05 | Planning              | Repository inspected; parent reports strong calculation and difficulty with wording/planning. No implementation or child pilot completed.                                                                                                                                                                             | M0 content specification, then M1 contracts and persistence.                                                               |
-| 2026-10-05 | M0 content draft      | Teaching specification added for all five families with checked answers, hint ladders, candidate misconceptions, transfer variants, and interaction sketches. Parent review and child baseline remain pending.                                                                                                        | M1 instruction-chain task contracts and persistence; gather baseline observations when available.                          |
-| 2026-10-05 | M1 engine foundation  | Versioned instruction-chain generation, views/hints, validated local resume, first-response evidence, and retry handling implemented. Engine suite: 257 tests pass, including 20 mission tests and 1,000 generated mission seeds. Engine type check and changed-file lint pass. M1 is not complete.                   | Add D1/API mission persistence, offline sync, opt-in preferences, and reasoning progress hydration before the M2 UI pilot. |
-| 2026-10-05 | M1 server persistence | Additive D1 migration and authenticated save/load/list API implemented. Append-only snapshots preserve stale/conflicting evidence; conditional revision updates handle concurrent writers. API suite: 57 tests pass, including 19 mission tests. API type check and changed-file lint pass. No production deployment. | Browser API/offline queue, conflict recovery, opt-in preferences, and reasoning progress hydration.                        |
+| Date       | Milestone                       | Result / evidence                                                                                                                                                                                                                                                                                                                                                                        | Next action                                                                                                                |
+| ---------- | ------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------- |
+| 2026-10-05 | Planning                        | Repository inspected; parent reports strong calculation and difficulty with wording/planning. No implementation or child pilot completed.                                                                                                                                                                                                                                                | M0 content specification, then M1 contracts and persistence.                                                               |
+| 2026-10-05 | M0 content draft                | Teaching specification added for all five families with checked answers, hint ladders, candidate misconceptions, transfer variants, and interaction sketches. Parent review and child baseline remain pending.                                                                                                                                                                           | M1 instruction-chain task contracts and persistence; gather baseline observations when available.                          |
+| 2026-10-05 | M1 engine foundation            | Versioned instruction-chain generation, views/hints, validated local resume, first-response evidence, and retry handling implemented. Engine suite: 257 tests pass, including 20 mission tests and 1,000 generated mission seeds. Engine type check and changed-file lint pass. M1 is not complete.                                                                                      | Add D1/API mission persistence, offline sync, opt-in preferences, and reasoning progress hydration before the M2 UI pilot. |
+| 2026-10-05 | M1 server persistence           | Additive D1 migration and authenticated save/load/list API implemented. Append-only snapshots preserve stale/conflicting evidence; conditional revision updates handle concurrent writers. API suite: 57 tests pass, including 19 mission tests. API type check and changed-file lint pass. No production deployment.                                                                    | Browser API/offline queue, conflict recovery, opt-in preferences, and reasoning progress hydration.                        |
+| 2026-10-05 | M1 browser integration complete | Durable offline queue, paginated hydration, in-flight response preservation, old-API compatibility, shared evidence summaries, opt-in settings, and parent conflict recovery implemented. All 620 tests pass (261 engine / 60 API / 299 web), including actual Worker/D1 sync integration. Type checks, lint, engine build, and web/PWA production build pass. No production deployment. | M2 playable instruction-chain Training pilot; M0 parent review and baseline remain pending.                                |

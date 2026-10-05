@@ -82,3 +82,24 @@ export interface MissionAttempt {
   responses: MissionResponse[];
   hints: MissionHintEvent[];
 }
+
+export interface StoredMissionAttempt {
+  attempt: MissionAttempt;
+  revision: number;
+}
+
+export interface MissionSaveRequest {
+  schemaVersion: 1;
+  attempt: MissionAttempt;
+}
+
+export interface MissionSaveResponse extends StoredMissionAttempt {
+  schemaVersion: 1;
+  disposition: 'created' | 'advanced' | 'unchanged' | 'stale';
+}
+
+export interface MissionAttemptPage {
+  schemaVersion: 1;
+  attempts: StoredMissionAttempt[];
+  nextCursor: { startedAt: string; attemptId: string } | null;
+}

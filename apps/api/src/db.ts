@@ -12,9 +12,11 @@ import type {
   WorldAreaId,
   PlayerRewardsState,
   EquippedCosmetics,
+  ReasoningSettings,
 } from '@math-archer/learning-engine';
 import {
   createEmptyProfile,
+  defaultReasoningSettings,
   recordAttempt,
   computeAttemptStats,
   generatePracticeRecommendation,
@@ -836,6 +838,7 @@ export async function createChildProfile(
     avatar,
     grade,
     parentId,
+    reasoningSettings: defaultReasoningSettings(),
     hasPin: Boolean(pin),
   };
 }
@@ -847,7 +850,7 @@ export async function getChildrenForParent(
   // In Math Archer, there is only one parent role; all child profiles belong to the parent.
   const rows = await db
     .prepare(
-      `SELECT id, name, avatar, grade, pin, parent_id, disabled_skills, animation_speed FROM players ORDER BY created_at ASC`
+      `SELECT id, name, avatar, grade, pin, parent_id, disabled_skills, animation_speed, reasoning_settings FROM players ORDER BY created_at ASC`
     )
     .all<{
       id: string;
@@ -858,6 +861,7 @@ export async function getChildrenForParent(
       parent_id: string | null;
       disabled_skills: string;
       animation_speed: AnimationSpeed;
+      reasoning_settings: string;
     }>();
 
   if (!rows.results) return [];
@@ -869,6 +873,7 @@ export async function getChildrenForParent(
     grade: r.grade || '1st Grade',
     disabledSkills: JSON.parse(r.disabled_skills || '[]'),
     animationSpeed: r.animation_speed || 'fast',
+    reasoningSettings: JSON.parse(r.reasoning_settings),
     parentId: r.parent_id ?? undefined,
     hasPin: Boolean(r.pin && r.pin.trim()),
   }));
@@ -887,7 +892,7 @@ export async function getChildProfile(
 export async function getAllPublicChildProfiles(db: D1Database): Promise<ChildPublicProfile[]> {
   const rows = await db
     .prepare(
-      `SELECT id, name, avatar, grade, pin, parent_id, disabled_skills, animation_speed FROM players ORDER BY name ASC`
+      `SELECT id, name, avatar, grade, pin, parent_id, disabled_skills, animation_speed, reasoning_settings FROM players ORDER BY name ASC`
     )
     .all<{
       id: string;
@@ -898,6 +903,7 @@ export async function getAllPublicChildProfiles(db: D1Database): Promise<ChildPu
       parent_id: string | null;
       disabled_skills: string;
       animation_speed: AnimationSpeed;
+      reasoning_settings: string;
     }>();
 
   if (!rows.results) return [];
@@ -909,6 +915,7 @@ export async function getAllPublicChildProfiles(db: D1Database): Promise<ChildPu
     grade: r.grade || '1st Grade',
     disabledSkills: JSON.parse(r.disabled_skills || '[]'),
     animationSpeed: r.animation_speed || 'fast',
+    reasoningSettings: JSON.parse(r.reasoning_settings),
     parentId: r.parent_id ?? undefined,
     hasPin: Boolean(r.pin && r.pin.trim()),
   }));
@@ -939,6 +946,7 @@ export async function updateChildProfile(
     grade?: string;
     disabledSkills?: Skill[];
     animationSpeed?: AnimationSpeed;
+    reasoningSettings?: ReasoningSettings;
   } = {}
 ): Promise<ChildPublicProfile | null> {
   const current = await getChildProfile(db, childId);
@@ -950,15 +958,28 @@ export async function updateChildProfile(
   const grade = updates.grade !== undefined ? updates.grade : current.grade;
   const disabledSkills = updates.disabledSkills ?? JSON.parse(current.disabled_skills || '[]');
   const animationSpeed = updates.animationSpeed ?? current.animation_speed ?? 'fast';
+  const reasoningSettings =
+    updates.reasoningSettings ??
+    JSON.parse(current.reasoning_settings || JSON.stringify(defaultReasoningSettings()));
   const now = new Date().toISOString();
 
   await db
     .prepare(
       `UPDATE players
-       SET name = ?, pin = ?, avatar = ?, grade = ?, disabled_skills = ?, animation_speed = ?, updated_at = ?
+       SET name = ?, pin = ?, avatar = ?, grade = ?, disabled_skills = ?, animation_speed = ?, reasoning_settings = ?, updated_at = ?
        WHERE id = ?`
     )
-    .bind(name, pin, avatar, grade, JSON.stringify(disabledSkills), animationSpeed, now, childId)
+    .bind(
+      name,
+      pin,
+      avatar,
+      grade,
+      JSON.stringify(disabledSkills),
+      animationSpeed,
+      JSON.stringify(reasoningSettings),
+      now,
+      childId
+    )
     .run();
 
   return {
@@ -968,6 +989,7 @@ export async function updateChildProfile(
     grade,
     disabledSkills,
     animationSpeed,
+    reasoningSettings,
     parentId: current.parent_id ?? undefined,
     hasPin: Boolean(pin),
   };

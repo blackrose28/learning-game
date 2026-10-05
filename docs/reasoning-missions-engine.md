@@ -1,8 +1,9 @@
 # Reasoning Missions — M1 Engine Contracts
 
-Status: Engine, local persistence, D1 storage, and authenticated mission-attempt API
-implemented. Browser offline sync, per-child settings, progress aggregation, and
-UI integration are pending.
+Status: M1 engineering groundwork implemented, including engine, local persistence,
+D1/API storage, browser offline sync, per-child settings, and evidence summaries.
+See [M1 Browser Sync and Parent Controls](reasoning-missions-browser.md).
+The player-facing Training mission screen is next, in M2.
 
 ## Task and template boundaries
 
@@ -139,18 +140,13 @@ Deploy migration 0006 before exposing these endpoints. The existing deployment
 workflow applies pending migrations before publishing the Worker; manual deployment
 requires the same order. No production migration was run during this work.
 
-## Next M1 work
+## Next work
 
-1. Add browser API methods, offline mission queues, and retry/conflict handling.
-   Check server version support before sending new records; preserve pending
-   snapshots when an older API does not support these endpoints.
-2. Add offline mission hydration and resume discovery. Preserve server-supported
-   versions and avoid sending new payloads to an older API.
-3. Add per-child opt-in/family preferences and versioned reasoning progress
-   hydration, with reasoning separate from arithmetic history and scoring.
-4. Verify legacy profiles and queues, cross-device behavior, and the complete M1
-   exit criteria before starting the M2 player-facing Training pilot.
+M1 browser integration is documented in the companion specification. Mission API
+types and prefix comparison are shared in the learning engine, so browser and
+server retry/conflict rules remain consistent. Progress is recomputed from unique
+ledgers without speed penalties or arithmetic mastery updates.
 
-Local persistence currently requires the caller to know the attempt ID. The API
-can list saved attempts, but browser hydration, active-mission discovery, conflict
-recovery UI, and rewards/session integration belong to subsequent work.
+Begin the M2 Training pilot using the browser workspace, resumable mission lookup,
+and per-child settings. Adventure/Challenge, rewards, and daily-arrow integration
+remain in M5.

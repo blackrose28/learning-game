@@ -93,7 +93,8 @@ The banner is disabled in local Vite development.
 - **[MVP Boundary & Scope](mvp-boundary.md)**: Frozen MVP definition, in-scope requirements, and explicitly deferred features.
 - **[Reasoning Missions Plan](reasoning-missions-plan.md)**: Post-MVP plan for Vietnamese problem comprehension, choosing solution steps, and all five story/puzzle families, with phased checklists and completion criteria.
 - **[Reasoning Missions Teaching Specification](reasoning-missions-content.md)**: M0 Vietnamese teaching flows, hint ladders, prerequisites, transfer questions, interaction sketches, and a baseline observation sheet.
-- **[Reasoning Missions Engine Contracts](reasoning-missions-engine.md)**: Implemented M1 instruction-chain contracts, local evidence/resume behavior, D1/API persistence, and remaining browser integration work.
+- **[Reasoning Missions Engine Contracts](reasoning-missions-engine.md)**: Implemented M1 instruction-chain contracts, local evidence/resume behavior, D1/API persistence, and versioned mission evidence.
+- **[Reasoning Missions Browser Integration](reasoning-missions-browser.md)**: Completed M1 offline sync, per-child opt-in, progress hydration, and parent conflict recovery; M2 Training is next.
 
 ## Parent practice skills
 
@@ -127,3 +128,16 @@ to Fast.
 
 Migration `0005_animation_speed.sql` stores the preference; the deployment workflow
 applies it before deploying the API and frontend.
+
+## Reasoning practice groundwork
+
+The parent dashboard has an **Instruction chains** opt-in under **Reasoning practice**,
+with separate evidence counts and conflict recovery. Existing and new children
+start with reasoning off. Preferences save to the child profile and survive
+changes to arithmetic skills and animation speed. The playable reasoning Training
+screen is the next milestone; enabling the preference prepares that child for it.
+
+Migration `0007_reasoning_settings.sql` follows `0006_mission_attempts.sql`; apply
+pending migrations before deploying manually. GitHub Actions applies them before
+deploying automatically. Offline mission queues and cloud histories stay separate
+from arithmetic mastery, daily arrows, and rewards.

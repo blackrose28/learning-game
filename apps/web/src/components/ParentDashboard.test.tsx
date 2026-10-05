@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach } from 'vitest';
-import { render, screen, fireEvent, waitFor, act } from '@testing-library/react';
+import { render, screen, fireEvent, waitFor, act, within } from '@testing-library/react';
 import { ParentDashboard } from './ParentDashboard';
 import { AuthProvider } from '../context/AuthContext';
 import {
@@ -881,7 +881,9 @@ describe('Practice skill switches', () => {
     );
     const view = render(<ParentDashboard playerId="child-a" />);
     const toggle = screen.getByRole('switch', { name: 'Addition within 10' });
-    expect(screen.getAllByRole('switch')).toHaveLength(getAllSkills().length);
+    expect(
+      within(screen.getByRole('region', { name: 'Practice skills' })).getAllByRole('switch')
+    ).toHaveLength(getAllSkills().length);
     fireEvent.click(toggle);
     await waitFor(() => expect(toggle).not.toBeChecked());
     view.rerender(<ParentDashboard playerId="child-b" />);

@@ -1,4 +1,4 @@
-import { restoreMissionAttempt, type MissionAttempt } from '@math-archer/learning-engine';
+import { restoreMissionAttempt, compareMissionAttempts } from '@math-archer/learning-engine';
 import type { MissionAttemptPage, MissionSaveResponse, StoredMissionAttempt } from './types';
 
 interface MissionRow {
@@ -53,36 +53,6 @@ export async function getMissionAttemptFromDb(
   return row ? restoreRow(row) : null;
 }
 
-function events(attempt: MissionAttempt): string[] {
-  return [
-    ...attempt.responses.map((event) => ({ kind: 'response', event })),
-    ...attempt.hints.map((event) => ({ kind: 'hint', event })),
-  ]
-    .sort((a, b) => a.event.sequence - b.event.sequence)
-    .map((event) => JSON.stringify(event));
-}
-
-function compareSnapshots(
-  incoming: MissionAttempt,
-  current: MissionAttempt
-): 'advance' | 'unchanged' | 'stale' | 'conflict' {
-  if (
-    incoming.mission.id !== current.mission.id ||
-    incoming.startedAt !== current.startedAt ||
-    incoming.mode !== current.mode
-  ) {
-    return 'conflict';
-  }
-  const next = events(incoming);
-  const previous = events(current);
-  const commonLength = Math.min(next.length, previous.length);
-  for (let i = 0; i < commonLength; i++) {
-    if (next[i] !== previous[i]) return 'conflict';
-  }
-  if (next.length === previous.length) return 'unchanged';
-  return next.length > previous.length ? 'advance' : 'stale';
-}
-
 /** Append-only snapshots, keyed by child and attempt ID; CAS guards concurrent writers. */
 export async function saveMissionAttemptInDb(
   db: D1Database,
@@ -120,7 +90,7 @@ export async function saveMissionAttemptInDb(
         };
       continue;
     }
-    const comparison = compareSnapshots(incoming, current.attempt);
+    const comparison = compareMissionAttempts(incoming, current.attempt);
     if (comparison === 'conflict') throw new MissionConflictError(current);
     if (comparison === 'stale' || comparison === 'unchanged') {
       return { schemaVersion: 1, disposition: comparison, ...current };

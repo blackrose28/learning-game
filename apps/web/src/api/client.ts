@@ -8,7 +8,13 @@ import type {
   PracticeRecommendation,
   WorldProgressionState,
   PlayerRewardsState,
+  ReasoningSettings,
+  MissionAttempt,
+  StoredMissionAttempt,
+  MissionAttemptPage,
+  MissionSaveResponse,
 } from '@math-archer/learning-engine';
+import { restoreMissionAttempt } from '@math-archer/learning-engine';
 
 export interface ParentPublic {
   id: string;
@@ -20,6 +26,7 @@ export interface ParentPublic {
 export interface ChildPublicProfile {
   disabledSkills?: Skill[];
   animationSpeed?: AnimationSpeed;
+  reasoningSettings?: ReasoningSettings;
   id: string;
   name: string;
   avatar: string;
@@ -77,26 +84,32 @@ export interface ApiClientOptions {
 export interface ApiErrorPayload {
   error?: string;
   message?: string;
+  details?: unknown;
 }
 
 export class ApiError extends Error {
   code?: string;
   status: number;
+  details?: unknown;
 
-  constructor(message: string, status: number, code?: string) {
+  constructor(message: string, status: number, code?: string, details?: unknown) {
     super(message);
     this.name = 'ApiError';
     this.status = status;
     this.code = code;
+    this.details = details;
   }
 }
 
-async function parseApiError(res: Response): Promise<{ message: string; code?: string }> {
+async function parseApiError(
+  res: Response
+): Promise<{ message: string; code?: string; details?: unknown }> {
   try {
     const data = (await res.json()) as ApiErrorPayload;
     return {
       message: data.message || res.statusText || `Request failed with status ${res.status}`,
       code: data.error,
+      details: data.details,
     };
   } catch {
     return {
@@ -142,6 +155,92 @@ export class MathArcherApiClient {
 
   getAuthToken(): string | null {
     return this.token;
+  }
+
+  private async missionResponse(res: Response): Promise<Record<string, unknown>> {
+    if (!res.ok) {
+      const err = await parseApiError(res);
+      throw new ApiError(err.message, res.status, err.code, err.details);
+    }
+    const value: unknown = await res.json();
+    if (
+      !value ||
+      typeof value !== 'object' ||
+      (value as { schemaVersion?: unknown }).schemaVersion !== 1
+    ) {
+      throw new ApiError(
+        'Unsupported mission response version',
+        400,
+        'UNSUPPORTED_MISSION_VERSION'
+      );
+    }
+    return value as Record<string, unknown>;
+  }
+
+  async saveMissionAttempt(attempt: MissionAttempt): Promise<MissionSaveResponse> {
+    const res = await this.fetchFn(this.url('/api/missions/attempts'), {
+      method: 'PUT',
+      headers: this.getHeaders({ 'Content-Type': 'application/json' }),
+      body: JSON.stringify({ schemaVersion: 1, attempt: restoreMissionAttempt(attempt) }),
+    });
+    const value = await this.missionResponse(res);
+    const stored = validateStoredMissionAttempt(value, attempt.playerId);
+    if (
+      stored.attempt.id !== attempt.id ||
+      !['created', 'advanced', 'unchanged', 'stale'].includes(String(value.disposition))
+    ) {
+      throw new Error('Invalid mission save response');
+    }
+    return {
+      schemaVersion: 1,
+      ...stored,
+      disposition: value.disposition as MissionSaveResponse['disposition'],
+    };
+  }
+
+  async getMissionAttempt(playerId: string, attemptId: string): Promise<StoredMissionAttempt> {
+    const query = new URLSearchParams({ playerId, attemptId });
+    const res = await this.fetchFn(this.url(`/api/missions/attempts?${query}`), {
+      headers: this.getHeaders(),
+    });
+    const stored = validateStoredMissionAttempt(await this.missionResponse(res), playerId);
+    if (stored.attempt.id !== attemptId) throw new Error('Mission response identity mismatch');
+    return stored;
+  }
+
+  async listMissionAttempts(
+    playerId: string,
+    cursor?: { startedAt: string; attemptId: string }
+  ): Promise<MissionAttemptPage> {
+    const query = new URLSearchParams({ playerId, limit: '100' });
+    if (cursor) {
+      query.set('afterStartedAt', cursor.startedAt);
+      query.set('afterAttemptId', cursor.attemptId);
+    }
+    const res = await this.fetchFn(this.url(`/api/missions/attempts?${query}`), {
+      headers: this.getHeaders(),
+    });
+    const value = await this.missionResponse(res);
+    if (!Array.isArray(value.attempts)) throw new Error('Invalid mission attempt listing');
+    const next = value.nextCursor;
+    if (
+      next !== null &&
+      (!next ||
+        typeof next !== 'object' ||
+        typeof (next as { startedAt?: unknown }).startedAt !== 'string' ||
+        !Number.isFinite(Date.parse((next as { startedAt: string }).startedAt)) ||
+        new Date((next as { startedAt: string }).startedAt).toISOString() !==
+          (next as { startedAt: string }).startedAt ||
+        typeof (next as { attemptId?: unknown }).attemptId !== 'string' ||
+        !(next as { attemptId: string }).attemptId.trim())
+    ) {
+      throw new Error('Invalid mission listing cursor');
+    }
+    return {
+      schemaVersion: 1,
+      attempts: value.attempts.map((item) => validateStoredMissionAttempt(item, playerId)),
+      nextCursor: next as MissionAttemptPage['nextCursor'],
+    };
   }
 
   private url(endpoint: string): string {
@@ -324,6 +423,7 @@ export class MathArcherApiClient {
       grade?: string;
       disabledSkills?: Skill[];
       animationSpeed?: AnimationSpeed;
+      reasoningSettings?: ReasoningSettings;
     }
   ): Promise<{ child: ChildPublicProfile }> {
     const res = await this.fetchFn(
@@ -515,4 +615,17 @@ export class MathArcherApiClient {
 
     return res.json();
   }
+}
+
+export function validateStoredMissionAttempt(
+  value: unknown,
+  playerId: string
+): StoredMissionAttempt {
+  if (!value || typeof value !== 'object') throw new Error('Invalid stored mission response');
+  const stored = value as StoredMissionAttempt;
+  const attempt = restoreMissionAttempt(stored.attempt);
+  if (attempt.playerId !== playerId || !Number.isInteger(stored.revision) || stored.revision < 1) {
+    throw new Error('Mission response identity or revision mismatch');
+  }
+  return { attempt, revision: stored.revision };
 }
