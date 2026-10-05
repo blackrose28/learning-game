@@ -3,6 +3,9 @@ import { cleanup, fireEvent, render, screen, act } from '@testing-library/react'
 import {
   createMemoryStorage,
   generateInstructionChain,
+  generateInstructionChainV2,
+  getActiveMissionStep,
+  recordMissionResponse,
   startMissionAttempt,
   type MissionFamily,
 } from '@math-archer/learning-engine';
@@ -290,5 +293,54 @@ describe('story-family Training', () => {
     const before = attemptOf(storage).responses.length;
     fireEvent.keyDown(screen.getByRole('region'), { key: '9' });
     expect(attemptOf(storage).responses).toHaveLength(before);
+  });
+});
+
+describe('support recommendation', () => {
+  // A completed, clean guided chain: every first response correct, no hints.
+  const cleanChain = (index: number) => {
+    const mission = generateInstructionChainV2({
+      seed: 700 + index,
+      support: 'guided',
+      wording: index % 2 ? 'plain' : 'school',
+    });
+    const startedAt = new Date(2026, 9, 5, 10, index).toISOString();
+    let attempt = startMissionAttempt(mission, 'child', `clean-${index}`, startedAt);
+    while (!attempt.completedAt) {
+      const stepId = getActiveMissionStep(attempt)!;
+      attempt = recordMissionResponse(attempt, {
+        eventId: `r-${index}-${attempt.responses.length}`,
+        stepId,
+        choiceId: mission.steps.find((step) => step.id === stepId)!.correctChoiceId,
+        timestamp: startedAt,
+        responseTimeMs: 1000,
+      });
+    }
+    return attempt;
+  };
+
+  it('suggests guided practice for a new family but lets the child choose otherwise', () => {
+    const { storage } = setup();
+    expect(screen.getByRole('button', { name: 'Từng bước' })).toHaveAttribute(
+      'aria-pressed',
+      'true'
+    );
+    expect(screen.getByText(/làm từng bước vì đây là loại bài mới/)).toBeVisible();
+    fireEvent.click(screen.getByRole('button', { name: 'Tự giải' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Bắt đầu' }));
+    expect(current(storage).mission.support).toBe('independent');
+  });
+
+  it('offers independent practice with the evidence after four of five clean missions', () => {
+    const storage = createMemoryStorage();
+    [0, 1, 2, 3, 4].forEach((i) => queueMissionAttempt(cleanChain(i), storage));
+    render(<ReasoningTraining playerId="child" storage={storage} onBack={vi.fn()} />);
+    expect(screen.getByRole('button', { name: 'Tự giải' })).toHaveAttribute('aria-pressed', 'true');
+    expect(screen.getByText(/thử tự giải, vì 5\/5 bài gần nhất đúng ngay lần đầu/)).toBeVisible();
+    fireEvent.click(screen.getByRole('button', { name: 'Bắt đầu' }));
+    const started = loadMissionWorkspace('child', storage).items.find(
+      (item) => !item.local.completedAt
+    )!;
+    expect(started.local.mission.support).toBe('independent');
   });
 });

@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import {
   compareMissionAttempts,
+  computeReasoningProgress,
   describeCardArrangement,
   getActiveMissionStep,
   getMissionDiagram,
@@ -8,9 +9,13 @@ import {
   getMissionStepFeedback,
   getMissionView,
   recordMissionHint,
+  recommendFocus,
+  recommendSupport,
   recordMissionResponse,
   startMissionAttempt,
+  summarizeIndependentStability,
   type MissionAttempt,
+  type SupportRecommendation,
   type MissionFamily,
   type MissionHintLevel,
   type MissionStepId,
@@ -26,7 +31,7 @@ import {
   syncMissionAttempts,
 } from '../sync/missions';
 import { useGamepad, XboxButton } from '../input/useGamepad';
-import { createMission, familyLabels } from '../reasoningMissionFactory';
+import { createDistinctMission, familyLabels } from '../reasoningMissionFactory';
 import { DigitCardBoard } from './DigitCardBoard';
 import './ReasoningTraining.css';
 
@@ -48,6 +53,17 @@ const elements = ['🔥 Lửa', '❄️ Băng', '🌬️ Gió', '🌿 Đất'];
 const hintLabels = ['Gợi ý cách làm', 'Sơ đồ còn thiếu', 'Xem bài giải'];
 const hintLevels: MissionHintLevel[] = ['strategy', 'partial', 'worked'];
 const defaultFamilies: MissionFamily[] = ['instruction_chain'];
+/** Say why this support was suggested, with the evidence. The child can always choose otherwise. */
+function supportAdvice(advice: SupportRecommendation): string {
+  const evidence = `${advice.successes}/${advice.window} bài gần nhất đúng ngay lần đầu, không cần gợi ý`;
+  if (advice.change === 'start') return 'Gợi ý: làm từng bước vì đây là loại bài mới.';
+  if (advice.change === 'fade') return `Gợi ý: thử tự giải, vì ${evidence}.`;
+  if (advice.change === 'restore')
+    return 'Gợi ý: làm từng bước, vì hai bài tự giải gần nhất cần giúp đỡ. Con vẫn có thể chọn khác.';
+  return advice.support === 'guided'
+    ? `Gợi ý: tiếp tục làm từng bước (${evidence}).`
+    : `Gợi ý: tiếp tục tự giải (${evidence}).`;
+}
 const errorText = (error: unknown) => (error instanceof Error ? error.message : String(error));
 
 export function ReasoningTraining({
@@ -58,7 +74,8 @@ export function ReasoningTraining({
   storage = browserStorage,
 }: ReasoningTrainingProps) {
   const [attempt, setAttempt] = useState<MissionAttempt | null>(null);
-  const [support, setSupport] = useState<MissionSupport>('guided');
+  // The child's own choice for the next mission; null follows the recommendation.
+  const [chosenSupport, setChosenSupport] = useState<MissionSupport | null>(null);
   const [chosenFamily, setChosenFamily] = useState<MissionFamily>(families[0]);
   const family = families.includes(chosenFamily) ? chosenFamily : families[0];
   const [error, setError] = useState('');
@@ -142,21 +159,39 @@ export function ReasoningTraining({
     setSyncText('');
     setBlocked(false);
   };
+  const advice = (() => {
+    if (blocked) return null;
+    try {
+      const attempts = loadMissionWorkspace(playerId, storage).items.map((item) => item.local);
+      return {
+        support: recommendSupport(attempts, family),
+        stability: summarizeIndependentStability(attempts, family),
+        focus: recommendFocus(computeReasoningProgress(playerId, attempts), families),
+      };
+    } catch {
+      return null;
+    }
+  })();
+  const support = chosenSupport ?? advice?.support.support ?? 'guided';
   const start = () => {
     if (busy.current || blocked) return;
     busy.current = true;
     try {
       const history = loadMissionWorkspace(playerId, storage);
-      const mission = createMission({
-        family,
-        seed: crypto.getRandomValues(new Uint32Array(1))[0],
-        support,
-        startedInFamily: history.items.filter((item) => item.local.mission.family === family)
-          .length,
-      });
+      const inFamily = history.items.filter((item) => item.local.mission.family === family);
+      const mission = createDistinctMission(
+        {
+          family,
+          seed: crypto.getRandomValues(new Uint32Array(1))[0],
+          support,
+          startedInFamily: inFamily.length,
+        },
+        new Set(inFamily.map((item) => item.local.mission.prompt))
+      );
       persist(
         startMissionAttempt(mission, playerId, crypto.randomUUID(), new Date().toISOString())
       );
+      setChosenSupport(null);
       setFeedback(null);
       startedStep.current = Date.now();
     } catch (cause) {
@@ -304,25 +339,50 @@ export function ReasoningTraining({
                 <button
                   key={item}
                   aria-pressed={family === item}
-                  onClick={() => setChosenFamily(item)}
+                  onClick={() => {
+                    setChosenFamily(item);
+                    setChosenSupport(null);
+                  }}
                 >
                   {familyLabels[item]}
                 </button>
               ))}
             </fieldset>
           )}
+          {advice?.focus && families.length > 1 && advice.focus.family !== family && (
+            <p role="note" className="mission-advice">
+              Gợi ý: con đang cần luyện thêm “{familyLabels[advice.focus.family]}” (
+              {Math.round(advice.focus.accuracy * 100)}% đúng ngay lần đầu, qua{' '}
+              {advice.focus.observations} lần).{' '}
+              <button
+                onClick={() => {
+                  setChosenFamily(advice.focus!.family);
+                  setChosenSupport(null);
+                }}
+              >
+                Chọn loại này
+              </button>
+            </p>
+          )}
           <fieldset disabled={blocked}>
             <legend>Chọn cách luyện cho bài tiếp theo</legend>
-            <button aria-pressed={support === 'guided'} onClick={() => setSupport('guided')}>
+            <button aria-pressed={support === 'guided'} onClick={() => setChosenSupport('guided')}>
               Từng bước
             </button>
             <button
               aria-pressed={support === 'independent'}
-              onClick={() => setSupport('independent')}
+              onClick={() => setChosenSupport('independent')}
             >
               Tự giải
             </button>
           </fieldset>
+          {advice && (
+            <p role="note" className="mission-advice">
+              {supportAdvice(advice.support)}
+              {advice.stability.stable &&
+                ` Con tự giải ổn định (${advice.stability.independentMissions} bài, ${Math.round(advice.stability.accuracy * 100)}% đúng ngay lần đầu).`}
+            </p>
+          )}
           <button data-primary disabled={blocked} onClick={start}>
             {attempt ? 'Bài tiếp theo' : 'Bắt đầu'}
           </button>

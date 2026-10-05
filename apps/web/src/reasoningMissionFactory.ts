@@ -111,3 +111,18 @@ export function createMission({
       });
   }
 }
+
+/**
+ * Like createMission, but retries other seeds so the child is not given a problem whose text they
+ * already attempted. The original example (first in a family) is never retried.
+ */
+export function createDistinctMission(
+  request: NewMissionRequest,
+  seenPrompts: ReadonlySet<string>
+): ReasoningMission {
+  let mission = createMission(request);
+  for (let tries = 1; tries < 25 && seenPrompts.has(mission.prompt); tries++) {
+    mission = createMission({ ...request, seed: (request.seed + tries * 2654435761) >>> 0 });
+  }
+  return mission;
+}

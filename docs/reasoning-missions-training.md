@@ -16,7 +16,8 @@ Choose **Từng bước** or **Tự giải** before starting a mission. The firs
 uses the parent's original 14 / 7 / 9 question. Later missions alternate school
 wording and simpler wording with seeded parameter variants (all four number phrases,
 “hiệu” and “tổng”, adding or subtracting at the end) within 20. Support is
-chosen deliberately; automatic support fading and adaptation belong to M5.
+suggested from the child's evidence and always overridable; see
+[M5 Adaptive Practice](reasoning-missions-adaptive.md).
 
 Guided practice asks for the starting number (liền sau, liền trước, or lớn/bé hơn
 some units), the “hiệu” or “tổng” expression, the next operation, then the final

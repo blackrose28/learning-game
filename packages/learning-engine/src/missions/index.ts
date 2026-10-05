@@ -9,3 +9,4 @@ export * from './maxSumDigitCards';
 export * from './mission';
 export * from './attempt';
 export * from './progress';
+export * from './adaptive';

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { validateMission } from '@math-archer/learning-engine';
-import { createMission } from './reasoningMissionFactory';
+import { createDistinctMission, createMission } from './reasoningMissionFactory';
 
 describe('reasoning mission factory', () => {
   it('starts every family with the parent’s original example and its checked answer', () => {
@@ -117,5 +117,19 @@ describe('reasoning mission factory', () => {
       later.some((mission) => (mission.parameters as { cards: number[] }).cards.length === 5)
     ).toBe(true);
     expect(later.every((mission) => validateMission(mission))).toBe(true);
+  });
+
+  it('retries other seeds so a problem the child already attempted is not repeated', () => {
+    const request = {
+      family: 'daily_collection',
+      seed: 9,
+      support: 'guided',
+      startedInFamily: 4,
+    } as const;
+    const first = createMission(request);
+    const other = createDistinctMission(request, new Set([first.prompt]));
+    expect(other.prompt).not.toBe(first.prompt);
+    expect(validateMission(other)).toBe(true);
+    expect(createDistinctMission(request, new Set()).prompt).toBe(first.prompt);
   });
 });
