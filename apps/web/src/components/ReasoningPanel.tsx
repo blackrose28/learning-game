@@ -133,6 +133,7 @@ export const ReasoningPanel: React.FC<ReasoningPanelProps> = ({
     <section className="practice-skills-panel" aria-labelledby="reasoning-practice-title">
       <h2 id="reasoning-practice-title">Reasoning practice</h2>
       <p>Practice understanding Vietnamese questions and choosing solution steps.</p>
+      <p>When enabled, open Play → Training → “Đọc đề, chọn bước”. Choose guided steps or an independent answer before each mission.</p>
       <label className="practice-skill-row">
         <span>
           <strong>Instruction chains</strong>

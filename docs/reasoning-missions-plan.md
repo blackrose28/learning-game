@@ -250,15 +250,19 @@ The playable mission interface and child teaching review remain M2/M0 work.
 
 ### M2 — Complete instruction-chain Training pilot
 
-- [ ] Implement mission panel, guided and independent modes, progressive hints,
+- [x] Implement mission panel, guided and independent modes, progressive hints,
       retry feedback, and explicit advancement.
-- [ ] Reuse elemental feedback and support touch, keyboard, and Xbox navigation.
-- [ ] Add Training entry and parent enable/focus controls for the pilot family.
-- [ ] Show vocabulary/plan evidence, assistance, and independent outcomes in the
+- [x] Reuse elemental feedback and support touch, keyboard, and Xbox navigation.
+- [x] Add Training entry and parent enable/focus controls for the pilot family.
+- [x] Show vocabulary/plan evidence, assistance, and independent outcomes in the
       parent dashboard; include insufficient-data states.
-- [ ] Ship changed wording and parameter variants, including the original example.
+- [x] Ship changed wording and parameter variants, including the original example.
 - [ ] Run the engineering checks and a parent/child pilot; record observations and
       adjust confusing wording or interaction before expanding content.
+
+Engineering verification is complete; the parent/child observation remains pending.
+See [M2 Training Pilot](reasoning-missions-training.md) for entry, behavior, and the
+short observation procedure.
 
 Exit: the complete loop is usable end to end, and the dashboard can distinguish
 an observed vocabulary mistake from an observed plan or calculation mistake.
@@ -383,3 +387,4 @@ Keep completed work checked; revise decisions when evidence changes the plan.
 | 2026-10-05 | M1 engine foundation            | Versioned instruction-chain generation, views/hints, validated local resume, first-response evidence, and retry handling implemented. Engine suite: 257 tests pass, including 20 mission tests and 1,000 generated mission seeds. Engine type check and changed-file lint pass. M1 is not complete.                                                                                      | Add D1/API mission persistence, offline sync, opt-in preferences, and reasoning progress hydration before the M2 UI pilot. |
 | 2026-10-05 | M1 server persistence           | Additive D1 migration and authenticated save/load/list API implemented. Append-only snapshots preserve stale/conflicting evidence; conditional revision updates handle concurrent writers. API suite: 57 tests pass, including 19 mission tests. API type check and changed-file lint pass. No production deployment.                                                                    | Browser API/offline queue, conflict recovery, opt-in preferences, and reasoning progress hydration.                        |
 | 2026-10-05 | M1 browser integration complete | Durable offline queue, paginated hydration, in-flight response preservation, old-API compatibility, shared evidence summaries, opt-in settings, and parent conflict recovery implemented. All 620 tests pass (261 engine / 60 API / 299 web), including actual Worker/D1 sync integration. Type checks, lint, engine build, and web/PWA production build pass. No production deployment. | M2 playable instruction-chain Training pilot; M0 parent review and baseline remain pending.                                |
+| 2026-10-05 | M2 playable Training engineering | Opt-in Training entry, guided/independent questions, original example and varied wording/parameters, elemental choices, step feedback, saved hints/responses, explicit continuation, resume, conflict blocking, and keyboard/Xbox input implemented. All 628 tests pass (261 engine / 60 API / 307 web); type checks, lint, and frontend/PWA build pass. No deployment or child observation. | Run the documented parent/child pilot and resolve confusing wording or interaction; M3 daily collection and unknown-start follows. |

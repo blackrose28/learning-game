@@ -66,6 +66,7 @@ import { useSafeAuth } from '../context/AuthContext';
 export type GameMode = 'adventure' | 'training' | 'challenge';
 
 export interface GameScreenProps {
+  onReasoningTraining?: () => void;
   /**
    * Optional initial question to display (useful for deterministic tests or presets).
    */
@@ -221,6 +222,7 @@ function getCategoryInfo(category?: SelectionCategory): { label: string; classNa
 }
 
 export const GameScreen: React.FC<GameScreenProps> = ({
+  onReasoningTraining,
   initialQuestion,
   mode = 'adventure',
   initialProfile,
@@ -1114,6 +1116,13 @@ export const GameScreen: React.FC<GameScreenProps> = ({
   useGamepad({
     enabled: true,
     onButtonDown: (btn) => {
+      if (
+        btn === XboxButton.RS && gameMode === 'training' && onReasoningTraining &&
+        !isTransitioning && !isHelpOpen && !isWorldMapOpen
+      ) {
+        onReasoningTraining();
+        return;
+      }
       // 1. Session complete screen navigation
       if (isCompleted && gameMode !== 'training') {
         if (btn === XboxButton.A) {
@@ -1685,6 +1694,11 @@ export const GameScreen: React.FC<GameScreenProps> = ({
       {/* Deliberate Practice Bar for Weak Skills in Training Mode (Task 4.3) */}
       {gameMode === 'training' && (
         <div className="deliberate-practice-bar" data-testid="deliberate-practice-bar">
+          {onReasoningTraining && (
+            <button type="button" onClick={onReasoningTraining}>
+              🏹 Đọc đề, chọn bước (tay cầm: RS)
+            </button>
+          )}
           <div className="deliberate-practice-header">
             <span className="deliberate-practice-title">🎯 Deliberate Practice Focus:</span>
             <span className="deliberate-practice-desc">

@@ -1,6 +1,7 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { App } from './App';
+import { saveReasoningSettings } from './reasoningPreferences';
 import { saveAttempt, saveDailySession } from '@math-archer/learning-engine';
 
 beforeEach(() => {
@@ -163,5 +164,27 @@ describe('App navigation and Progress & History View', () => {
 
     expect(screen.getByTestId('total-attempts-metric')).toHaveTextContent('0');
     expect(screen.getByText(/No attempts recorded yet/i)).toBeInTheDocument();
+  });
+});
+
+
+describe('reasoning Training entry', () => {
+  it('opens opted-in reasoning practice, resumes saved work and returns to arithmetic Training', async () => {
+    saveReasoningSettings('player-local', { schemaVersion: 1, enabledFamilies: ['instruction_chain'] });
+    render(<App />);
+    fireEvent.click(screen.getByTestId('mode-tab-training'));
+    fireEvent.click(screen.getByRole('button', { name: /Đọc đề, chọn bước/ }));
+    fireEvent.click(screen.getByRole('button', { name: 'Bắt đầu' }));
+    expect(screen.getByRole('region', { name: 'Luyện đọc đề và lập kế hoạch' })).toBeVisible();
+    fireEvent.click(screen.getByRole('button', { name: '← Về luyện tính' }));
+    expect(screen.getByTestId('training-mode-banner')).toBeVisible();
+    fireEvent.click(screen.getByRole('button', { name: /Đọc đề, chọn bước/ }));
+    expect(screen.getByText('Số liền sau của 7 là số nào?')).toBeVisible();
+    expect(screen.queryByRole('button', { name: 'Bắt đầu' })).not.toBeInTheDocument();
+  });
+  it('keeps reasoning unavailable for a child who has not opted in', () => {
+    render(<App />);
+    fireEvent.click(screen.getByTestId('mode-tab-training'));
+    expect(screen.queryByRole('button', { name: /Đọc đề, chọn bước/ })).not.toBeInTheDocument();
   });
 });

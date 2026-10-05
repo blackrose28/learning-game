@@ -1,0 +1,106 @@
+.reasoning-training {
+  box-sizing: border-box;
+  max-width: 900px;
+  margin: auto;
+  padding: 1.25rem;
+  flex: 1;
+  min-height: 0;
+  width: 100%;
+  color: #edf4ff;
+  background: #17243c;
+  overflow-y: auto;
+}
+.reasoning-training h1 {
+  font-size: clamp(1.5rem, 5vw, 2rem);
+}
+.reasoning-training p {
+  line-height: 1.65;
+}
+.reasoning-training button {
+  cursor: pointer;
+  font: inherit;
+  min-height: 48px;
+  padding: 0.75rem 1rem;
+  border-radius: 0.65rem;
+  border: 2px solid #99b4d9;
+  background: #253958;
+  color: #fff;
+  margin: 0.25rem;
+}
+.reasoning-training button:focus-visible {
+  outline: 4px solid #ffe183;
+  outline-offset: 3px;
+}
+.reasoning-training button:disabled {
+  cursor: default;
+  opacity: 0.65;
+}
+.reasoning-training button[aria-pressed='true'] {
+  background: #3b567b;
+  border-color: #ffe183;
+}
+.mission-problem {
+  background: #fff;
+  color: #15243c;
+  border-radius: 0.75rem;
+  padding: 1rem;
+  font-size: clamp(1.15rem, 4vw, 1.4rem);
+}
+.mission-problem p {
+  margin: 0.5rem 0;
+}
+.mission-choices {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.65rem;
+  margin-bottom: 1rem;
+}
+.reasoning-training .mission-choice {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  text-align: left;
+  overflow-wrap: anywhere;
+}
+.mission-choice strong {
+  font-size: 1.15rem;
+}
+.reasoning-training .element-0 {
+  border-color: #ffb8a2;
+}
+.reasoning-training .element-1 {
+  border-color: #99d7ff;
+}
+.reasoning-training .element-2 {
+  border-color: #a6e4a6;
+}
+.reasoning-training .element-3 {
+  border-color: #ded0ff;
+}
+.mission-feedback,
+.mission-complete {
+  padding: 1rem;
+  background: #273954;
+  border-radius: 0.75rem;
+  margin: 1rem 0;
+}
+.mission-feedback.correct {
+  border: 2px solid #a6e4a6;
+}
+.mission-controls,
+.mission-sync {
+  font-size: 0.9rem;
+  color: #d0def4;
+}
+.reasoning-training fieldset {
+  border-radius: 0.75rem;
+  margin-bottom: 1rem;
+}
+@media (max-width: 480px) {
+  .mission-choices {
+    grid-template-columns: 1fr;
+  }
+  .reasoning-training {
+    padding: 0.85rem;
+  }
+}

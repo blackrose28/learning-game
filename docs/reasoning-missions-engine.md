@@ -3,7 +3,7 @@
 Status: M1 engineering groundwork implemented, including engine, local persistence,
 D1/API storage, browser offline sync, per-child settings, and evidence summaries.
 See [M1 Browser Sync and Parent Controls](reasoning-missions-browser.md).
-The player-facing Training mission screen is next, in M2.
+The player-facing Training mission screen is implemented in [M2 Training Pilot](reasoning-missions-training.md).
 
 ## Task and template boundaries
 
@@ -147,6 +147,7 @@ types and prefix comparison are shared in the learning engine, so browser and
 server retry/conflict rules remain consistent. Progress is recomputed from unique
 ledgers without speed penalties or arithmetic mastery updates.
 
-Begin the M2 Training pilot using the browser workspace, resumable mission lookup,
-and per-child settings. Adventure/Challenge, rewards, and daily-arrow integration
-remain in M5.
+M2 now uses the browser workspace, resumable mission lookup, and per-child
+settings. See [M2 Training Pilot](reasoning-missions-training.md) for the playable
+loop and pending child observation. Adventure/Challenge, rewards, and daily-arrow
+integration remain in M5.

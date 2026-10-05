@@ -9,6 +9,7 @@ import {
   clearLocalProgress,
   type LocalProgress,
 } from '@math-archer/learning-engine';
+import { ReasoningTraining } from './components/ReasoningTraining';
 import { GameScreen } from './components/GameScreen';
 import { ParentDashboard } from './components/ParentDashboard';
 import { ParentGate } from './components/ParentGate';
@@ -21,7 +22,7 @@ import { AuthProvider, useAuth } from './context/AuthContext';
 import type { MathArcherApiClient } from './api/client';
 import { useGamepad, XboxButton } from './input/useGamepad';
 import { hydratePlayerProgress, syncMissionAttempts } from './sync';
-import { saveReasoningSettings } from './reasoningPreferences';
+import { loadReasoningSettings, saveReasoningSettings } from './reasoningPreferences';
 import { audioFx } from './audio/AudioFx';
 import './App.css';
 
@@ -36,6 +37,20 @@ export const AppContent: React.FC = () => {
   const [syncTick, setSyncTick] = useState<number>(0);
   const [showChildPicker, setShowChildPicker] = useState<boolean>(false);
   const [isMuted, setIsMuted] = useState<boolean>(() => audioFx.getIsMuted());
+  const [reasoningOpen, setReasoningOpen] = useState(false);
+  const [returnToTraining, setReturnToTraining] = useState(false);
+  let reasoningEnabled = false;
+  try {
+    const settings = activeChild.reasoningSettings ?? loadReasoningSettings(activeChild.id);
+    reasoningEnabled =
+      isReasoningSettings(settings) && settings.enabledFamilies.includes('instruction_chain');
+  } catch {
+    /* Preserve unreadable preferences and keep the activity disabled. */
+  }
+  useEffect(() => {
+    setReasoningOpen(false);
+    setReturnToTraining(false);
+  }, [activeChild.id]);
   const [isMenuOpen, setIsMenuOpen] = useState<boolean>(false);
 
   // Keep mute state in sync with AudioFx
@@ -463,7 +478,24 @@ export const AppContent: React.FC = () => {
 
       {/* Screen Render: Primary Game Views (Play, World Map, Royal Armory) are single-screen 100vh; secondary views are scrollable */}
       {activeTab === 'game' ? (
-        <GameScreen key={`${activeChild.id}_${syncTick}`} playerId={activeChild.id} />
+        reasoningOpen && reasoningEnabled ? (
+          <ReasoningTraining
+            key={activeChild.id}
+            playerId={activeChild.id}
+            api={apiClient}
+            onBack={() => {
+              setReasoningOpen(false);
+              setReturnToTraining(true);
+            }}
+          />
+        ) : (
+          <GameScreen
+            key={`${activeChild.id}_${syncTick}`}
+            playerId={activeChild.id}
+            mode={returnToTraining ? 'training' : 'adventure'}
+            onReasoningTraining={reasoningEnabled ? () => setReasoningOpen(true) : undefined}
+          />
+        )
       ) : activeTab === 'world' ? (
         <WorldMap
           key={`${activeChild.id}_${syncTick}`}

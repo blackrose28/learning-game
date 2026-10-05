@@ -1,7 +1,7 @@
 # Reasoning Missions — M1 Browser Sync and Parent Controls
 
 Status: M1 engineering groundwork implemented and verified. The playable Training
-mission screen is the next milestone, M2. Parent/child teaching review remains
+mission screen is implemented in [M2 Training Pilot](reasoning-missions-training.md). Parent/child teaching review remains
 pending in M0.
 
 ## Per-child opt-in
@@ -124,6 +124,7 @@ Apply migration 0007 after 0006 before deploying the updated Worker. The existin
 deployment workflow applies pending migrations first. This milestone was verified
 locally; no production deployment or production migration was performed.
 
-Next: M2 player-facing Training entry, guided/independent mission panel,
-progressive hints, explicit continuation, elemental feedback, and touch/keyboard/
-controller interaction. Keep M0 baseline observations pending until collected.
+The M2 screen now uses these contracts for Training entry, guided/independent
+missions, saved hints/responses, explicit continuation, and conflict blocking.
+See [M2 Training Pilot](reasoning-missions-training.md). Keep M0 baseline
+observations pending until collected.
