@@ -33,4 +33,3 @@ export interface WorldProgressionState {
   lastUnlockedAreaId: WorldAreaId | null;
   updatedAt?: string;
 }
-

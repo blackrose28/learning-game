@@ -32,7 +32,12 @@ describe('Item 7: Offline Parent PIN Change Sync Queue', () => {
       serverPin = newPin;
       return {
         success: true,
-        parent: { id: 'parent_default', email: 'parent@test.com', name: 'Test Parent', hasPin: true },
+        parent: {
+          id: 'parent_default',
+          email: 'parent@test.com',
+          name: 'Test Parent',
+          hasPin: true,
+        },
       };
     });
 
@@ -173,7 +178,12 @@ describe('Item 7: Offline Parent PIN Change Sync Queue', () => {
       serverPin = newPin;
       return {
         success: true,
-        parent: { id: 'parent_default', email: 'parent@test.com', name: 'Test Parent', hasPin: true },
+        parent: {
+          id: 'parent_default',
+          email: 'parent@test.com',
+          name: 'Test Parent',
+          hasPin: true,
+        },
       };
     });
 
@@ -181,7 +191,11 @@ describe('Item 7: Offline Parent PIN Change Sync Queue', () => {
     mockApiClient.changeParentPin = changePinMock;
 
     // Simulate being offline during startup
-    Object.defineProperty(navigator, 'onLine', { value: false, configurable: true, writable: true });
+    Object.defineProperty(navigator, 'onLine', {
+      value: false,
+      configurable: true,
+      writable: true,
+    });
 
     // Simulate pre-existing offline queued PIN change
     enqueuePinChange({ newPin: '7777', currentPin: '1234' });
@@ -225,12 +239,21 @@ describe('Item 7: Offline Parent PIN Change Sync Queue', () => {
       pushed = true;
       return {
         success: true,
-        parent: { id: 'parent_default', email: 'parent@test.com', name: 'Test Parent', hasPin: true },
+        parent: {
+          id: 'parent_default',
+          email: 'parent@test.com',
+          name: 'Test Parent',
+          hasPin: true,
+        },
       };
     });
 
     // Start offline so mount doesn't auto-flush
-    Object.defineProperty(navigator, 'onLine', { value: false, configurable: true, writable: true });
+    Object.defineProperty(navigator, 'onLine', {
+      value: false,
+      configurable: true,
+      writable: true,
+    });
 
     enqueuePinChange({ newPin: '5555', currentPin: '1234' });
 
@@ -286,7 +309,9 @@ describe('Item 7: Offline Parent PIN Change Sync Queue', () => {
     fireEvent.submit(screen.getByTestId('new-parent-pin-input').closest('form')!);
 
     await waitFor(() => {
-      expect(screen.getByTestId('change-pin-success')).toHaveTextContent(/Parent PIN successfully updated/i);
+      expect(screen.getByTestId('change-pin-success')).toHaveTextContent(
+        /Parent PIN successfully updated/i
+      );
     });
 
     expect(localStorage.getItem('math_archer_parent_pin')).toBe('8888');

@@ -224,12 +224,12 @@
   font-weight: 800;
 }
 
-.character-switcher .switcher-pill.active[data-testid*="wizard"] {
+.character-switcher .switcher-pill.active[data-testid*='wizard'] {
   background: linear-gradient(135deg, #a855f7 0%, #7c3aed 100%);
   box-shadow: 0 2px 8px rgba(124, 58, 237, 0.45);
 }
 
-.target-switcher .switcher-pill.active[data-testid*="dummy"] {
+.target-switcher .switcher-pill.active[data-testid*='dummy'] {
   background: linear-gradient(135deg, #d97706 0%, #b45309 100%);
   box-shadow: 0 2px 8px rgba(217, 119, 6, 0.45);
 }
@@ -859,7 +859,12 @@
 .flying-arrow.character-wizard .flying-arrow-trail {
   width: 10px;
   height: 50px;
-  background: linear-gradient(to top, currentColor 0%, rgba(255, 255, 255, 0.95) 40%, transparent 100%);
+  background: linear-gradient(
+    to top,
+    currentColor 0%,
+    rgba(255, 255, 255, 0.95) 40%,
+    transparent 100%
+  );
   filter: drop-shadow(0 0 12px currentColor);
   animation: wizard-trail-pulse 0.18s ease-in-out infinite alternate;
 }
@@ -879,58 +884,91 @@
 
 .flying-arrow-trail[data-effect='arrow_effect_stardust'] {
   background: linear-gradient(to top, #818cf8 0%, #c7d2fe 50%, transparent 100%);
-  box-shadow: 0 0 10px #c7d2fe, 0 0 18px #818cf8;
+  box-shadow:
+    0 0 10px #c7d2fe,
+    0 0 18px #818cf8;
 }
 .flying-arrow-trail[data-effect='arrow_effect_sparkle_nova'] {
   background: linear-gradient(to top, #ec4899 0%, #fbcfe8 60%, transparent 100%);
-  box-shadow: 0 0 12px #ec4899, 0 0 20px #fbcfe8;
+  box-shadow:
+    0 0 12px #ec4899,
+    0 0 20px #fbcfe8;
 }
 .flying-arrow-trail[data-effect='arrow_effect_flame_embers'] {
   background: linear-gradient(to top, #f97316 0%, #ea580c 40%, transparent 100%);
-  box-shadow: 0 0 12px #f97316, 0 0 22px #fed7aa;
+  box-shadow:
+    0 0 12px #f97316,
+    0 0 22px #fed7aa;
 }
 .flying-arrow-trail[data-effect='arrow_effect_rainbow'] {
-  background: linear-gradient(to top, #ef4444, #f97316, #eab308, #22c55e, #06b6d4, #a855f7, transparent);
+  background: linear-gradient(
+    to top,
+    #ef4444,
+    #f97316,
+    #eab308,
+    #22c55e,
+    #06b6d4,
+    #a855f7,
+    transparent
+  );
   box-shadow: 0 0 14px #a855f7;
   width: 8px;
 }
 .flying-arrow-trail[data-effect='arrow_effect_thunder_strike'] {
   background: linear-gradient(to top, #0ea5e9 0%, #7dd3fc 70%, transparent 100%);
-  box-shadow: 0 0 12px #7dd3fc, 0 0 20px #0ea5e9;
+  box-shadow:
+    0 0 12px #7dd3fc,
+    0 0 20px #0ea5e9;
 }
 .flying-arrow-trail[data-effect='arrow_effect_shadow_void'] {
   background: linear-gradient(to top, #7c3aed 0%, #3b0764 70%, transparent 100%);
-  box-shadow: 0 0 12px #c4b5fd, 0 0 22px #7c3aed;
+  box-shadow:
+    0 0 12px #c4b5fd,
+    0 0 22px #7c3aed;
 }
 .flying-arrow-trail[data-effect='arrow_effect_golden_sunbeam'] {
   background: linear-gradient(to top, #eab308 0%, #fef08a 60%, transparent 100%);
-  box-shadow: 0 0 14px #fef08a, 0 0 24px #eab308;
+  box-shadow:
+    0 0 14px #fef08a,
+    0 0 24px #eab308;
   width: 8px;
 }
 .flying-arrow-trail[data-effect='arrow_effect_sakura_petals'] {
   background: linear-gradient(to top, #f472b6 0%, #fce7f3 70%, transparent 100%);
-  box-shadow: 0 0 10px #fce7f3, 0 0 18px #f472b6;
+  box-shadow:
+    0 0 10px #fce7f3,
+    0 0 18px #f472b6;
 }
 .flying-arrow-trail[data-effect='arrow_effect_ice_shards'] {
   background: linear-gradient(to top, #38bdf8 0%, #e0f2fe 70%, transparent 100%);
-  box-shadow: 0 0 12px #e0f2fe, 0 0 20px #0284c7;
+  box-shadow:
+    0 0 12px #e0f2fe,
+    0 0 20px #0284c7;
 }
 .flying-arrow-trail[data-effect='arrow_effect_dragon_fire'] {
   background: linear-gradient(to top, #dc2626 0%, #f97316 60%, transparent 100%);
-  box-shadow: 0 0 14px #dc2626, 0 0 24px #f97316;
+  box-shadow:
+    0 0 14px #dc2626,
+    0 0 24px #f97316;
   width: 8px;
 }
 .flying-arrow-trail[data-effect='arrow_effect_comet_trail'] {
   background: linear-gradient(to top, #06b6d4 0%, #a5f3fc 60%, transparent 100%);
-  box-shadow: 0 0 14px #a5f3fc, 0 0 22px #06b6d4;
+  box-shadow:
+    0 0 14px #a5f3fc,
+    0 0 22px #06b6d4;
 }
 .flying-arrow-trail[data-effect='arrow_effect_phoenix_sparks'] {
   background: linear-gradient(to top, #f59e0b 0%, #ef4444 60%, transparent 100%);
-  box-shadow: 0 0 14px #ef4444, 0 0 22px #f59e0b;
+  box-shadow:
+    0 0 14px #ef4444,
+    0 0 22px #f59e0b;
 }
 .flying-arrow-trail[data-effect='arrow_effect_celestial_supernova'] {
   background: linear-gradient(to top, #ec4899 0%, #38bdf8 50%, #a855f7 80%, transparent 100%);
-  box-shadow: 0 0 16px #38bdf8, 0 0 26px #ec4899;
+  box-shadow:
+    0 0 16px #38bdf8,
+    0 0 26px #ec4899;
   width: 8px;
 }
 
@@ -992,11 +1030,13 @@
 
 /* Flying Trajectory Animations */
 .flying-arrow.outcome-hit {
-  animation: fly-straight-to-target var(--shot-flight-duration, 250ms) cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+  animation: fly-straight-to-target var(--shot-flight-duration, 250ms)
+    cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
 }
 
 .flying-arrow.outcome-miss {
-  animation: fly-miss-target var(--shot-flight-duration, 250ms) cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+  animation: fly-miss-target var(--shot-flight-duration, 250ms) cubic-bezier(0.2, 0.8, 0.2, 1)
+    forwards;
 }
 
 @keyframes fly-straight-to-target {
@@ -1401,19 +1441,27 @@
 }
 
 .arrow-button.character-wizard.element-fire {
-  box-shadow: 0 4px 12px rgba(234, 88, 12, 0.15), inset 0 0 8px rgba(254, 215, 170, 0.3);
+  box-shadow:
+    0 4px 12px rgba(234, 88, 12, 0.15),
+    inset 0 0 8px rgba(254, 215, 170, 0.3);
 }
 
 .arrow-button.character-wizard.element-ice {
-  box-shadow: 0 4px 12px rgba(2, 132, 199, 0.15), inset 0 0 8px rgba(186, 230, 253, 0.3);
+  box-shadow:
+    0 4px 12px rgba(2, 132, 199, 0.15),
+    inset 0 0 8px rgba(186, 230, 253, 0.3);
 }
 
 .arrow-button.character-wizard.element-wind {
-  box-shadow: 0 4px 12px rgba(5, 150, 105, 0.15), inset 0 0 8px rgba(167, 243, 208, 0.3);
+  box-shadow:
+    0 4px 12px rgba(5, 150, 105, 0.15),
+    inset 0 0 8px rgba(167, 243, 208, 0.3);
 }
 
 .arrow-button.character-wizard.element-earth {
-  box-shadow: 0 4px 12px rgba(120, 53, 15, 0.15), inset 0 0 8px rgba(254, 240, 138, 0.3);
+  box-shadow:
+    0 4px 12px rgba(120, 53, 15, 0.15),
+    inset 0 0 8px rgba(254, 240, 138, 0.3);
 }
 
 /* Feedback States */
@@ -3526,4 +3574,3 @@ body.controller-active :focus-visible,
     font-size: 11px !important;
   }
 }
-

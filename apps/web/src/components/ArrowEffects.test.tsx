@@ -3,11 +3,7 @@ import { describe, it, expect, beforeEach } from 'vitest';
 import { ArcheryTarget } from './ArcheryTarget';
 import { ElementalArrowGraphic } from './ElementalArrowGraphic';
 import { RewardsScreen } from './RewardsScreen';
-import {
-  ARROW_EFFECT_VISUALS,
-  getArrowEffectVisual,
-  DEFAULT_ARROW_EFFECT,
-} from './arrowEffects';
+import { ARROW_EFFECT_VISUALS, getArrowEffectVisual, DEFAULT_ARROW_EFFECT } from './arrowEffects';
 import {
   createDefaultRewardsState,
   savePlayerRewards,
@@ -217,7 +213,9 @@ describe('Arrow Effects Visual System', () => {
       fireEvent.click(screen.getByTestId('equip-arrow_effect_thunder_strike'));
 
       // Showcase target should have data-effect updated to thunder strike
-      const target = screen.getByTestId('stage-target-preview').querySelector('[data-testid="target-card"]');
+      const target = screen
+        .getByTestId('stage-target-preview')
+        .querySelector('[data-testid="target-card"]');
       expect(target).toHaveAttribute('data-effect', 'arrow_effect_thunder_strike');
 
       // Equipped badge chip should show thunderbolt icon ⚡

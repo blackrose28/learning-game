@@ -49,7 +49,11 @@ describe('Item 5: Active Child Profile Metadata & Selection Sync', () => {
     let capturedAuth: ReturnType<typeof useAuth> | null = null;
     const TestConsumer = () => {
       capturedAuth = useAuth();
-      return <div>Active: {capturedAuth.activeChild.name} ({capturedAuth.activeChild.avatar})</div>;
+      return (
+        <div>
+          Active: {capturedAuth.activeChild.name} ({capturedAuth.activeChild.avatar})
+        </div>
+      );
     };
 
     render(

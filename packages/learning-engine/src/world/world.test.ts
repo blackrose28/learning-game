@@ -152,7 +152,13 @@ describe('Task 9.3 — World Progression Engine', () => {
 
     // Supports explicit updatedAt timestamp
     const customTimestamp = '2026-09-18T12:30:00.000Z';
-    const savedWithTime = saveActiveArea('player-test', 'ice_area', mockStorage, 2, customTimestamp);
+    const savedWithTime = saveActiveArea(
+      'player-test',
+      'ice_area',
+      mockStorage,
+      2,
+      customTimestamp
+    );
     expect(savedWithTime.updatedAt).toBe(customTimestamp);
     const reloaded = loadWorldProgression('player-test', mockStorage, 2);
     expect(reloaded.updatedAt).toBe(customTimestamp);
@@ -173,4 +179,3 @@ describe('Task 9.3 — World Progression Engine', () => {
     expect(reloaded.unlockedAreaIds).toHaveLength(5);
   });
 });
-

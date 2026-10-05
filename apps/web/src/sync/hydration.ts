@@ -183,13 +183,17 @@ export async function hydratePlayerProgress(
         // Server was updated more recently on another device
         activeArea = combinedUnlocked.includes(serverWorld.activeAreaId)
           ? serverWorld.activeAreaId
-          : (combinedUnlocked.includes(localWorld.activeAreaId) ? localWorld.activeAreaId : 'castle');
+          : combinedUnlocked.includes(localWorld.activeAreaId)
+            ? localWorld.activeAreaId
+            : 'castle';
         finalUpdatedAt = serverWorld.updatedAt;
       } else if (localTime > serverTime) {
         // Local was updated more recently on this device
         activeArea = combinedUnlocked.includes(localWorld.activeAreaId)
           ? localWorld.activeAreaId
-          : (combinedUnlocked.includes(serverWorld.activeAreaId) ? serverWorld.activeAreaId : 'castle');
+          : combinedUnlocked.includes(serverWorld.activeAreaId)
+            ? serverWorld.activeAreaId
+            : 'castle';
         finalUpdatedAt = localWorld.updatedAt;
         shouldPushWorld = true;
       } else {
@@ -323,9 +327,9 @@ export async function hydratePlayerProgress(
       }
 
       // Check if equipped items differ between merged and server:
-      const equippedDiffers = (
-        Object.keys(equipped) as (keyof EquippedCosmetics)[]
-      ).some((k) => equipped[k] !== serverRewards.equippedCosmetics?.[k]);
+      const equippedDiffers = (Object.keys(equipped) as (keyof EquippedCosmetics)[]).some(
+        (k) => equipped[k] !== serverRewards.equippedCosmetics?.[k]
+      );
 
       if (equippedDiffers) {
         shouldPushEquipped = true;
@@ -350,7 +354,7 @@ export async function hydratePlayerProgress(
         updatedAt:
           localTime > serverTime
             ? localRewards.updatedAt
-            : (serverRewards.updatedAt || localRewards.updatedAt || new Date().toISOString()),
+            : serverRewards.updatedAt || localRewards.updatedAt || new Date().toISOString(),
       };
 
       savePlayerRewards(mergedRewards, storage);

@@ -62,9 +62,7 @@ describe('GamepadManager', () => {
     const unsub = gamepadManager.onStateChange(onStateChange);
 
     // Initial state notification
-    expect(onStateChange).toHaveBeenCalledWith(
-      expect.objectContaining({ isConnected: false })
-    );
+    expect(onStateChange).toHaveBeenCalledWith(expect.objectContaining({ isConnected: false }));
 
     // Simulate connection
     gamepadManager.simulateConnected(true, 'Xbox Wireless Controller');
@@ -129,4 +127,3 @@ describe('GamepadManager', () => {
     unsub();
   });
 });
-

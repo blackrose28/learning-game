@@ -5,19 +5,21 @@ This checklist tracks all identified synchronization gaps between devices, brows
 ---
 
 ## Progress Summary
-- [x] **Item 1: Cosmetic Equipment & Royal Armory Real-Time Sync** *(Completed)*
-- [x] **Item 2: Fix Initial Startup 401 Auth Race Condition on Fresh Browsers / PWAs** *(Completed)*
-- [x] **Item 3: World Map Realm Selection Sync (`WorldMap.tsx` & Hydration)** *(Completed)*
-- [x] **Item 4: Parent Dashboard Multi-Child On-Demand Hydration** *(Completed)*
-- [x] **Item 5: Active Child Profile Metadata & Selection Sync** *(Completed)*
-- [x] **Item 6: Procedural Audio Mute Setting Persistence** *(Completed)*
-- [x] **Item 7: Offline Parent PIN Change Sync Queue** *(Completed)*
+
+- [x] **Item 1: Cosmetic Equipment & Royal Armory Real-Time Sync** _(Completed)_
+- [x] **Item 2: Fix Initial Startup 401 Auth Race Condition on Fresh Browsers / PWAs** _(Completed)_
+- [x] **Item 3: World Map Realm Selection Sync (`WorldMap.tsx` & Hydration)** _(Completed)_
+- [x] **Item 4: Parent Dashboard Multi-Child On-Demand Hydration** _(Completed)_
+- [x] **Item 5: Active Child Profile Metadata & Selection Sync** _(Completed)_
+- [x] **Item 6: Procedural Audio Mute Setting Persistence** _(Completed)_
+- [x] **Item 7: Offline Parent PIN Change Sync Queue** _(Completed)_
 
 ---
 
 ## Detailed Task Breakdown
 
 ### Item 1: Cosmetic Equipment & Royal Armory Real-Time Sync
+
 - **Gaps Identified**:
   - `RewardsScreen.handleEquip()` saves to local `localStorage` only; never calls `apiClient.updatePlayerRewards(next, playerId)`.
   - `GameScreen.tsx` only sends rewards when an arrow is shot or session completes; equipping items in the Armory without shooting an arrow is never sent to the backend.
@@ -31,6 +33,7 @@ This checklist tracks all identified synchronization gaps between devices, brows
   - [x] Added unit tests verifying real-time sync in `Rewards.test.tsx` and bi-directional equipment reconciliation in `hydration.test.ts`. All 152 web tests and 412 monorepo tests pass.
 
 ### Item 2: Fix Initial Startup 401 Auth Race Condition on Fresh Browsers / PWAs
+
 - **Gaps Identified**:
   - On a fresh browser or newly installed PWA, `AuthProvider`'s `useEffect` begins `loginChild` asynchronously.
   - Concurrently, `App.tsx` triggers `hydratePlayerProgress` on mount before the login request finishes.
@@ -49,6 +52,7 @@ This checklist tracks all identified synchronization gaps between devices, brows
   - [x] All 155 web tests across 17 test suites pass; all 415 tests across the entire monorepo pass.
 
 ### Item 3: World Map Realm Selection Sync (`WorldMap.tsx` & Hydration)
+
 - **Gaps Identified**:
   - Selecting an area on the standalone `WorldMap` tab only writes to `localStorage` via `saveActiveArea`; it never calls `apiClient.updateWorldProgression`.
   - `hydration.ts` always prefers `serverWorld.activeAreaId`, overwriting local area selection unless local has more completed sessions or unlocked areas.
@@ -66,6 +70,7 @@ This checklist tracks all identified synchronization gaps between devices, brows
   - [x] Added unit tests in `WorldProgression.test.tsx` for standalone World Map `apiClient` sync and in `hydration.test.ts` for bi-directional active realm reconciliation. All 158 web tests and 418 monorepo tests pass.
 
 ### Item 4: Parent Dashboard Multi-Child On-Demand Hydration
+
 - **Gaps Identified**:
   - `hydratePlayerProgress` only hydrates `activeChild.id`.
   - In `ParentDashboard.tsx`, selecting another child (e.g. Child 2 or Child 3) reads only from local storage. If that child was never active on that device, their dashboard displays 0 attempts and empty stats.
@@ -79,6 +84,7 @@ This checklist tracks all identified synchronization gaps between devices, brows
   - [x] Added comprehensive unit tests in `ParentDashboard.test.tsx` verifying child switching hydration, manual refresh hydration, rapid child switching race prevention, and offline error resilience. All 17 dashboard tests and all 422 monorepo tests pass.
 
 ### Item 5: Active Child Profile Metadata & Selection Sync
+
 - **Gaps Identified**:
   - `math_archer_active_child` is saved in `localStorage` and not refreshed when profile fields (e.g., name, avatar, grade) are updated on another device.
   - Active child badge in `App.tsx` rendered static 🏹 icon rather than dynamically displaying the active child's chosen archer avatar emoji.
@@ -103,6 +109,7 @@ This checklist tracks all identified synchronization gaps between devices, brows
   - [x] All 18 test suites (167 tests) in `web` pass; all 427 tests across the monorepo pass.
 
 ### Item 6: Procedural Audio Mute Setting Persistence
+
 - **Gaps Identified**:
   - `AudioFx.ts` held `isMuted` only in memory; refreshing the page or switching devices reset audio settings.
 - **Implementation Completed**:
@@ -116,6 +123,7 @@ This checklist tracks all identified synchronization gaps between devices, brows
   - [x] Created unit and component tests in `apps/web/src/audio/AudioFx.test.tsx` verifying default initialization, storage persistence, subscriber notifications, audio context bypassing, and header toggle integration. All 7 tests pass.
 
 ### Item 7: Offline Parent PIN Change Sync Queue
+
 - **Gaps Identified**:
   - Changing parent PIN while offline stored it only in `math_archer_parent_pin` without queueing for server update when reconnected.
 - **Implementation Completed**:
@@ -141,4 +149,3 @@ This checklist tracks all identified synchronization gaps between devices, brows
     - Offline PIN changes executed through `ParentDashboard` change PIN modal.
     - Seamless Parent Gate unlocking with newly queued PIN.
   - [x] All 20 test suites (181 tests) in `web` pass; all 441 tests across the entire monorepo pass.
-

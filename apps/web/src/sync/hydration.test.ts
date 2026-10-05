@@ -400,7 +400,9 @@ describe('Cloud Hydration Engine (hydratePlayerProgress)', () => {
 
     // And pushed update to server!
     expect(pushedRewards).not.toBeNull();
-    expect((pushedRewards as PlayerRewardsState | null)?.equippedCosmetics.outfit).toBe('outfit_ember_crimson');
+    expect((pushedRewards as PlayerRewardsState | null)?.equippedCosmetics.outfit).toBe(
+      'outfit_ember_crimson'
+    );
   });
 
   it('adopts server equipped robe on Device B when server is newer', async () => {
@@ -536,4 +538,3 @@ describe('Cloud Hydration Engine (hydratePlayerProgress)', () => {
     expect((pushedWorld as WorldProgressionState | null)?.activeAreaId).toBe('ice_area');
   });
 });
-

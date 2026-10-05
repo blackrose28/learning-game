@@ -6,7 +6,20 @@ export interface ArrowEffectVisual {
   primaryColor: string;
   secondaryColor: string;
   glowColor: string;
-  particleType: 'spark' | 'star' | 'ember' | 'rainbow' | 'lightning' | 'void' | 'sunbeam' | 'petal' | 'ice' | 'dragon' | 'meteor' | 'phoenix' | 'supernova';
+  particleType:
+    | 'spark'
+    | 'star'
+    | 'ember'
+    | 'rainbow'
+    | 'lightning'
+    | 'void'
+    | 'sunbeam'
+    | 'petal'
+    | 'ice'
+    | 'dragon'
+    | 'meteor'
+    | 'phoenix'
+    | 'supernova';
   summary: string;
 }
 

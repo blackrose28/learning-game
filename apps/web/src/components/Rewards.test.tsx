@@ -504,7 +504,9 @@ describe('Task 9.4 — Rewards Integration Tests', () => {
       fireEvent.click(bowTab);
       const oakCard = screen.getByTestId('cosmetic-card-bow_recurve_oak');
       expect(oakCard).toHaveTextContent('Apprentice Oak Wand');
-      expect(oakCard).toHaveTextContent(/Hand-turned oak wand capped with a humming amber focus crystal/i);
+      expect(oakCard).toHaveTextContent(
+        /Hand-turned oak wand capped with a humming amber focus crystal/i
+      );
     });
 
     it('allows toggling between Target and Training Dummy in Royal Armory showcase', () => {
@@ -514,7 +516,10 @@ describe('Task 9.4 — Rewards Integration Tests', () => {
       const dummyBtn = screen.getByTestId('rewards-switch-dummy');
       expect(targetBtn).toHaveClass('active');
       expect(dummyBtn).not.toHaveClass('active');
-      expect(screen.getByTestId('target-card')).toHaveAttribute('data-target-type', 'archery_target');
+      expect(screen.getByTestId('target-card')).toHaveAttribute(
+        'data-target-type',
+        'archery_target'
+      );
 
       // Switch to Dummy
       fireEvent.click(dummyBtn);
@@ -525,4 +530,3 @@ describe('Task 9.4 — Rewards Integration Tests', () => {
     });
   });
 });
-

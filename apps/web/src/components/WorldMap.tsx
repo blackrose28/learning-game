@@ -72,9 +72,7 @@ export const WorldMap: React.FC<WorldMapProps> = ({
           <h2 className="world-map-title" data-testid="world-map-title">
             🗺️ Archery World Map
           </h2>
-          <p className="world-map-subtitle">
-            Explore elemental realms across the kingdom
-          </p>
+          <p className="world-map-subtitle">Explore elemental realms across the kingdom</p>
         </div>
 
         {/* Progression Overview Bar */}
@@ -150,17 +148,11 @@ export const WorldMap: React.FC<WorldMapProps> = ({
 
               <div className="stage-realm-status-pill">
                 {isInspectedActive ? (
-                  <span className="stage-status-badge badge-active">
-                    ✨ Currently Practicing
-                  </span>
+                  <span className="stage-status-badge badge-active">✨ Currently Practicing</span>
                 ) : isInspectedUnlocked ? (
-                  <span className="stage-status-badge badge-unlocked">
-                    ✅ Realm Discovered
-                  </span>
+                  <span className="stage-status-badge badge-unlocked">✅ Realm Discovered</span>
                 ) : (
-                  <span className="stage-status-badge badge-locked">
-                    🔒 Realm Locked
-                  </span>
+                  <span className="stage-status-badge badge-locked">🔒 Realm Locked</span>
                 )}
               </div>
             </div>
@@ -191,7 +183,8 @@ export const WorldMap: React.FC<WorldMapProps> = ({
                       Requires <strong>{inspectedArea.sessionsRequired}</strong> completed sessions
                     </span>
                     <span className="locked-session-count">
-                      ({progression.completedSessionsCount} / {inspectedArea.sessionsRequired} completed)
+                      ({progression.completedSessionsCount} / {inspectedArea.sessionsRequired}{' '}
+                      completed)
                     </span>
                   </div>
                 )}

@@ -295,4 +295,3 @@ describe('Startup Auth & Hydration Race Condition Prevention', () => {
     expect(storedAttempts[0].questionId).toBe('q-local-offline-1');
   });
 });
-

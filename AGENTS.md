@@ -1,4 +1,5 @@
 <!-- ripwire:start -->
+
 # ripwire — Code Intelligence
 
 This repo uses [ripwire](https://github.com/redhat-et/ripwire) for ranked call-graph navigation: who
@@ -8,7 +9,7 @@ nothing is written into the repo.
 ## Always Do
 
 - **Always pass `--legend=compact`.** Every XML verb ships a self-describing legend, and the full posture
-  costs ~2–3K tokens *per call* — enough to erase the savings the tool exists to provide. The prose verbs
+  costs ~2–3K tokens _per call_ — enough to erase the savings the tool exists to provide. The prose verbs
   (`--situ`, `--doctor`, `--help-task`) take no `--legend` flag at all.
 - **Before editing a function or method, run `ripwire . --impact=SYM --legend=compact`** and report the
   blast radius. Add `--uses=SYM` when you need individual call sites rather than counts.
@@ -21,18 +22,18 @@ nothing is written into the repo.
 
 ## Commands
 
-| Task | Command |
-|---|---|
-| Orient in a repo or directory | `ripwire . --legend=compact --max-tokens=3000` |
-| Where is X handled? | `ripwire . --for="…" --legend=compact` |
-| Who calls this? | `ripwire . --callers=SYM --legend=compact` |
-| What does it call? | `ripwire . --callees=SYM --legend=compact` |
-| Every use site, with roles | `ripwire . --uses=SYM --legend=compact` |
-| Is it safe to change? | `ripwire . --impact=SYM --legend=compact` |
-| I changed files — tests and blast radius | `ripwire . --situ` |
-| Show one symbol's body | `ripwire . --expand=SYM --top-k=0 --legend=compact` |
-| Which command do I want? | `ripwire . --help-task="<task in words>"` |
-| Is the setup healthy? | `ripwire . --doctor` |
+| Task                                     | Command                                             |
+| ---------------------------------------- | --------------------------------------------------- |
+| Orient in a repo or directory            | `ripwire . --legend=compact --max-tokens=3000`      |
+| Where is X handled?                      | `ripwire . --for="…" --legend=compact`              |
+| Who calls this?                          | `ripwire . --callers=SYM --legend=compact`          |
+| What does it call?                       | `ripwire . --callees=SYM --legend=compact`          |
+| Every use site, with roles               | `ripwire . --uses=SYM --legend=compact`             |
+| Is it safe to change?                    | `ripwire . --impact=SYM --legend=compact`           |
+| I changed files — tests and blast radius | `ripwire . --situ`                                  |
+| Show one symbol's body                   | `ripwire . --expand=SYM --top-k=0 --legend=compact` |
+| Which command do I want?                 | `ripwire . --help-task="<task in words>"`           |
+| Is the setup healthy?                    | `ripwire . --doctor`                                |
 
 `--format=rows` or `--format=columnar` shrink the flat list verbs (`--callers`, `--callees`, `--uses`,
 `--impact`) further. Selectors accept `path/to/file.ts:symbolName` to disambiguate an overloaded name.
@@ -46,9 +47,11 @@ nothing is written into the repo.
 - MCP alternative (warm in-memory index, project `.mcp.json` / `opencode.json` already register it): 31 verbs —
   read (`for`, `find_symbol`, `grep`, `explore`, `fetch_body`, `batch`, …), flagship reflexes (`impact`,
   `uses`, `exemplar`, `quality_delta`, `edit_check`, `from_trace`, …), edits (`replace_symbol_body`, …).
+
 <!-- ripwire:end -->
 
 <!-- context-mode:start -->
+
 # context-mode — MANDATORY routing rules
 
 context-mode MCP tools available. Rules protect context window from flooding. One unrouted command dumps 56 KB into context.
@@ -60,26 +63,32 @@ Analyze/count/filter/compare/search/parse/transform data: **write code** via `co
 ## BLOCKED — do NOT attempt
 
 ### curl / wget — BLOCKED
+
 Shell `curl`/`wget` intercepted and blocked. Do NOT retry.
 Use: `context-mode_ctx_fetch_and_index(url, source)` or `context-mode_ctx_execute(language: "javascript", code: "const r = await fetch(...)")`
 
 ### Inline HTTP — BLOCKED
+
 `fetch('http`, `requests.get(`, `requests.post(`, `http.get(`, `http.request(` — intercepted. Do NOT retry.
 Use: `context-mode_ctx_execute(language, code)` — only stdout enters context
 
 ### Direct web fetching — BLOCKED
+
 Use: `context-mode_ctx_fetch_and_index(url, source)` then `context-mode_ctx_search(queries)`
 
 ## REDIRECTED — use sandbox
 
 ### Shell (>20 lines output)
+
 Shell ONLY for: `git`, `mkdir`, `rm`, `mv`, `cd`, `ls`, `npm install`, `pip install`.
 Otherwise: `context-mode_ctx_batch_execute(commands, queries)` or `context-mode_ctx_execute(language: "javascript", code: "...")`. Use `language: "shell"` only when code matches the host shell.
 
 ### File reading (for analysis)
+
 Reading to **edit** → reading correct. Reading to **analyze/explore/summarize** → `context-mode_ctx_execute_file(path, language, code)`.
 
 ### grep / search (large results)
+
 Use `context-mode_ctx_execute(language: "javascript", code: "...")` in sandbox for portable filtering/counting.
 
 ## Tool selection
@@ -115,22 +124,22 @@ Skills, roles, and decisions persist for the entire session. Do not abandon them
 
 Session history is persistent and searchable. On resume, search BEFORE asking the user:
 
-| Need | Command |
-|------|---------|
-| What did we decide? | `context-mode_ctx_search(queries: ["decision"], source: "decision", sort: "timeline")` |
-| What constraints exist? | `context-mode_ctx_search(queries: ["constraint"], source: "constraint")` |
+| Need                    | Command                                                                                |
+| ----------------------- | -------------------------------------------------------------------------------------- |
+| What did we decide?     | `context-mode_ctx_search(queries: ["decision"], source: "decision", sort: "timeline")` |
+| What constraints exist? | `context-mode_ctx_search(queries: ["constraint"], source: "constraint")`               |
 
 DO NOT ask "what were we working on?" — SEARCH FIRST.
 If search returns 0 results, proceed as a fresh session.
 
 ## ctx commands
 
-| Command | Action |
-|---------|--------|
-| `ctx stats` | Call `stats` MCP tool, display full output verbatim |
-| `ctx doctor` | Call `doctor` MCP tool, run returned shell command, display as checklist |
-| `ctx upgrade` | Call `upgrade` MCP tool, run returned shell command, display as checklist |
-| `ctx purge` | Call `purge` MCP tool with confirm: true. Warns before wiping knowledge base. |
+| Command       | Action                                                                        |
+| ------------- | ----------------------------------------------------------------------------- |
+| `ctx stats`   | Call `stats` MCP tool, display full output verbatim                           |
+| `ctx doctor`  | Call `doctor` MCP tool, run returned shell command, display as checklist      |
+| `ctx upgrade` | Call `upgrade` MCP tool, run returned shell command, display as checklist     |
+| `ctx purge`   | Call `purge` MCP tool with confirm: true. Warns before wiping knowledge base. |
 
 After /clear or /compact: knowledge base and session stats preserved. Use `ctx purge` to start fresh.
 <!-- context-mode:end -->

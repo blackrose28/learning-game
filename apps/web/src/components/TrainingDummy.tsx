@@ -36,7 +36,11 @@ export const TrainingDummy: React.FC<TrainingDummyProps> = ({
   return (
     <div
       className={`target-card dummy-target-card hit-${hitState} effect-${effectVisual.id} ${
-        hitState === 'hit' ? 'target-impact-hit dummy-hit-wobble' : hitState === 'miss' ? 'target-impact-miss' : ''
+        hitState === 'hit'
+          ? 'target-impact-hit dummy-hit-wobble'
+          : hitState === 'miss'
+            ? 'target-impact-miss'
+            : ''
       } ${className}`}
       data-testid="target-card"
       data-target-type="dummy"

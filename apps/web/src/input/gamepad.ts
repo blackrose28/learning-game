@@ -396,7 +396,10 @@ class GamepadManager {
     this.emitDirection(direction);
   }
 
-  public simulateConnected(connected: boolean, id = 'Xbox Wireless Controller (STANDARD GAMEPAD)'): void {
+  public simulateConnected(
+    connected: boolean,
+    id = 'Xbox Wireless Controller (STANDARD GAMEPAD)'
+  ): void {
     this.isConnected = connected;
     this.gamepadId = connected ? id : null;
     if (connected) {
@@ -410,4 +413,3 @@ class GamepadManager {
 }
 
 export const gamepadManager = new GamepadManager();
-

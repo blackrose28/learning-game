@@ -167,10 +167,12 @@ describe('App navigation and Progress & History View', () => {
   });
 });
 
-
 describe('reasoning Training entry', () => {
   it('opens opted-in reasoning practice, resumes saved work and returns to arithmetic Training', async () => {
-    saveReasoningSettings('player-local', { schemaVersion: 1, enabledFamilies: ['instruction_chain'] });
+    saveReasoningSettings('player-local', {
+      schemaVersion: 1,
+      enabledFamilies: ['instruction_chain'],
+    });
     render(<App />);
     fireEvent.click(screen.getByTestId('mode-tab-training'));
     fireEvent.click(screen.getByRole('button', { name: /Đọc đề, chọn bước/ }));

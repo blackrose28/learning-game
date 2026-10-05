@@ -115,7 +115,14 @@ const OUTFIT_SKINS: Record<
 
 const STAFF_SKINS: Record<
   string,
-  { shaft0: string; shaft100: string; orb0: string; orb100: string; headpiece: string; glow: string }
+  {
+    shaft0: string;
+    shaft100: string;
+    orb0: string;
+    orb100: string;
+    headpiece: string;
+    glow: string;
+  }
 > = {
   bow_recurve_oak: {
     shaft0: '#92400e',
@@ -316,12 +323,7 @@ export const WizardGraphic: React.FC<WizardGraphicProps> = ({
             strokeWidth="1.5"
           />
           {/* Mystic Hem Trim */}
-          <path
-            d="M 49 83 Q 66 89 87 83"
-            stroke={outfit.feather}
-            strokeWidth="2"
-            fill="none"
-          />
+          <path d="M 49 83 Q 66 89 87 83" stroke={outfit.feather} strokeWidth="2" fill="none" />
         </g>
 
         {/* Wizard Body & Robe Torso */}
@@ -334,12 +336,7 @@ export const WizardGraphic: React.FC<WizardGraphicProps> = ({
             strokeWidth="1.5"
           />
           {/* Robe Lapel Fold */}
-          <path
-            d="M 60 50 L 64 68 L 68 50"
-            stroke={outfit.feather}
-            strokeWidth="1.5"
-            fill="none"
-          />
+          <path d="M 60 50 L 64 68 L 68 50" stroke={outfit.feather} strokeWidth="1.5" fill="none" />
           {/* Magical Waist Belt & Buckle */}
           <path d="M 53 68 Q 64 72 75 69" stroke="#78350f" strokeWidth="4" strokeLinecap="round" />
           <rect
@@ -362,14 +359,7 @@ export const WizardGraphic: React.FC<WizardGraphicProps> = ({
           {/* Neck */}
           <rect x="61" y="44" width="6" height="8" rx="2" fill="#fbcfe8" />
           {/* Cute Kid Wizard Head */}
-          <circle
-            cx="64"
-            cy="36"
-            r="12"
-            fill="#fed7aa"
-            stroke="#ea580c"
-            strokeWidth="1"
-          />
+          <circle cx="64" cy="36" r="12" fill="#fed7aa" stroke="#ea580c" strokeWidth="1" />
           {/* Friendly Rosy Cheeks */}
           <circle cx="58" cy="40" r="2.2" fill="#fca5a5" opacity="0.6" />
           <circle cx="70" cy="40" r="2.2" fill="#fca5a5" opacity="0.6" />
@@ -407,12 +397,7 @@ export const WizardGraphic: React.FC<WizardGraphicProps> = ({
               strokeWidth="1.5"
             />
             {/* Hat Band */}
-            <path
-              d="M 50 26 Q 64 30 78 26"
-              stroke={outfit.feather}
-              strokeWidth="3.5"
-              fill="none"
-            />
+            <path d="M 50 26 Q 64 30 78 26" stroke={outfit.feather} strokeWidth="3.5" fill="none" />
             {/* Golden Star / Plume on Hat Tip */}
             <polygon
               points="72,2 73.5,4.5 76,5 74,7 74.5,9.5 72,8 69.5,9.5 70,7 68,5 70.5,4.5"
@@ -459,12 +444,7 @@ export const WizardGraphic: React.FC<WizardGraphicProps> = ({
             strokeLinecap="round"
           />
           {/* Staff Headpiece Prongs */}
-          <path
-            d="M 20 22 Q 26 14 32 22"
-            stroke={staff.headpiece}
-            strokeWidth="2.5"
-            fill="none"
-          />
+          <path d="M 20 22 Q 26 14 32 22" stroke={staff.headpiece} strokeWidth="2.5" fill="none" />
           <line x1="26" y1="18" x2="26" y2="12" stroke={staff.headpiece} strokeWidth="2.5" />
 
           {/* Floating Mystical Crystal Orb */}

@@ -35,12 +35,12 @@ the five collection days; do not count it as day one.
 
 ### Guided flow
 
-| Objective | Prompt | Expected response | Other choices / evidence |
-| --- | --- | --- | --- |
-| Identify starting amount | Trước khi sưu tầm thêm, Hải có mấy thẻ? | 8 | 1, 5, 13: selecting other quantities or the final amount. |
-| Interpret repeated change | Sau 5 ngày, Hải sưu tầm thêm được mấy thẻ? | 5 | 1: one day only; 4: missed day; 8: starting amount. |
-| Build plan | Muốn biết tất cả số thẻ, con chọn phép tính nào? | 8 + 5 | 8 − 5; 5 − 1; 8 + 1. |
-| Calculate | Hải có tất cả bao nhiêu thẻ? | 13 | 9: one day only; 12: missed day; 5: added cards only. |
+| Objective                 | Prompt                                           | Expected response | Other choices / evidence                                  |
+| ------------------------- | ------------------------------------------------ | ----------------- | --------------------------------------------------------- |
+| Identify starting amount  | Trước khi sưu tầm thêm, Hải có mấy thẻ?          | 8                 | 1, 5, 13: selecting other quantities or the final amount. |
+| Interpret repeated change | Sau 5 ngày, Hải sưu tầm thêm được mấy thẻ?       | 5                 | 1: one day only; 4: missed day; 8: starting amount.       |
+| Build plan                | Muốn biết tất cả số thẻ, con chọn phép tính nào? | 8 + 5             | 8 − 5; 5 − 1; 8 + 1.                                      |
+| Calculate                 | Hải có tất cả bao nhiêu thẻ?                     | 13                | 9: one day only; 12: missed day; 5: added cards only.     |
 
 Hints:
 
@@ -68,12 +68,12 @@ Solution: successor of 7 is 8; 14 − 8 = 6; 6 + 9 = **15**.
 
 ### Guided flow
 
-| Objective | Prompt | Expected response | Other choices / evidence |
-| --- | --- | --- | --- |
-| Interpret successor | Số liền sau của 7 là số nào? | 8 | 6: predecessor; 7: unchanged; 9: skipped a number. |
-| Interpret difference | Hiệu của 14 và 8 được viết như thế nào? | 14 − 8 | 14 + 8; 8 − 14; 14 − 7. |
-| Order dependent steps | Sau khi tính 14 − 8, con làm gì tiếp? | Cộng kết quả vừa tìm được với 9 | Trừ kết quả đi 9; cộng 14 với 9; dừng lại. |
-| Calculate final result | Kết quả cuối cùng là bao nhiêu? | 15 | 16: use 7 instead of 8; 6: stop early; 23: omit subtraction. |
+| Objective              | Prompt                                  | Expected response               | Other choices / evidence                                     |
+| ---------------------- | --------------------------------------- | ------------------------------- | ------------------------------------------------------------ |
+| Interpret successor    | Số liền sau của 7 là số nào?            | 8                               | 6: predecessor; 7: unchanged; 9: skipped a number.           |
+| Interpret difference   | Hiệu của 14 và 8 được viết như thế nào? | 14 − 8                          | 14 + 8; 8 − 14; 14 − 7.                                      |
+| Order dependent steps  | Sau khi tính 14 − 8, con làm gì tiếp?   | Cộng kết quả vừa tìm được với 9 | Trừ kết quả đi 9; cộng 14 với 9; dừng lại.                   |
+| Calculate final result | Kết quả cuối cùng là bao nhiêu?         | 15                              | 16: use 7 instead of 8; 6: stop early; 23: omit subtraction. |
 
 Hints:
 
@@ -94,12 +94,12 @@ thêm 5 vào kết quả. Em được số nào?” → **12**.
 Vocabulary variants, implemented as `instruction_chain_v2`. The guided flow is
 the same four steps, with the first two adapted to the phrase:
 
-| Phrase | Example and answer | Typical distractors for the number step |
-| --- | --- | --- |
-| số liền sau | Lấy hiệu của 14 và số liền sau của số 7 rồi cộng với 9 → **15** | 6 (trước), 7, 9 |
-| số liền trước | Lấy tổng của 6 và số liền trước của số 5 rồi trừ đi 3 → **7** | 6 (sau), 5, 3 |
+| Phrase              | Example and answer                                                  | Typical distractors for the number step |
+| ------------------- | ------------------------------------------------------------------- | --------------------------------------- |
+| số liền sau         | Lấy hiệu của 14 và số liền sau của số 7 rồi cộng với 9 → **15**     | 6 (trước), 7, 9                         |
+| số liền trước       | Lấy tổng của 6 và số liền trước của số 5 rồi trừ đi 3 → **7**       | 6 (sau), 5, 3                           |
 | số lớn hơn … đơn vị | Lấy hiệu của 14 và số lớn hơn 7 là 3 đơn vị rồi cộng với 9 → **13** | 4 (sai hướng), 8 (xem như liền sau), 11 |
-| số bé hơn … đơn vị | Lấy tổng của 5 và số bé hơn 9 là 2 đơn vị rồi trừ đi 4 → **8** | 11 (sai hướng), 8, 6 |
+| số bé hơn … đơn vị  | Lấy tổng của 5 và số bé hơn 9 là 2 đơn vị rồi trừ đi 4 → **8**      | 11 (sai hướng), 8, 6                    |
 
 “Tổng” uses the “Tổng của 6 và 4 được viết như thế nào?” step with choices such as
 6 + 4 and 6 − 4. The final instruction is “cộng với” or “trừ đi”. Plain wording:
@@ -118,12 +118,12 @@ Solution: 1 chục = 10; restore both removed amounts: 34 + 10 + 4 =
 
 ### Guided flow
 
-| Objective | Prompt | Expected response | Other choices / evidence |
-| --- | --- | --- | --- |
-| Interpret dozen | 1 chục cái kẹo là bao nhiêu cái kẹo? | 10 | 1, 12, 20: unit interpretation. |
-| Identify the unknown | Bài toán hỏi số kẹo vào lúc nào? | Lúc đầu, trước khi ăn và cho em | Sau khi ăn và cho em; chỉ sau khi ăn; chỉ sau khi cho em. |
-| Reverse changes | Muốn tìm số kẹo lúc đầu, con chọn cách nào? | Thêm lại 4 cái đã ăn và 10 cái đã cho | Bớt tiếp cả hai; thêm lại 4 thôi; thêm lại 10 thôi. |
-| Calculate | Lúc đầu Mai có bao nhiêu cái kẹo? | 48 | 20: subtract both again; 38: omit the gift; 44: omit the eaten candies. |
+| Objective            | Prompt                                      | Expected response                     | Other choices / evidence                                                |
+| -------------------- | ------------------------------------------- | ------------------------------------- | ----------------------------------------------------------------------- |
+| Interpret dozen      | 1 chục cái kẹo là bao nhiêu cái kẹo?        | 10                                    | 1, 12, 20: unit interpretation.                                         |
+| Identify the unknown | Bài toán hỏi số kẹo vào lúc nào?            | Lúc đầu, trước khi ăn và cho em       | Sau khi ăn và cho em; chỉ sau khi ăn; chỉ sau khi cho em.               |
+| Reverse changes      | Muốn tìm số kẹo lúc đầu, con chọn cách nào? | Thêm lại 4 cái đã ăn và 10 cái đã cho | Bớt tiếp cả hai; thêm lại 4 thôi; thêm lại 10 thôi.                     |
+| Calculate            | Lúc đầu Mai có bao nhiêu cái kẹo?           | 48                                    | 20: subtract both again; 38: omit the gift; 44: omit the eaten candies. |
 
 Hints:
 
@@ -159,12 +159,12 @@ that a finite list uniquely determines its continuation.
 
 ### Guided flow
 
-| Objective | Prompt | Expected response | Other choices / evidence |
-| --- | --- | --- | --- |
-| Term position | Trong dãy này, 20 là số thứ mấy? | 5 | 4: count from zero; 6: off by one; 20: confuse position with value. |
-| Observe gaps | Từ 12 đến 20 tăng thêm bao nhiêu? | 8 | 2: assume fixed gap; 6: reuse previous gap; 20: select value. |
-| Extend rule | Các bước tăng là 2, 4, 6, 8. Bước tăng tiếp theo là bao nhiêu? | 10 | 8: repeat gap; 2: restart; 12: skip one. |
-| Extend two positions | Điền số thứ 6 và thứ 7. | 30, then 42 | Final choices: 42; 30: stop at sixth; 40: repeat +10; 36: repeat +8 twice from 20. |
+| Objective            | Prompt                                                         | Expected response | Other choices / evidence                                                           |
+| -------------------- | -------------------------------------------------------------- | ----------------- | ---------------------------------------------------------------------------------- |
+| Term position        | Trong dãy này, 20 là số thứ mấy?                               | 5                 | 4: count from zero; 6: off by one; 20: confuse position with value.                |
+| Observe gaps         | Từ 12 đến 20 tăng thêm bao nhiêu?                              | 8                 | 2: assume fixed gap; 6: reuse previous gap; 20: select value.                      |
+| Extend rule          | Các bước tăng là 2, 4, 6, 8. Bước tăng tiếp theo là bao nhiêu? | 10                | 8: repeat gap; 2: restart; 12: skip one.                                           |
+| Extend two positions | Điền số thứ 6 và thứ 7.                                        | 30, then 42       | Final choices: 42; 30: stop at sixth; 40: repeat +10; 36: repeat +8 twice from 20. |
 
 Hints:
 
@@ -172,8 +172,7 @@ Hints:
 2. Show numbered terms 1–7 and gap labels +2, +4, +6, +8, blank, blank.
 3. “Sau 20, cộng 10 được 30 là số thứ 6. Cộng tiếp 12 được 42 là số thứ 7.”
 
-Prerequisites: numbered positions, subtraction to find gaps, and addition within
-100. Teach constant-gap patterns first, then increasing gaps; hold wording simple.
+Prerequisites: numbered positions, subtraction to find gaps, and addition within 100. Teach constant-gap patterns first, then increasing gaps; hold wording simple.
 
 Independent, with rule stated: “Các bước tăng là số chẵn liên tiếp: 1; 3; 7;
 13; 21; … Điền số thứ 7.” → **43**.
@@ -194,12 +193,12 @@ validation; child-facing teaching can use tens bundles and units. Accept 53 + 42
 
 ### Guided flow
 
-| Objective | Prompt | Expected response | Other choices / evidence |
-| --- | --- | --- | --- |
-| Place value | Đặt thẻ 5 ở hàng chục thì thẻ đó có giá trị bao nhiêu? | 50 | 5, 15, 10: place-value confusion. |
-| Choose cards | Muốn tổng lớn nhất, con để lại thẻ nào không dùng? | 1 | 2, 4, 5: omit a larger digit. |
-| Optimize tens | Hai thẻ nào nên đặt ở hàng chục? | 5 và 4 | 5 và 3; 4 và 3; 2 và 3. |
-| Build and calculate | Hãy xếp 4 thẻ để được tổng lớn nhất. | Any valid arrangement totaling 95 | 94: discard 2; 86: put 3 instead of 4 in tens; 68: keep 5 in units. |
+| Objective           | Prompt                                                 | Expected response                 | Other choices / evidence                                            |
+| ------------------- | ------------------------------------------------------ | --------------------------------- | ------------------------------------------------------------------- |
+| Place value         | Đặt thẻ 5 ở hàng chục thì thẻ đó có giá trị bao nhiêu? | 50                                | 5, 15, 10: place-value confusion.                                   |
+| Choose cards        | Muốn tổng lớn nhất, con để lại thẻ nào không dùng?     | 1                                 | 2, 4, 5: omit a larger digit.                                       |
+| Optimize tens       | Hai thẻ nào nên đặt ở hàng chục?                       | 5 và 4                            | 5 và 3; 4 và 3; 2 và 3.                                             |
+| Build and calculate | Hãy xếp 4 thẻ để được tổng lớn nhất.                   | Any valid arrangement totaling 95 | 94: discard 2; 86: put 3 instead of 4 in tens; 68: keep 5 in units. |
 
 Hints:
 
@@ -314,8 +313,8 @@ Then, if comfortable: “Mai cho bạn 2 cái kẹo và ăn 1 cái. Mai còn 5 c
 Lúc đầu Mai có mấy cái?” → 8. Pattern/card baselines can wait for their milestone.
 
 | Date / problem | Read independently or aloud? | What did the child say is asked? | Proposed plan, before help | Calculation | Assistance supplied | Next practice |
-| --- | --- | --- | --- | --- | --- | --- |
-| Pending | — | — | — | — | — | — |
+| -------------- | ---------------------------- | -------------------------------- | -------------------------- | ----------- | ------------------- | ------------- |
+| Pending        | —                            | —                                | —                          | —           | —                   | —             |
 
 Repeat with held-out wording after practice, preferably across two sessions.
 Keep baseline and transfer items out of the immediately preceding guided bank.

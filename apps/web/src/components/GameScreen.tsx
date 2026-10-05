@@ -1117,8 +1117,12 @@ export const GameScreen: React.FC<GameScreenProps> = ({
     enabled: true,
     onButtonDown: (btn) => {
       if (
-        btn === XboxButton.RS && gameMode === 'training' && onReasoningTraining &&
-        !isTransitioning && !isHelpOpen && !isWorldMapOpen
+        btn === XboxButton.RS &&
+        gameMode === 'training' &&
+        onReasoningTraining &&
+        !isTransitioning &&
+        !isHelpOpen &&
+        !isWorldMapOpen
       ) {
         onReasoningTraining();
         return;

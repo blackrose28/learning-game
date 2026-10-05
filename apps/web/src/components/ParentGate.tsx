@@ -130,7 +130,8 @@ export const ParentGate: React.FC<ParentGateProps> = ({ onSuccess, onCancel }) =
             </div>
 
             <div className="hint-pill" data-testid="parent-pin-hint">
-              💡 {parentPin === '1234' ? 'Demo Parent PIN' : 'Parent PIN'}: <strong>{parentPin || '1234'}</strong>
+              💡 {parentPin === '1234' ? 'Demo Parent PIN' : 'Parent PIN'}:{' '}
+              <strong>{parentPin || '1234'}</strong>
             </div>
 
             <button

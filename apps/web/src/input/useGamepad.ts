@@ -72,4 +72,3 @@ export function useGamepad(options: UseGamepadOptions = {}): ControllerState {
 }
 
 export { XboxButton, type ControllerDirection, type ControllerState };
-

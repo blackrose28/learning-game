@@ -95,9 +95,7 @@ describe('Single-Screen Redesign: World Map & Royal Armory', () => {
       });
 
       const onSelectArea = vi.fn();
-      render(
-        <WorldMap playerId="player-single-screen-test" onSelectArea={onSelectArea} />
-      );
+      render(<WorldMap playerId="player-single-screen-test" onSelectArea={onSelectArea} />);
 
       // Travel using the travel button inside realm card
       const travelBtn = screen.getByTestId('travel-btn-fire_area');

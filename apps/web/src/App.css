@@ -536,12 +536,16 @@ body {
 
 /* Controller Mode & 10-Foot Living Room TV Navigation (Phase 10) */
 body.controller-active :focus-visible,
-body.controller-active [data-controller-focus="true"] {
+body.controller-active [data-controller-focus='true'] {
   outline: 3px solid #107c10 !important;
   outline-offset: 3px !important;
-  box-shadow: 0 0 0 3px #107c10, 0 0 16px rgba(16, 124, 16, 0.65) !important;
+  box-shadow:
+    0 0 0 3px #107c10,
+    0 0 16px rgba(16, 124, 16, 0.65) !important;
   transform: scale(1.02);
-  transition: transform 0.1s ease, box-shadow 0.1s ease;
+  transition:
+    transform 0.1s ease,
+    box-shadow 0.1s ease;
   z-index: 10;
 }
 

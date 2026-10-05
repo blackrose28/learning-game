@@ -4,10 +4,7 @@ import { GameScreen } from './GameScreen';
 import { AppContent } from '../App';
 import { AuthProvider } from '../context/AuthContext';
 import { gamepadManager, XboxButton } from '../input/gamepad';
-import {
-  type Question,
-  createMemoryStorage,
-} from '@math-archer/learning-engine';
+import { type Question, createMemoryStorage } from '@math-archer/learning-engine';
 
 describe('Phase 10 — Xbox Controller Integration', () => {
   const mockQuestion: Question = {

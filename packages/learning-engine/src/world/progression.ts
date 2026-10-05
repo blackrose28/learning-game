@@ -128,8 +128,6 @@ export function getWorldCompletedSessionsKey(playerId: string = 'player-local'):
   return `${WORLD_COMPLETED_SESSIONS_PREFIX}${playerId}`;
 }
 
-
-
 export function getAllWorldAreas(): readonly WorldArea[] {
   return WORLD_AREAS;
 }
@@ -272,9 +270,7 @@ export function saveActiveArea(
   );
 
   const completedCount =
-    explicitCompletedSessionsCount !== undefined
-      ? explicitCompletedSessionsCount
-      : baseCount;
+    explicitCompletedSessionsCount !== undefined ? explicitCompletedSessionsCount : baseCount;
 
   const highestCount = Math.max(baseCount, completedCount);
   storage.setItem(getWorldCompletedSessionsKey(playerId), String(highestCount));
@@ -304,5 +300,3 @@ export function unlockAllWorldAreas(
   storage.setItem(getWorldCompletedSessionsKey(playerId), String(targetSessions));
   return loadWorldProgression(playerId, storage, targetSessions);
 }
-
-

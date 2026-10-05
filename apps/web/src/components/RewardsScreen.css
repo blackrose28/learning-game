@@ -10,7 +10,13 @@
   min-height: 0;
   margin: 0 auto;
   padding: 4px 10px 6px;
-  font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  font-family:
+    system-ui,
+    -apple-system,
+    BlinkMacSystemFont,
+    'Segoe UI',
+    Roboto,
+    sans-serif;
   user-select: none;
   box-sizing: border-box;
   position: relative;
@@ -149,12 +155,12 @@
   font-weight: 800;
 }
 
-.character-switcher .switcher-pill.active[data-testid*="wizard"] {
+.character-switcher .switcher-pill.active[data-testid*='wizard'] {
   background: linear-gradient(135deg, #a855f7 0%, #7c3aed 100%);
   box-shadow: 0 1px 6px rgba(124, 58, 237, 0.45);
 }
 
-.target-switcher .switcher-pill.active[data-testid*="dummy"] {
+.target-switcher .switcher-pill.active[data-testid*='dummy'] {
   background: linear-gradient(135deg, #d97706 0%, #b45309 100%);
   box-shadow: 0 1px 6px rgba(217, 119, 6, 0.45);
 }

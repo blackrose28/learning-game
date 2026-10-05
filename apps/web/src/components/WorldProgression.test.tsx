@@ -3,7 +3,11 @@ import { render, screen, fireEvent, act } from '@testing-library/react';
 import { WorldMap } from './WorldMap';
 import { RangeBackdrop } from './RangeBackdrop';
 import { GameScreen } from './GameScreen';
-import { saveDailySession, type Question, type WorldProgressionState } from '@math-archer/learning-engine';
+import {
+  saveDailySession,
+  type Question,
+  type WorldProgressionState,
+} from '@math-archer/learning-engine';
 import { MathArcherApiClient } from '../api/client';
 
 const MOCK_QUESTION: Question = {
