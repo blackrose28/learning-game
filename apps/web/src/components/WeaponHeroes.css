@@ -62,58 +62,117 @@
   pointer-events: none;
 }
 
+/* One continuous support hand: pouch -> loading port -> fore-end -> pump.
+   Reference sequence: Valve Source SDK weapon_shotgun.cpp (StartReload/Reload/Pump). */
 .gunner-graphic-container.state-reloading .gunner-weapon-arm {
-  animation: shotgun-reload-tilt 640ms ease-in-out;
+  animation: shotgun-reload-tilt 640ms ease-in-out both;
 }
 .gunner-graphic-container.state-reloading .shotgun-pump {
-  animation: shotgun-pump-cycle 640ms ease-in-out;
+  animation: shotgun-pump-cycle 640ms ease-in-out both;
 }
-.shotgun-loading-hand {
-  animation: shotgun-load-shell 640ms ease-in-out both;
+.gunner-graphic-container.state-reloading .shotgun-support-arm {
+  animation: shotgun-support-arm-cycle 640ms ease-in-out both;
+}
+.gunner-graphic-container.state-reloading .shotgun-support-hand {
+  animation: shotgun-support-hand-cycle 640ms ease-in-out both;
+}
+.shotgun-shell {
+  animation: shotgun-insert-shell 640ms ease-in-out both;
 }
 @keyframes shotgun-reload-tilt {
   0%,
   100% {
     transform: rotate(0deg);
   }
-  25%,
-  65% {
-    transform: rotate(15deg);
+  15%,
+  88% {
+    transform: rotate(-8deg);
   }
 }
 @keyframes shotgun-pump-cycle {
   0%,
-  55%,
+  64%,
+  88%,
   100% {
     transform: translateX(0);
   }
-  72% {
+  74% {
     transform: translateX(-8px);
   }
 }
-@keyframes shotgun-load-shell {
-  0% {
-    transform: translateY(8px);
-    opacity: 0;
-  }
-  20% {
-    opacity: 1;
-  }
-  45%,
-  60% {
-    transform: translateY(-9px);
-    opacity: 1;
-  }
-  80%,
+@keyframes shotgun-support-hand-cycle {
+  0%,
+  60%,
+  64%,
+  88%,
   100% {
-    transform: translateY(4px);
+    transform: translate(0, 0);
+  }
+  12% {
+    transform: translate(-39px, 17px);
+  }
+  25% {
+    transform: translate(-10px, 10px);
+  }
+  42%,
+  48% {
+    transform: translate(-10px, 1px);
+  }
+  74% {
+    transform: translate(-8px, 0);
+  }
+}
+@keyframes shotgun-support-arm-cycle {
+  0%,
+  60%,
+  64%,
+  88%,
+  100% {
+    d: path('M50 54 Q53 72 69 71 L104 60');
+  }
+  12% {
+    d: path('M50 54 Q53 72 69 71 L65 77');
+  }
+  25% {
+    d: path('M50 54 Q53 72 69 71 L94 70');
+  }
+  42%,
+  48% {
+    d: path('M50 54 Q53 72 69 71 L94 61');
+  }
+  74% {
+    d: path('M50 54 Q53 72 69 71 L96 60');
+  }
+}
+@keyframes shotgun-insert-shell {
+  0%,
+  8% {
+    transform: translate(-29px, 10px);
     opacity: 0;
+  }
+  12% {
+    transform: translate(-29px, 10px);
+    opacity: 1;
+  }
+  25% {
+    transform: translate(0, 0);
+    opacity: 1;
+  }
+  42%,
+  100% {
+    transform: translate(0, -13px);
+    opacity: 1;
   }
 }
 @media (prefers-reduced-motion: reduce) {
   .gunner-graphic-container.state-reloading .gunner-weapon-arm,
   .gunner-graphic-container.state-reloading .shotgun-pump,
-  .shotgun-loading-hand {
+  .gunner-graphic-container.state-reloading .shotgun-support-arm,
+  .gunner-graphic-container.state-reloading .shotgun-support-hand {
     animation: none;
+  }
+  .shotgun-shell {
+    animation: none;
+    transform: translate(0, -4px);
   }
 }

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useId } from 'react';
 import { getCosmeticItem } from '@math-archer/learning-engine';
 import type { CharacterGraphicProps } from './CharacterGraphic';
 import { ELEMENTAL_PROFILES } from './elementalVisuals';
@@ -24,6 +24,7 @@ export const WeaponHeroGraphic: React.FC<
     ? ELEMENTAL_PROFILES[element].secondaryColor
     : weapon?.glowColor || '#fbbf24';
   const gunner = character === 'gunner';
+  const shellClipId = useId();
 
   return (
     <div
@@ -115,8 +116,12 @@ export const WeaponHeroGraphic: React.FC<
             <path d="M61 14 Q62 4 72 6" stroke={primary} strokeWidth="6" strokeLinecap="round" />
           </g>
         )}
-        <path d="M50 53 L39 67" stroke={primary} strokeWidth="8" strokeLinecap="round" />
-        <circle cx="39" cy="68" r="4" fill="#fed7aa" />
+        {!gunner && (
+          <>
+            <path d="M50 53 L39 67" stroke={primary} strokeWidth="8" strokeLinecap="round" />
+            <circle cx="39" cy="68" r="4" fill="#fed7aa" />
+          </>
+        )}
         <g
           className={`${character}-weapon-arm`}
           style={{
@@ -134,6 +139,16 @@ export const WeaponHeroGraphic: React.FC<
             transition: 'transform 0.18s ease-out',
           }}
         >
+          {gunner && (
+            <path
+              className="shotgun-support-arm"
+              d="M50 54 Q53 72 69 71 L104 60"
+              stroke={primary}
+              strokeWidth="7"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+          )}
           <path d="M70 54 L86 60" stroke={primary} strokeWidth="8" strokeLinecap="round" />
           <circle cx="87" cy="60" r="4" fill="#fed7aa" />
           {gunner ? (
@@ -181,19 +196,48 @@ export const WeaponHeroGraphic: React.FC<
                   <path d="M102 53 V58 M106 53 V58 M110 53 V58" stroke={accent} />
                 </g>
                 <circle cx="89" cy="51" r="2.5" fill={glow} />
+                <rect x="90" y="57" width="7" height="3" rx="1" fill="#0f172a" />
                 {state === 'reloading' && (
-                  <g data-testid="shotgun-reload" className="shotgun-loading-hand">
-                    <rect x="88" y="65" width="5" height="9" rx="1" fill={glow} stroke="#78350f" />
-                    <path d="M88 73 H93" stroke="#fbbf24" strokeWidth="3" />
-                    <path
-                      d="M73 67 L85 74"
-                      stroke={primary}
-                      strokeWidth="7"
-                      strokeLinecap="round"
-                    />
-                    <circle cx="87" cy="73" r="4" fill="#fed7aa" />
+                  <g data-testid="shotgun-reload">
+                    <defs>
+                      <clipPath id={shellClipId}>
+                        {/* The shell disappears into the receiver, not with the hand. */}
+                        <rect x="55" y="59" width="48" height="24" />
+                      </clipPath>
+                    </defs>
+                    <g clipPath={`url(#${shellClipId})`}>
+                      <g className="shotgun-shell" data-testid="shotgun-shell">
+                        <rect
+                          x="92"
+                          y="60"
+                          width="4"
+                          height="11"
+                          rx="1"
+                          fill="#dc2626"
+                          stroke="#7f1d1d"
+                          strokeWidth="0.6"
+                        />
+                        <path d="M92 70 H96" stroke="#fbbf24" strokeWidth="2" />
+                      </g>
+                    </g>
                   </g>
                 )}
+                <g className="shotgun-support-hand" data-testid="shotgun-support-hand">
+                  <circle
+                    cx="104"
+                    cy="60"
+                    r="4"
+                    fill="#fed7aa"
+                    stroke="#c2410c"
+                    strokeWidth="0.6"
+                  />
+                  <path
+                    d="M101 59 L106 57"
+                    stroke="#fed7aa"
+                    strokeWidth="3"
+                    strokeLinecap="round"
+                  />
+                </g>
               </g>
               {state === 'released' && (
                 <path
