@@ -93,7 +93,7 @@ The banner is disabled in local Vite development.
 - **[MVP Boundary & Scope](mvp-boundary.md)**: Frozen MVP definition, in-scope requirements, and explicitly deferred features.
 - **[Reasoning Missions Plan](reasoning-missions-plan.md)**: Post-MVP plan for Vietnamese problem comprehension, choosing solution steps, and all five story/puzzle families, with phased checklists and completion criteria.
 - **[Reasoning Missions Teaching Specification](reasoning-missions-content.md)**: M0 Vietnamese teaching flows, hint ladders, prerequisites, transfer questions, interaction sketches, and a baseline observation sheet.
-- **[Reasoning Missions Engine Contracts](reasoning-missions-engine.md)**: Implemented M1 instruction-chain contracts, local evidence/resume behavior, and remaining server integration work.
+- **[Reasoning Missions Engine Contracts](reasoning-missions-engine.md)**: Implemented M1 instruction-chain contracts, local evidence/resume behavior, D1/API persistence, and remaining browser integration work.
 
 ## Parent practice skills
 

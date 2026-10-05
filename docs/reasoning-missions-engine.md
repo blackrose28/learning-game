@@ -1,7 +1,8 @@
 # Reasoning Missions — M1 Engine Contracts
 
-Status: Engine and local persistence implemented. Server sync, D1 storage,
-per-child settings, progress aggregation, and UI integration are pending.
+Status: Engine, local persistence, D1 storage, and authenticated mission-attempt API
+implemented. Browser offline sync, per-child settings, progress aggregation, and
+UI integration are pending.
 
 ## Task and template boundaries
 
@@ -81,18 +82,75 @@ assistance, and completion. Corrupt/unknown versions throw and are not deleted o
 replaced. The future UI must offer recovery rather than silently resetting them.
 Storage write errors propagate so callers can display save failures.
 
+## Server storage and API
+
+Migration `0006_mission_attempts.sql` adds one mission record per `(player_id, id)`
+with a validated versioned JSON ledger, revision, and start/completion timestamps.
+It leaves arithmetic tables intact. No mission save updates arithmetic attempts,
+mastery, daily arrows, world progression, or rewards. Future reasoning aggregation
+must derive evidence from these unique records, rather than incrementing counters
+on every sync request.
+
+`PUT /api/missions/attempts` accepts `{ schemaVersion: 1, attempt }`. It replays
+the ledger with `restoreMissionAttempt` before writing and returns
+`{ schemaVersion: 1, disposition, revision, attempt }`.
+
+| Disposition | Behavior                                                                                                  |
+| ----------- | --------------------------------------------------------------------------------------------------------- |
+| `created`   | New child/attempt record, revision 1.                                                                     |
+| `advanced`  | Incoming events extend the saved history; revision increases.                                             |
+| `unchanged` | Identical history; no database mutation.                                                                  |
+| `stale`     | Incoming history is a prefix of the saved history; return the newer saved attempt without overwriting it. |
+
+An existing attempt's mission identity and start time cannot change. Events must
+match over the shared prefix, including IDs, timestamps, responses, and assistance.
+Divergent histories return HTTP 409 `MISSION_CONFLICT` with the saved attempt and
+revision in `details`. Preserve the local branch for recovery; do not silently
+replace it or remove hints to turn assisted success into independent success.
+
+Writes use primary-first D1 sessions and conditional revision updates. If another
+writer wins, reload and compare again; after five failed retries return HTTP 503
+`MISSION_BUSY`. This is retryable with the same attempt and event IDs. Corrupt
+stored records fail validation and remain untouched.
+
+`GET /api/missions/attempts?attemptId=...` returns
+`{ schemaVersion: 1, revision, attempt }`, or HTTP 404 when absent.
+
+Without `attemptId`, GET lists records with default `limit=50` (valid range 1–100),
+ordered by `(startedAt, attemptId)` ascending. The response contains
+`{ schemaVersion: 1, attempts: [{ attempt, revision }], nextCursor }`.
+For subsequent pages, supply both `afterStartedAt` and `afterAttemptId` from
+`nextCursor`; null means the current listing is exhausted. This is a listing
+cursor, not an incremental change watermark. Restart listing to discover changes
+to older attempts, or reload known attempt IDs directly.
+
+All mission routes require authentication. Children can read/write only their own
+attempts; a mismatched player ID returns HTTP 403. Parent requests use the player
+ID in the attempt for PUT and a `playerId` query parameter for GET. They follow
+the existing shared parent-role access model, which permits access to existing
+child profiles across parent accounts. This expansion does not redefine that
+model. Missing/deleted children return HTTP 404 and are not recreated by saves.
+
+Unknown payload versions, malformed definitions, and falsified evidence return
+HTTP 400. Child-profile deletion also removes that child's mission rows, with
+both explicit deletion and a cascading foreign key.
+
+Deploy migration 0006 before exposing these endpoints. The existing deployment
+workflow applies pending migrations before publishing the Worker; manual deployment
+requires the same order. No production migration was run during this work.
+
 ## Next M1 work
 
-1. Add additive D1 mission-attempt storage and authenticated API validation using
-   `restoreMissionAttempt`. Define idempotency by child and attempt ID, including
-   monotonic updates for interrupted versus completed ledgers.
-2. Add offline mission sync payloads and retry behavior. Preserve server-supported
+1. Add browser API methods, offline mission queues, and retry/conflict handling.
+   Check server version support before sending new records; preserve pending
+   snapshots when an older API does not support these endpoints.
+2. Add offline mission hydration and resume discovery. Preserve server-supported
    versions and avoid sending new payloads to an older API.
 3. Add per-child opt-in/family preferences and versioned reasoning progress
    hydration, with reasoning separate from arithmetic history and scoring.
 4. Verify legacy profiles and queues, cross-device behavior, and the complete M1
    exit criteria before starting the M2 player-facing Training pilot.
 
-Local persistence currently requires the caller to know the attempt ID; discovery
-of the active mission, conflict handling across devices, and rewards/session
-integration belong to subsequent work.
+Local persistence currently requires the caller to know the attempt ID. The API
+can list saved attempts, but browser hydration, active-mission discovery, conflict
+recovery UI, and rewards/session integration belong to subsequent work.

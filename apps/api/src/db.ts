@@ -982,6 +982,7 @@ export async function deleteChildProfile(
   if (!current) return false;
 
   // Cascade deletion across attempts, sessions, skill progress, and player
+  await db.prepare(`DELETE FROM mission_attempts WHERE player_id = ?`).bind(childId).run();
   await db.prepare(`DELETE FROM attempts WHERE player_id = ?`).bind(childId).run();
   await db.prepare(`DELETE FROM sessions WHERE player_id = ?`).bind(childId).run();
   await db.prepare(`DELETE FROM skill_progress WHERE player_id = ?`).bind(childId).run();

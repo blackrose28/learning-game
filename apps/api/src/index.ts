@@ -1,4 +1,11 @@
-import { isAnimationSpeed } from '@math-archer/learning-engine';
+import { isAnimationSpeed, restoreMissionAttempt } from '@math-archer/learning-engine';
+import {
+  getMissionAttemptFromDb,
+  listMissionAttemptsFromDb,
+  saveMissionAttemptInDb,
+  MissionConflictError,
+  MissionBusyError,
+} from './missions';
 import type {
   Env,
   ErrorResponse,
@@ -40,7 +47,7 @@ import {
   type TokenPayload,
 } from './auth';
 import { getAllSkills } from '@math-archer/learning-engine';
-import type { Attempt, DailySession } from '@math-archer/learning-engine';
+import type { Attempt, DailySession, MissionAttempt } from '@math-archer/learning-engine';
 
 const CORS_HEADERS: Record<string, string> = {
   'Access-Control-Allow-Origin': '*',
@@ -574,6 +581,122 @@ export default {
       // (Task 7.2: Parent cannot accidentally see another parent's child)
       // -------------------------------------------------------------
 
+      // Versioned reasoning records use separate storage and never affect arithmetic progress.
+      if ((method === 'PUT' || method === 'GET') && pathname === '/api/missions/attempts') {
+        const auth = await getAuthContext(request, env);
+        if (!auth || !['parent', 'child'].includes(auth.role) || typeof auth.sub !== 'string') {
+          return errorResponse('UNAUTHORIZED', 'Authentication token required', 401);
+        }
+
+        let attempt: MissionAttempt | undefined;
+        let requestedPlayerId: unknown = url.searchParams.get('playerId');
+        if (method === 'PUT') {
+          let body: unknown;
+          try {
+            body = await request.json();
+          } catch {
+            return errorResponse('MALFORMED_JSON', 'Request body must be valid JSON', 400);
+          }
+          if (!body || typeof body !== 'object' || Array.isArray(body)) {
+            return errorResponse('INVALID_BODY', 'Request body must be a JSON object', 400);
+          }
+          const payload = body as Record<string, unknown>;
+          if (payload.schemaVersion !== 1) {
+            return errorResponse(
+              'UNSUPPORTED_MISSION_VERSION',
+              'Mission payload schemaVersion must be 1',
+              400
+            );
+          }
+          try {
+            attempt = restoreMissionAttempt(payload.attempt);
+          } catch {
+            return errorResponse(
+              'INVALID_MISSION_ATTEMPT',
+              'Mission definition or evidence is invalid',
+              400
+            );
+          }
+          requestedPlayerId = attempt.playerId;
+        }
+
+        let playerId: string;
+        if (auth.role === 'child') {
+          if (requestedPlayerId !== null && requestedPlayerId !== auth.sub) {
+            return errorResponse(
+              'FORBIDDEN',
+              'A child can only access their own mission attempts',
+              403
+            );
+          }
+          playerId = auth.sub;
+          if (!(await getChildProfile(env.DB, playerId))) {
+            return errorResponse('NOT_FOUND', 'Child profile not found', 404);
+          }
+        } else {
+          if (typeof requestedPlayerId !== 'string' || !requestedPlayerId.trim()) {
+            return errorResponse(
+              'MISSING_PLAYER_ID',
+              'playerId is required for a parent request',
+              400
+            );
+          }
+          playerId = requestedPlayerId;
+          // Follow the game's established shared parent-role access model.
+          if (!(await verifyChildBelongsToParent(env.DB, playerId, auth.sub))) {
+            return errorResponse('NOT_FOUND', 'Child profile not found', 404);
+          }
+        }
+
+        if (method === 'PUT') {
+          return jsonResponse(await saveMissionAttemptInDb(env.DB, attempt), 200);
+        }
+
+        const attemptId = url.searchParams.get('attemptId');
+        if (attemptId !== null) {
+          if (!attemptId.trim())
+            return errorResponse('INVALID_ATTEMPT_ID', 'attemptId must not be empty', 400);
+          const saved = await getMissionAttemptFromDb(
+            env.DB.withSession('first-primary'),
+            playerId,
+            attemptId
+          );
+          if (!saved) return errorResponse('NOT_FOUND', 'Mission attempt not found', 404);
+          return jsonResponse({ schemaVersion: 1, ...saved });
+        }
+
+        const limit = Number(url.searchParams.get('limit') ?? '50');
+        if (!Number.isInteger(limit) || limit < 1 || limit > 100) {
+          return errorResponse('INVALID_LIMIT', 'limit must be an integer from 1 to 100', 400);
+        }
+        const afterStartedAt = url.searchParams.get('afterStartedAt');
+        const afterAttemptId = url.searchParams.get('afterAttemptId');
+        let cursor: { startedAt: string; attemptId: string } | undefined;
+        if (afterStartedAt !== null || afterAttemptId !== null) {
+          if (
+            !afterStartedAt ||
+            !afterAttemptId?.trim() ||
+            !Number.isFinite(Date.parse(afterStartedAt)) ||
+            new Date(afterStartedAt).toISOString() !== afterStartedAt
+          ) {
+            return errorResponse(
+              'INVALID_CURSOR',
+              'Supply a canonical afterStartedAt and nonempty afterAttemptId',
+              400
+            );
+          }
+          cursor = { startedAt: afterStartedAt, attemptId: afterAttemptId };
+        }
+        return jsonResponse(
+          await listMissionAttemptsFromDb(
+            env.DB.withSession('first-primary'),
+            playerId,
+            limit,
+            cursor
+          )
+        );
+      }
+
       // 1. POST /api/sessions/start
       if (method === 'POST' && pathname === '/api/sessions/start') {
         const auth = await getAuthContext(request, env);
@@ -895,6 +1018,12 @@ export default {
       // Fallback 404 for unknown endpoints
       return errorResponse('NOT_FOUND', `Endpoint ${method} ${pathname} not found`, 404);
     } catch (err: unknown) {
+      if (err instanceof MissionConflictError) {
+        return errorResponse('MISSION_CONFLICT', err.message, 409, err.current);
+      }
+      if (err instanceof MissionBusyError) {
+        return errorResponse('MISSION_BUSY', err.message, 503);
+      }
       if (err instanceof DailyLimitError) {
         return errorResponse('DAILY_LIMIT_EXCEEDED', err.message, 403);
       }
