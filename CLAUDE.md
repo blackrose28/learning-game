@@ -49,3 +49,13 @@ nothing is written into the repo.
   `uses`, `exemplar`, `quality_delta`, `edit_check`, `from_trace`, …), edits (`replace_symbol_body`, …).
 
 <!-- ripwire:end -->
+
+# Code Formatting
+
+This repo is formatted with Prettier (`.prettierrc`: single quotes, semicolons, 100-column lines, 2-space indent, ES5 trailing commas). The whole repo is currently clean, so keep it that way.
+
+- **Before ending a turn that touched files, run `pnpm format:check`** and fix any reported files with `pnpm exec prettier --write <file>`. Do not stop with it failing.
+- Format only the files you changed. Do not run `pnpm format` repo-wide inside an unrelated change, because it buries the real diff.
+- Markdown counts: `AGENTS.md`, `CLAUDE.md` and `docs/` are checked too.
+- `.prettierignore` excludes the vendored ripwire skills (`.claude/skills`, `.agents/skills`, `.opencode/skills`). Never hand-edit or reformat them; they must stay identical to upstream.
+- Lint is separate: `pnpm lint` (ESLint). Run both when you finish.
