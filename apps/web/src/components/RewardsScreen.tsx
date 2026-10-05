@@ -98,10 +98,12 @@ export const RewardsScreen: React.FC<RewardsScreenProps> = ({
         setTimeout(() => {
           setTestShotReleased(false);
           setTestShotReloading(true);
+          if (activeTarget === 'dummy') audioFx.playDummyHit('hit', 'fire');
+          else audioFx.playTargetHit('hit', 'fire');
           audioFx.playShotgunReload();
-        }, 160)
+        }, 250)
       );
-      timers.push(setTimeout(() => setTestShotReloading(false), 800));
+      timers.push(setTimeout(() => setTestShotReloading(false), 890));
     }
     timers.push(
       setTimeout(() => {
@@ -110,7 +112,7 @@ export const RewardsScreen: React.FC<RewardsScreenProps> = ({
       }, 1800)
     );
     return () => timers.forEach(clearTimeout);
-  }, [testShotActive, activeCharacter]);
+  }, [testShotActive, activeCharacter, activeTarget]);
 
   const handleTriggerTestShot = () => {
     if (testShotActive) return;
@@ -428,7 +430,11 @@ export const RewardsScreen: React.FC<RewardsScreenProps> = ({
                     expression={
                       activeTarget === 'dummy' ? '🪵 Practice Dummy' : '🎯 Royal Bullseye'
                     }
-                    hitState={testShotActive ? 'hit' : 'idle'}
+                    hitState={
+                      testShotActive && (activeCharacter !== 'gunner' || !testShotReleased)
+                        ? 'hit'
+                        : 'idle'
+                    }
                     activeElement="fire"
                     equippedEffect={rewardsState.equippedCosmetics.arrowEffect}
                   />

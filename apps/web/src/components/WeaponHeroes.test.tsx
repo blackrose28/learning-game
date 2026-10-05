@@ -30,34 +30,48 @@ afterEach(() => {
   vi.restoreAllMocks();
 });
 describe('Gunner and Warrior presentation', () => {
-  it.each(['fire', 'ice'])('reloads after a %s shot and blocks firing until ready', (element) => {
+  it.each([
+    ['fire', 250],
+    ['ice', 500],
+    ['fire', 1000],
+  ] as const)('reloads with sound only after a %s shot arrives in %sms', (element, flightMs) => {
     vi.useFakeTimers();
     const reload = vi.spyOn(audioFx, 'playShotgunReload').mockImplementation(() => {});
     const onAnswerSubmit = vi.fn();
-    render(
+    const { unmount } = render(
       <GameScreen
         initialQuestion={question}
         maxArrows={10}
-        autoAdvanceDelayMs={0}
+        autoAdvanceDelayMs={1}
+        shotFlightDurationMs={flightMs}
         onAnswerSubmit={onAnswerSubmit}
       />
     );
     fireEvent.click(screen.getByTestId('btn-switch-gunner'));
-    expect(screen.getByTestId('gunner-shotgun')).toBeInTheDocument();
     fireEvent.click(screen.getByTestId(`choice-${element}`));
+    act(() => vi.advanceTimersByTime(flightMs - 1));
     expect(screen.getByTestId('gunner-graphic')).toHaveAttribute('data-state', 'released');
-    act(() => vi.advanceTimersByTime(160));
+    expect(screen.getByTestId('target-card')).toHaveAttribute('data-hit-state', 'idle');
+    expect(reload).not.toHaveBeenCalled();
+    act(() => vi.advanceTimersByTime(1));
+    expect(screen.getByTestId('target-card')).toHaveAttribute(
+      'data-hit-state',
+      element === 'fire' ? 'hit' : 'miss'
+    );
     expect(screen.getByTestId('gunner-graphic')).toHaveAttribute('data-state', 'reloading');
     expect(screen.getByTestId('shotgun-reload')).toBeInTheDocument();
     expect(reload).toHaveBeenCalledTimes(1);
+    act(() => vi.advanceTimersByTime(639));
     fireEvent.click(screen.getByTestId('choice-fire'));
     expect(onAnswerSubmit).toHaveBeenCalledTimes(1);
-    act(() => vi.advanceTimersByTime(640));
+    expect(screen.getByTestId('gunner-graphic')).toHaveAttribute('data-state', 'reloading');
+    act(() => vi.advanceTimersByTime(1));
     expect(screen.getByTestId('gunner-graphic')).toHaveAttribute('data-state', 'idle');
     fireEvent.click(screen.getByTestId('choice-fire'));
-    act(() => vi.advanceTimersByTime(160));
+    act(() => vi.advanceTimersByTime(flightMs));
     expect(reload).toHaveBeenCalledTimes(2);
     expect(onAnswerSubmit).toHaveBeenCalledTimes(2);
+    unmount();
   });
 
   it('previews shotgun reload audio and animation and cancels timers on unmount', () => {
@@ -66,10 +80,10 @@ describe('Gunner and Warrior presentation', () => {
     const { unmount } = render(<RewardsScreen />);
     fireEvent.click(screen.getByTestId('rewards-switch-gunner'));
     fireEvent.click(screen.getByTestId('btn-test-shot'));
-    act(() => vi.advanceTimersByTime(160));
+    act(() => vi.advanceTimersByTime(250));
     expect(screen.getByTestId('shotgun-reload')).toBeInTheDocument();
     expect(reload).toHaveBeenCalledTimes(1);
-    act(() => vi.advanceTimersByTime(1640));
+    act(() => vi.advanceTimersByTime(1550));
     fireEvent.click(screen.getByTestId('btn-test-shot'));
     unmount();
     act(() => vi.runAllTimers());
@@ -119,6 +133,7 @@ describe('Gunner and Warrior presentation', () => {
   it.each(['gunner', 'warrior'] as const)(
     'equips %s weapons and effects in the armory and previews the attack',
     (character) => {
+      vi.useFakeTimers();
       const state = createDefaultRewardsState('player-local');
       state.unlockedCosmeticIds.push('bow_ember_blaze', 'arrow_effect_thunder_strike');
       savePlayerRewards(state);
@@ -135,6 +150,7 @@ describe('Gunner and Warrior presentation', () => {
       fireEvent.click(screen.getByTestId('tab-cat-effects'));
       fireEvent.click(screen.getByTestId('equip-arrow_effect_thunder_strike'));
       fireEvent.click(screen.getByTestId('btn-test-shot'));
+      if (character === 'gunner') act(() => vi.advanceTimersByTime(250));
       expect(screen.getByTestId('embedded-arrow-fire')).toHaveAttribute(
         'data-effect',
         'arrow_effect_thunder_strike'

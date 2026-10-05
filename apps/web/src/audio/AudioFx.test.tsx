@@ -136,9 +136,9 @@ describe('Item 6: Procedural Audio Mute Setting Persistence', () => {
     fakeCtx.createOscillator.mockClear();
     manager.playShotgunReload();
     expect(fakeCtx.createOscillator).toHaveBeenCalledTimes(3);
-    expect(fakeOsc.start).toHaveBeenCalledWith(10.12);
-    expect(fakeOsc.start).toHaveBeenCalledWith(10.42);
-    expect(fakeOsc.start).toHaveBeenCalledWith(10.54);
+    expect(fakeOsc.start).toHaveBeenCalledWith(10.269);
+    expect(fakeOsc.start).toHaveBeenCalledWith(10.474);
+    expect(fakeOsc.start).toHaveBeenCalledWith(10.563);
   });
 
   it('renders audio mute toggle button in App header and allows toggling', async () => {

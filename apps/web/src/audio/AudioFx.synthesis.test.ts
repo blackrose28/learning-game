@@ -134,6 +134,26 @@ describe('Sound effect playback', () => {
     }
   );
 
+  it('plays audible shell and pump textures through the shared mix in animation order', () => {
+    manager.playShotgunReload();
+    const tones = ctx.createOscillator.mock.results.map((result) => result.value);
+    const textures = ctx.createBufferSource.mock.results.map((result) => result.value);
+    expect(tones.map((source) => source.start.mock.calls[0][0])).toEqual([10.269, 10.474, 10.563]);
+    expect(textures.map((source) => source.start.mock.calls[0][0])).toEqual([
+      10.269, 10.41, 10.474, 10.5, 10.563,
+    ]);
+    const gains = ctx.createGain.mock.results.map((result) => result.value);
+    expect(
+      gains.filter((gain) =>
+        gain.connect.mock.calls.some((call: unknown[]) => call[0] === ctx.destination)
+      )
+    ).toHaveLength(1);
+    for (const source of [...tones, ...textures]) {
+      expect(source.stop.mock.calls[0][0]).toBeLessThanOrEqual(10.64);
+      expect(source.onended).toBeTypeOf('function');
+    }
+  });
+
   it('mutes active output as well as future effects', () => {
     manager.playMagicCast('ice');
     const master = ctx.createGain.mock.results[1].value;
@@ -148,6 +168,7 @@ describe('Sound effect playback', () => {
     manager.playMagicCast();
     manager.playDummyHit('hit');
     manager.playTargetHit('hit');
+    manager.playShotgunReload();
     expect(ctx.createOscillator).not.toHaveBeenCalled();
     expect(ctx.createBufferSource).not.toHaveBeenCalled();
     manager.setMuted(false);

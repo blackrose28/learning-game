@@ -353,31 +353,17 @@ export class AudioManager {
 
   /** Shell insertion followed by the two mechanical clicks of the shotgun pump. */
   public playShotgunReload(): void {
-    if (this.isMuted) return;
-    const ctx = this.getContext();
-    if (!ctx) return;
-    try {
-      const now = ctx.currentTime;
-      for (const [offset, frequency, length] of [
-        [0.12, 900, 0.06],
-        [0.42, 180, 0.09],
-        [0.54, 320, 0.08],
-      ]) {
-        const oscillator = ctx.createOscillator();
-        const gain = ctx.createGain();
-        oscillator.type = 'triangle';
-        oscillator.frequency.setValueAtTime(frequency, now + offset);
-        oscillator.frequency.exponentialRampToValueAtTime(60, now + offset + length);
-        gain.gain.setValueAtTime(0.1, now + offset);
-        gain.gain.exponentialRampToValueAtTime(0.001, now + offset + length);
-        oscillator.connect(gain);
-        gain.connect(ctx.destination);
-        oscillator.start(now + offset);
-        oscillator.stop(now + offset + length);
-      }
-    } catch {
-      // Reload remains playable when browser audio is unavailable.
-    }
+    this.play((ctx, now) => {
+      // Match the insertion (42%) and pump stops (74%, 88%) of the 640ms animation.
+      this.noise(ctx, now + 0.269, 0.035, 3200, 1400, 0.24, 'highpass');
+      this.tone(ctx, now + 0.269, 900, 300, 0.045, 0.12, 'triangle');
+      this.noise(ctx, now + 0.41, 0.064, 1800, 700, 0.24, 'bandpass');
+      this.noise(ctx, now + 0.474, 0.045, 2600, 800, 0.4, 'highpass');
+      this.tone(ctx, now + 0.474, 180, 65, 0.065, 0.22, 'triangle');
+      this.noise(ctx, now + 0.5, 0.063, 900, 2200, 0.24, 'bandpass');
+      this.noise(ctx, now + 0.563, 0.045, 3400, 1100, 0.4, 'highpass');
+      this.tone(ctx, now + 0.563, 320, 90, 0.065, 0.22, 'triangle');
+    });
   }
 
   public playMagicCast(element: ElementType = 'fire'): void {

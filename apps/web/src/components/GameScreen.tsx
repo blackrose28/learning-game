@@ -603,13 +603,11 @@ export const GameScreen: React.FC<GameScreenProps> = ({
   const questionStartTimeRef = useRef<number>(Date.now());
   const flightTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const advanceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const reloadTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const reloadEndTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Clean up any pending timers on unmount
   useEffect(() => {
     return () => {
-      if (reloadTimerRef.current) clearTimeout(reloadTimerRef.current);
       if (reloadEndTimerRef.current) clearTimeout(reloadEndTimerRef.current);
       if (flightTimerRef.current) {
         clearTimeout(flightTimerRef.current);
@@ -697,13 +695,6 @@ export const GameScreen: React.FC<GameScreenProps> = ({
 
       // Procedural audio effects (Task 9.1 & 9.2)
       audioFx.playCharacterAttack(currentChar, choice.element);
-      if (currentChar === 'gunner') {
-        reloadTimerRef.current = setTimeout(() => {
-          setArcherState('reloading');
-          audioFx.playShotgunReload();
-        }, 160);
-        reloadEndTimerRef.current = setTimeout(() => setArcherState('idle'), 800);
-      }
       audioFx.playArrowFlight(choice.element);
 
       const attempt: Attempt = {
@@ -892,10 +883,17 @@ export const GameScreen: React.FC<GameScreenProps> = ({
         } else {
           audioFx.playTargetHit(outcome, choice.element);
         }
+        if (currentChar === 'gunner') {
+          setArcherState('reloading');
+          audioFx.playShotgunReload();
+          reloadEndTimerRef.current = setTimeout(() => setArcherState('idle'), 640);
+        }
       };
 
       const advanceDelay =
-        currentChar === 'gunner' ? Math.max(autoAdvanceDelayMs, 800) : autoAdvanceDelayMs;
+        currentChar === 'gunner'
+          ? Math.max(autoAdvanceDelayMs, flightDelay + 640)
+          : autoAdvanceDelayMs;
       if (advanceDelay > 0) {
         if (flightDelay > 0) {
           flightTimerRef.current = setTimeout(() => {
