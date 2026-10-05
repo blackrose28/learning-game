@@ -6,12 +6,37 @@ import * as updates from '../updates';
 vi.mock('../updates', () => ({
   subscribeToUpdates: vi.fn(() => () => {}),
   checkForUpdates: vi.fn().mockResolvedValue(undefined),
+  checkLatestVersion: vi.fn().mockResolvedValue('current'),
+  gameVersion: { id: 'test-release', label: 'v0.1.0 · test' },
   reloadLatestVersion: vi.fn().mockResolvedValue(undefined),
 }));
 
 afterEach(() => vi.clearAllMocks());
 
 describe('UpdatePrompt', () => {
+  it('always displays the running version and shows the result of a manual check', async () => {
+    render(<UpdatePrompt activeTab="game" />);
+    fireEvent.click(screen.getByRole('button', { name: /Check for updates, current version/ }));
+    await waitFor(() =>
+      expect(screen.getByRole('status')).toHaveTextContent('You have the latest version')
+    );
+    expect(updates.checkLatestVersion).toHaveBeenCalledOnce();
+    expect(screen.getByText('v0.1.0 · test')).toBeInTheDocument();
+  });
+
+  it('shows failed checks and offers reload when a manual check finds a release', async () => {
+    vi.mocked(updates.checkLatestVersion).mockRejectedValueOnce(new Error('You are offline.'));
+    render(<UpdatePrompt activeTab="game" />);
+    const button = screen.getByRole('button', { name: /Check for updates, current version/ });
+    fireEvent.click(button);
+    await waitFor(() => expect(screen.getByRole('status')).toHaveTextContent('You are offline'));
+    vi.mocked(updates.checkLatestVersion).mockResolvedValueOnce('ready');
+    fireEvent.click(button);
+    await waitFor(() =>
+      expect(screen.getByRole('button', { name: 'Reload to update' })).toBeInTheDocument()
+    );
+  });
+
   it('checks on game navigation, browser focus, tab return, and reconnect; cleans up listeners', () => {
     vi.spyOn(document, 'visibilityState', 'get').mockReturnValue('visible');
     const { rerender, unmount } = render(<UpdatePrompt activeTab="game" />);

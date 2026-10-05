@@ -7,6 +7,62 @@ let pendingCheck: Promise<void> | undefined;
 const listeners = new Set<(available: boolean) => void>();
 const CHECK_INTERVAL_MS = 30_000;
 
+export const gameVersion = __GAME_VERSION__;
+
+/** Manual checks always reach the server and bypass the automatic-check throttle. */
+export async function checkLatestVersion(): Promise<'current' | 'ready'> {
+  if (!navigator.onLine) throw new Error('You are offline. Check again when connected.');
+  if (import.meta.env.DEV) throw new Error('Update checks are available in the deployed game.');
+  const response = await fetch(`${import.meta.env.BASE_URL}version.json`, {
+    cache: 'no-store',
+    signal: AbortSignal.timeout(15_000),
+  });
+  if (!response.ok) throw new Error('Could not check for updates. Please try again.');
+  const latest: unknown = await response.json();
+  if (!latest || typeof latest !== 'object' || !('id' in latest) || typeof latest.id !== 'string') {
+    throw new Error('Could not check for updates. Please try again.');
+  }
+  if (latest.id === gameVersion.id) return 'current';
+  if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
+    const previousController = navigator.serviceWorker.controller;
+    const currentRegistration =
+      registration ?? (await navigator.serviceWorker.getRegistration(import.meta.env.BASE_URL));
+    if (!currentRegistration) throw new Error('Update is not ready yet. Please try again.');
+    registration = currentRegistration;
+    await pendingCheck;
+    await currentRegistration.update();
+    const worker = currentRegistration.installing;
+    if (worker) {
+      await new Promise<void>((resolve, reject) => {
+        const cleanup = () => {
+          clearTimeout(timeout);
+          worker.removeEventListener('statechange', onStateChange);
+        };
+        const onStateChange = () => {
+          if (worker.state === 'installed' || worker.state === 'activated') {
+            cleanup();
+            resolve();
+          } else if (worker.state === 'redundant') {
+            cleanup();
+            reject(new Error('Update download failed. Please try again.'));
+          }
+        };
+        const timeout = window.setTimeout(() => {
+          cleanup();
+          reject(new Error('Update is still downloading. Please check again shortly.'));
+        }, 15_000);
+        worker.addEventListener('statechange', onStateChange);
+        onStateChange();
+      });
+    }
+    if (!currentRegistration.waiting && navigator.serviceWorker.controller === previousController) {
+      throw new Error('Update is not ready yet. Please check again shortly.');
+    }
+  }
+  announceUpdate();
+  return 'ready';
+}
+
 function announceUpdate(): void {
   updateAvailable = true;
   listeners.forEach((listener) => listener(true));

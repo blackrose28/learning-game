@@ -27,3 +27,11 @@
   opacity: 0.7;
   cursor: wait;
 }
+
+.game-update-banner .game-version-button {
+  background: transparent;
+  color: #1e40af;
+  text-decoration: underline;
+  padding: 2px 4px;
+  font-size: 12px;
+}

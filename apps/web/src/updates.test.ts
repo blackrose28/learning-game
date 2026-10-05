@@ -14,6 +14,7 @@ describe('game release updates', () => {
   beforeEach(() => {
     vi.resetModules();
     vi.stubEnv('PROD', true);
+    vi.stubEnv('DEV', false);
     vi.spyOn(document, 'readyState', 'get').mockReturnValue('complete');
     vi.spyOn(navigator, 'onLine', 'get').mockReturnValue(true);
     registration = Object.assign(new EventTarget(), {
@@ -50,6 +51,42 @@ describe('game release updates', () => {
     updates.subscribeToUpdates(listener);
     expect(listener).toHaveBeenCalledWith(true);
     expect(registration.waiting.postMessage).not.toHaveBeenCalled();
+  });
+
+  it('checks the deployed version without cache and bypasses the automatic throttle', async () => {
+    const updates = await start();
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockResolvedValue({ ok: true, json: async () => ({ id: updates.gameVersion.id }) })
+    );
+    await expect(updates.checkLatestVersion()).resolves.toBe('current');
+    expect(fetch).toHaveBeenCalledWith(
+      '/version.json',
+      expect.objectContaining({ cache: 'no-store' })
+    );
+    registration.waiting = { postMessage: vi.fn() };
+    vi.mocked(fetch).mockResolvedValue({
+      ok: true,
+      json: async () => ({ id: 'new-release' }),
+    } as Response);
+    await expect(updates.checkLatestVersion()).resolves.toBe('ready');
+    expect(registration.update).toHaveBeenCalledTimes(2);
+    expect(registration.waiting.postMessage).not.toHaveBeenCalled();
+  });
+
+  it('does not offer a stale reload before the new offline worker is ready', async () => {
+    const updates = await start();
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockResolvedValue({ ok: true, json: async () => ({ id: 'new-release' }) })
+    );
+    await expect(updates.checkLatestVersion()).rejects.toThrow('not ready');
+  });
+
+  it('reports offline checks without claiming the game is current', async () => {
+    const updates = await start();
+    vi.spyOn(navigator, 'onLine', 'get').mockReturnValue(false);
+    await expect(updates.checkLatestVersion()).rejects.toThrow('offline');
   });
 
   it('announces installed updates but not the first offline installation', async () => {

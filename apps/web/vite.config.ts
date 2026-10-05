@@ -2,9 +2,31 @@ import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import { VitePWA } from 'vite-plugin-pwa';
 import path from 'path';
+import { readFileSync } from 'node:fs';
+
+const packageVersion = JSON.parse(
+  readFileSync(new URL('./package.json', import.meta.url), 'utf8')
+).version;
+const builtAt = new Date().toISOString();
+const revision = process.env.GITHUB_SHA?.slice(0, 7) ?? builtAt.replace(/\D/g, '').slice(0, 14);
+const buildVersion = {
+  id: `${revision}-${builtAt}`,
+  label: `v${packageVersion} · ${revision}`,
+};
 
 export default defineConfig({
+  define: { __GAME_VERSION__: JSON.stringify(buildVersion) },
   plugins: [
+    {
+      name: 'game-version',
+      generateBundle() {
+        this.emitFile({
+          type: 'asset',
+          fileName: 'version.json',
+          source: JSON.stringify(buildVersion),
+        });
+      },
+    },
     react(),
     VitePWA({
       registerType: 'prompt',
@@ -73,6 +95,7 @@ export default defineConfig({
         clientsClaim: true,
         skipWaiting: false,
         globPatterns: ['**/*.{js,css,html,ico,png,svg,json}'],
+        globIgnores: ['**/version.json'],
         navigateFallback: '/index.html',
         runtimeCaching: [
           {

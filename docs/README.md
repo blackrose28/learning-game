@@ -74,6 +74,11 @@ workflow** and select `main`. Check the run's summary for the live URL.
 
 ## Game updates
 
+The version button above the game shows the running release (package version and
+Git revision, or build timestamp for local builds). Click it to check the deployed release immediately, even inside
+the automatic-check interval. It reports whether the game is current, offers
+**Reload to update** for a new release, or displays a check/download error.
+
 In production, the game checks for a new release when you return to the browser
 tab, regain connectivity, or switch game views. Checks are limited to once every
 30 seconds. When the service worker finishes downloading a new release, a
