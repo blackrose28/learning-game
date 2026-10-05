@@ -1,0 +1,10 @@
+{
+  "mcpServers": {
+    "ripwire": {
+      "type": "stdio",
+      "command": "ripwire",
+      "args": ["--mcp"],
+      "env": {}
+    }
+  }
+}
