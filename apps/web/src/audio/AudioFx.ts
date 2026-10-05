@@ -351,6 +351,35 @@ export class AudioManager {
     });
   }
 
+  /** Shell insertion followed by the two mechanical clicks of the shotgun pump. */
+  public playShotgunReload(): void {
+    if (this.isMuted) return;
+    const ctx = this.getContext();
+    if (!ctx) return;
+    try {
+      const now = ctx.currentTime;
+      for (const [offset, frequency, length] of [
+        [0.12, 900, 0.06],
+        [0.42, 180, 0.09],
+        [0.54, 320, 0.08],
+      ]) {
+        const oscillator = ctx.createOscillator();
+        const gain = ctx.createGain();
+        oscillator.type = 'triangle';
+        oscillator.frequency.setValueAtTime(frequency, now + offset);
+        oscillator.frequency.exponentialRampToValueAtTime(60, now + offset + length);
+        gain.gain.setValueAtTime(0.1, now + offset);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + offset + length);
+        oscillator.connect(gain);
+        gain.connect(ctx.destination);
+        oscillator.start(now + offset);
+        oscillator.stop(now + offset + length);
+      }
+    } catch {
+      // Reload remains playable when browser audio is unavailable.
+    }
+  }
+
   public playMagicCast(element: ElementType = 'fire'): void {
     this.play((ctx, now) => {
       const root =

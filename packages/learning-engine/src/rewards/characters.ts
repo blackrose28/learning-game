@@ -30,12 +30,12 @@ export const CHARACTER_PROFILES = {
     icon: '🔫',
     projectile: 'bullet',
     plural: 'Shots',
-    weapon: 'Gun',
-    weapons: 'Gun Skins',
+    weapon: 'Shotgun',
+    weapons: 'Shotgun Skins',
     effects: 'Bullet Effects',
     action: 'Shot',
     inventory: "GUNNER'S AMMO",
-    hint: 'Aim an elemental bullet at the target',
+    hint: 'Fire an elemental shotgun blast, then reload',
   },
   warrior: {
     name: 'Warrior',
@@ -94,7 +94,7 @@ export function getCharacterCosmetic(
         icon: profile.icon,
         description:
           character === 'gunner'
-            ? `A ${theme.toLowerCase()} gun firing glowing elemental bullets with a bright muzzle flash.`
+            ? `A ${theme.toLowerCase()} shotgun firing glowing elemental blasts and reloading after every shot.`
             : `A ${theme.toLowerCase()} throwing axe with a gleaming blade and a swirling elemental trail.`,
       };
     }

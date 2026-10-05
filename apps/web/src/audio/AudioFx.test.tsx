@@ -124,6 +124,7 @@ describe('Item 6: Procedural Audio Mute Setting Persistence', () => {
     manager.playBowRelease('fire');
     manager.playArrowFlight('fire');
     manager.playTargetHit('hit', 'fire');
+    manager.playShotgunReload();
 
     // Should not interact with audio context when muted
     expect(fakeCtx.createOscillator).not.toHaveBeenCalled();
@@ -132,6 +133,12 @@ describe('Item 6: Procedural Audio Mute Setting Persistence', () => {
     manager.setMuted(false);
     manager.playBowRelease('fire');
     expect(fakeCtx.createOscillator).toHaveBeenCalled();
+    fakeCtx.createOscillator.mockClear();
+    manager.playShotgunReload();
+    expect(fakeCtx.createOscillator).toHaveBeenCalledTimes(3);
+    expect(fakeOsc.start).toHaveBeenCalledWith(10.12);
+    expect(fakeOsc.start).toHaveBeenCalledWith(10.42);
+    expect(fakeOsc.start).toHaveBeenCalledWith(10.54);
   });
 
   it('renders audio mute toggle button in App header and allows toggling', async () => {

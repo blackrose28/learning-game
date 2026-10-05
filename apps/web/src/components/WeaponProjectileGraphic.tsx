@@ -66,6 +66,14 @@ export const WeaponProjectileGraphic: React.FC<
             </g>
           ) : (
             <g data-testid="gunner-bullet">
+              {variant === 'projectile' && (
+                <g data-testid="shotgun-pellet-spread" fill={profile.secondaryColor}>
+                  <circle cx="105" cy="5" r="3" />
+                  <circle cx="122" cy="9" r="3" />
+                  <circle cx="105" cy="31" r="3" />
+                  <circle cx="122" cy="27" r="3" />
+                </g>
+              )}
               <path
                 d="M54 18 H115"
                 stroke={profile.secondaryColor}

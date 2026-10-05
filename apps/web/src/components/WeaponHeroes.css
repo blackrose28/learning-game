@@ -61,3 +61,59 @@
   font-size: 22px;
   pointer-events: none;
 }
+
+.gunner-graphic-container.state-reloading .gunner-weapon-arm {
+  animation: shotgun-reload-tilt 640ms ease-in-out;
+}
+.gunner-graphic-container.state-reloading .shotgun-pump {
+  animation: shotgun-pump-cycle 640ms ease-in-out;
+}
+.shotgun-loading-hand {
+  animation: shotgun-load-shell 640ms ease-in-out both;
+}
+@keyframes shotgun-reload-tilt {
+  0%,
+  100% {
+    transform: rotate(0deg);
+  }
+  25%,
+  65% {
+    transform: rotate(15deg);
+  }
+}
+@keyframes shotgun-pump-cycle {
+  0%,
+  55%,
+  100% {
+    transform: translateX(0);
+  }
+  72% {
+    transform: translateX(-8px);
+  }
+}
+@keyframes shotgun-load-shell {
+  0% {
+    transform: translateY(8px);
+    opacity: 0;
+  }
+  20% {
+    opacity: 1;
+  }
+  45%,
+  60% {
+    transform: translateY(-9px);
+    opacity: 1;
+  }
+  80%,
+  100% {
+    transform: translateY(4px);
+    opacity: 0;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .gunner-graphic-container.state-reloading .gunner-weapon-arm,
+  .gunner-graphic-container.state-reloading .shotgun-pump,
+  .shotgun-loading-hand {
+    animation: none;
+  }
+}

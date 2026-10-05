@@ -1,5 +1,6 @@
 import { render, screen, fireEvent, act } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { audioFx } from '../audio/AudioFx';
 import { GameScreen } from './GameScreen';
 import { RewardsScreen } from './RewardsScreen';
 import { TargetGraphic } from './TargetGraphic';
@@ -29,6 +30,52 @@ afterEach(() => {
   vi.restoreAllMocks();
 });
 describe('Gunner and Warrior presentation', () => {
+  it.each(['fire', 'ice'])('reloads after a %s shot and blocks firing until ready', (element) => {
+    vi.useFakeTimers();
+    const reload = vi.spyOn(audioFx, 'playShotgunReload').mockImplementation(() => {});
+    const onAnswerSubmit = vi.fn();
+    render(
+      <GameScreen
+        initialQuestion={question}
+        maxArrows={10}
+        autoAdvanceDelayMs={0}
+        onAnswerSubmit={onAnswerSubmit}
+      />
+    );
+    fireEvent.click(screen.getByTestId('btn-switch-gunner'));
+    expect(screen.getByTestId('gunner-shotgun')).toBeInTheDocument();
+    fireEvent.click(screen.getByTestId(`choice-${element}`));
+    expect(screen.getByTestId('gunner-graphic')).toHaveAttribute('data-state', 'released');
+    act(() => vi.advanceTimersByTime(160));
+    expect(screen.getByTestId('gunner-graphic')).toHaveAttribute('data-state', 'reloading');
+    expect(screen.getByTestId('shotgun-reload')).toBeInTheDocument();
+    expect(reload).toHaveBeenCalledTimes(1);
+    fireEvent.click(screen.getByTestId('choice-fire'));
+    expect(onAnswerSubmit).toHaveBeenCalledTimes(1);
+    act(() => vi.advanceTimersByTime(640));
+    expect(screen.getByTestId('gunner-graphic')).toHaveAttribute('data-state', 'idle');
+    fireEvent.click(screen.getByTestId('choice-fire'));
+    act(() => vi.advanceTimersByTime(160));
+    expect(reload).toHaveBeenCalledTimes(2);
+    expect(onAnswerSubmit).toHaveBeenCalledTimes(2);
+  });
+
+  it('previews shotgun reload audio and animation and cancels timers on unmount', () => {
+    vi.useFakeTimers();
+    const reload = vi.spyOn(audioFx, 'playShotgunReload').mockImplementation(() => {});
+    const { unmount } = render(<RewardsScreen />);
+    fireEvent.click(screen.getByTestId('rewards-switch-gunner'));
+    fireEvent.click(screen.getByTestId('btn-test-shot'));
+    act(() => vi.advanceTimersByTime(160));
+    expect(screen.getByTestId('shotgun-reload')).toBeInTheDocument();
+    expect(reload).toHaveBeenCalledTimes(1);
+    act(() => vi.advanceTimersByTime(1640));
+    fireEvent.click(screen.getByTestId('btn-test-shot'));
+    unmount();
+    act(() => vi.runAllTimers());
+    expect(reload).toHaveBeenCalledTimes(1);
+  });
+
   it.each(['gunner', 'warrior'] as const)(
     'plays %s attacks and retains selection through advance and reload',
     (character) => {
@@ -79,11 +126,11 @@ describe('Gunner and Warrior presentation', () => {
       fireEvent.click(screen.getByTestId(`rewards-switch-${character}`));
       fireEvent.click(screen.getByTestId('tab-cat-bow'));
       expect(
-        screen.getAllByText(`Oak Scout ${character === 'gunner' ? 'Gun' : 'Axe'}`).length
+        screen.getAllByText(`Oak Scout ${character === 'gunner' ? 'Shotgun' : 'Axe'}`).length
       ).toBeGreaterThan(0);
       fireEvent.click(screen.getByTestId('equip-bow_ember_blaze'));
       expect(screen.getByTestId('badge-equipped-bow')).toHaveTextContent(
-        `Ember Blaze ${character === 'gunner' ? 'Gun' : 'Axe'}`
+        `Ember Blaze ${character === 'gunner' ? 'Shotgun' : 'Axe'}`
       );
       fireEvent.click(screen.getByTestId('tab-cat-effects'));
       fireEvent.click(screen.getByTestId('equip-arrow_effect_thunder_strike'));
