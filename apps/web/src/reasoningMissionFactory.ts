@@ -1,7 +1,7 @@
 import {
   generateDailyCollection,
   generateInstructionChainV2,
-  generateUnknownStart,
+  generateUnknownStartV2,
   type MissionFamily,
   type MissionSupport,
   type ReasoningMission,
@@ -50,7 +50,7 @@ export function createMission({
           : {}),
       });
     case 'unknown_start':
-      return generateUnknownStart({
+      return generateUnknownStartV2({
         ...options,
         ...(first
           ? {
@@ -59,8 +59,8 @@ export function createMission({
                 name: 'Mai',
                 item: 'candy',
                 changes: [
-                  { action: 'eat', count: 4, unit: 'one' },
-                  { action: 'give_sister', count: 1, unit: 'chuc' },
+                  { kind: 'loss', action: 'eat', count: 4, unit: 'one' },
+                  { kind: 'loss', action: 'give_sister', count: 1, unit: 'chuc' },
                 ],
                 remaining: 34,
               },

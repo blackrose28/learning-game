@@ -58,7 +58,8 @@ const families: Record<MissionFamily, { name: string; description: string }> = {
   },
   unknown_start: {
     name: 'Unknown starting amount',
-    description: 'Use “1 chục” and “còn lại” to work backwards to “lúc đầu”.',
+    description:
+      'Use “1 chục” and “còn lại” to work backwards, undoing both gains and losses, to “lúc đầu”.',
   },
 };
 

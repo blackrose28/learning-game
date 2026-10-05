@@ -16,6 +16,12 @@ import {
   getUnknownStartFeedback,
   getUnknownStartHint,
 } from './unknownStart';
+import {
+  generateUnknownStartV2,
+  getUnknownStartV2Diagram,
+  getUnknownStartV2Feedback,
+  getUnknownStartV2Hint,
+} from './unknownStartV2';
 import type {
   MissionDiagram,
   MissionHintLevel,
@@ -41,6 +47,11 @@ export function validateMission(value: unknown): value is ReasoningMission {
         return (
           canonical(value) ===
           canonical(generateUnknownStart({ ...options, parameters: mission.parameters }))
+        );
+      case 'unknown_start_v2':
+        return (
+          canonical(value) ===
+          canonical(generateUnknownStartV2({ ...options, parameters: mission.parameters }))
         );
       default:
         return validateInstructionChain(value);
@@ -74,7 +85,9 @@ export function getMissionHint(mission: ReasoningMission, level: MissionHintLeve
     case 'daily_collection':
       return getDailyCollectionHint(mission, level);
     case 'unknown_start':
-      return getUnknownStartHint(mission, level);
+      return mission.templateId === 'unknown_start_v2'
+        ? getUnknownStartV2Hint(mission, level)
+        : getUnknownStartHint(mission, level);
     default:
       return getInstructionChainHint(mission, level);
   }
@@ -86,7 +99,9 @@ export function getMissionStepFeedback(mission: ReasoningMission, stepId: Missio
     case 'daily_collection':
       return getDailyCollectionFeedback(mission, stepId);
     case 'unknown_start':
-      return getUnknownStartFeedback(mission, stepId);
+      return mission.templateId === 'unknown_start_v2'
+        ? getUnknownStartV2Feedback(mission, stepId)
+        : getUnknownStartFeedback(mission, stepId);
     default:
       return getInstructionChainFeedback(mission, stepId);
   }
@@ -101,7 +116,9 @@ export function getMissionDiagram(
     case 'daily_collection':
       return getDailyCollectionDiagram(mission, completed);
     case 'unknown_start':
-      return getUnknownStartDiagram(mission, completed);
+      return mission.templateId === 'unknown_start_v2'
+        ? getUnknownStartV2Diagram(mission, completed)
+        : getUnknownStartDiagram(mission, completed);
     default:
       return null;
   }

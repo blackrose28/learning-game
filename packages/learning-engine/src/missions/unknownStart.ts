@@ -10,7 +10,7 @@ import type {
   UnknownStartAction,
   UnknownStartChange,
   UnknownStartItem,
-  UnknownStartMission,
+  UnknownStartMissionV1,
   UnknownStartParameters,
 } from './types';
 
@@ -26,7 +26,10 @@ export interface UnknownStartOptions {
 const MAX_TOTAL = 99;
 
 /** `verb` goes before an amount ("ăn hết 4"); `short` stands alone ("trước khi ăn"). */
-const ACTIONS: Record<UnknownStartAction, { verb: string; short: string }> = {
+export const UNKNOWN_START_LOSS_ACTIONS: Record<
+  UnknownStartAction,
+  { verb: string; short: string }
+> = {
   eat: { verb: 'ăn hết', short: 'ăn' },
   give_sister: { verb: 'cho em gái', short: 'cho em gái' },
   give_friend: { verb: 'cho bạn', short: 'cho bạn' },
@@ -35,19 +38,22 @@ const ACTIONS: Record<UnknownStartAction, { verb: string; short: string }> = {
   lose: { verb: 'làm mất', short: 'làm mất' },
 };
 
-const ITEMS: Record<UnknownStartItem, { unit: string; actions: UnknownStartAction[] }> = {
+export const UNKNOWN_START_ITEMS: Record<
+  UnknownStartItem,
+  { unit: string; actions: UnknownStartAction[] }
+> = {
   candy: { unit: 'cái kẹo', actions: ['eat', 'give_sister', 'give_friend'] },
   orange: { unit: 'quả cam', actions: ['eat', 'give_friend', 'give_sister'] },
   sticker: { unit: 'nhãn dán', actions: ['use', 'give_friend', 'lose'] },
   marble: { unit: 'viên bi', actions: ['take_out', 'give_friend', 'lose'] },
 };
-const ITEM_KEYS = Object.keys(ITEMS) as UnknownStartItem[];
+const ITEM_KEYS = Object.keys(UNKNOWN_START_ITEMS) as UnknownStartItem[];
 
 const amountOf = (change: UnknownStartChange) => change.count * (change.unit === 'chuc' ? 10 : 1);
 const spoken = (change: UnknownStartChange) =>
   change.unit === 'chuc' ? `${change.count} chục` : String(change.count);
 const phrase = (change: UnknownStartChange, unit: string) =>
-  `${ACTIONS[change.action].verb} ${spoken(change)} ${unit}`;
+  `${UNKNOWN_START_LOSS_ACTIONS[change.action].verb} ${spoken(change)} ${unit}`;
 
 /** Builds a clean copy, so unknown fields can never ride along in a stored mission. */
 function normalizeParameters(parameters: UnknownStartParameters): UnknownStartParameters {
@@ -79,7 +85,7 @@ export function solveUnknownStart(parameters: UnknownStartParameters) {
     const limit = change?.unit === 'chuc' ? 3 : 9;
     if (
       !['one', 'chuc'].includes(change?.unit) ||
-      !ITEMS[item].actions.includes(change.action) ||
+      !UNKNOWN_START_ITEMS[item].actions.includes(change.action) ||
       !isInt(change.count, 1, limit)
     ) {
       throw new Error('Unsupported removal in unknown-start story');
@@ -105,7 +111,7 @@ function randomParameters(
 ): UnknownStartParameters {
   const name = STORY_NAMES[pick(0, STORY_NAMES.length - 1)];
   const item = ITEM_KEYS[pick(0, ITEM_KEYS.length - 1)];
-  const actions = [...ITEMS[item].actions];
+  const actions = [...UNKNOWN_START_ITEMS[item].actions];
   const first = actions.splice(pick(0, actions.length - 1), 1)[0];
   const second = actions[pick(0, actions.length - 1)];
   const distinct = (min: number, max: number, other: number) => {
@@ -149,7 +155,7 @@ function randomParameters(
   return { name, item, changes, remaining: pick(2, 40) };
 }
 
-export function generateUnknownStart(options: UnknownStartOptions): UnknownStartMission {
+export function generateUnknownStart(options: UnknownStartOptions): UnknownStartMissionV1 {
   assertSeed(options.seed);
   const support = options.support ?? 'guided';
   const wording = options.wording ?? 'school';
@@ -170,8 +176,11 @@ export function generateUnknownStart(options: UnknownStartOptions): UnknownStart
   const [first, second] = changes;
   const [a1, a2] = solution.amounts;
   const { answer } = solution;
-  const { unit } = ITEMS[item];
-  const shortVerbs = [ACTIONS[first.action].short, ACTIONS[second.action].short];
+  const { unit } = UNKNOWN_START_ITEMS[item];
+  const shortVerbs = [
+    UNKNOWN_START_LOSS_ACTIONS[first.action].short,
+    UNKNOWN_START_LOSS_ACTIONS[second.action].short,
+  ];
   const dozen = changes.find((change) => change.unit === 'chuc');
 
   const textChoice = (id: string, label: string): MissionChoice => ({ id, label, value: id });
@@ -273,16 +282,19 @@ export function generateUnknownStart(options: UnknownStartOptions): UnknownStart
   };
 }
 
-export function getUnknownStartHint(mission: UnknownStartMission, level: MissionHintLevel): string {
+export function getUnknownStartHint(
+  mission: UnknownStartMissionV1,
+  level: MissionHintLevel
+): string {
   const { name, item, changes, remaining } = mission.parameters;
   const [a1, a2] = mission.solution.amounts;
-  const { unit } = ITEMS[item];
+  const { unit } = UNKNOWN_START_ITEMS[item];
   const [first, second] = changes;
   switch (level) {
     case 'strategy':
       return `${remaining} là số ${unit} còn lại sau hai việc. Muốn tìm số lúc đầu, hãy nghĩ cách đưa số ${unit} đã mất trở lại.${changes.some((change) => change.unit === 'chuc') ? ' “1 chục” là một nhóm mười.' : ''}`;
     case 'partial':
-      return `Lúc đầu: □ → ${ACTIONS[first.action].verb} ${spoken(first)} → ${ACTIONS[second.action].verb} ${spoken(second)} → còn ${remaining}. Đi ngược lại: ${remaining} → □ → □.`;
+      return `Lúc đầu: □ → ${UNKNOWN_START_LOSS_ACTIONS[first.action].verb} ${spoken(first)} → ${UNKNOWN_START_LOSS_ACTIONS[second.action].verb} ${spoken(second)} → còn ${remaining}. Đi ngược lại: ${remaining} → □ → □.`;
     case 'worked': {
       const dozens = changes
         .filter((change) => change.unit === 'chuc')
@@ -296,7 +308,7 @@ export function getUnknownStartHint(mission: UnknownStartMission, level: Mission
 }
 
 export function getUnknownStartFeedback(
-  _mission: UnknownStartMission,
+  _mission: UnknownStartMissionV1,
   stepId: MissionStepId
 ): string {
   switch (stepId) {
@@ -313,16 +325,16 @@ export function getUnknownStartFeedback(
 
 /** Rewind picture; amounts and the starting number appear only after the matching steps. */
 export function getUnknownStartDiagram(
-  mission: UnknownStartMission,
+  mission: UnknownStartMissionV1,
   completed: readonly MissionStepId[]
 ): MissionDiagram | null {
   if (mission.support !== 'guided') return null;
   const { item, changes, remaining } = mission.parameters;
   const [a1, a2] = mission.solution.amounts;
-  const { unit } = ITEMS[item];
+  const { unit } = UNKNOWN_START_ITEMS[item];
   const done = new Set(completed);
   const label = (change: UnknownStartChange) =>
-    `${ACTIONS[change.action].verb} ${spoken(change)}${
+    `${UNKNOWN_START_LOSS_ACTIONS[change.action].verb} ${spoken(change)}${
       change.unit === 'chuc' && done.has('dozen_value') ? ` = ${amountOf(change)}` : ''
     }`;
   const start = `Lúc đầu: ${done.has('final') ? mission.solution.answer : '?'}`;

@@ -131,6 +131,11 @@ Hints:
 2. Show `Lúc đầu: ? → ăn 4 → cho 10 → còn 34`, then offer backward arrows.
 3. “Thêm lại 10 cái đã cho: 34 + 10 = 44. Thêm lại 4 cái đã ăn: 44 + 4 = 48.”
 
+Mixed gains and losses (`unknown_start_v2`): “Sau khi Mai ăn hết 4 cái kẹo, được cho
+thêm 1 chục cái kẹo và cho em gái 5 cái kẹo thì Mai còn lại 41 cái kẹo…” → **40**:
+41 + 5 = 46 (undo the gift to the sister), 46 − 10 = 36 (undo the dozen received),
+36 + 4 = 40 (undo what she ate). Each event is undone by the opposite operation.
+
 Prerequisites: addition of tens and units within 100 and interpreting a missing
 starting amount. Start with one loss: after giving 2, 5 remain → 7. Then two
 small losses: after using 2 and giving 3, 6 remain → 11. Introduce “1 chục”

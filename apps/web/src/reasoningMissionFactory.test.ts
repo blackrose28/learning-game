@@ -46,4 +46,23 @@ describe('reasoning mission factory', () => {
       expect(Math.max(...later)).toBeGreaterThan(20);
     }
   });
+
+  it('mixes gains and losses in every unknown-start mission after the original example', () => {
+    for (let started = 1; started <= 6; started++) {
+      for (let seed = 0; seed < 100; seed++) {
+        const mission = createMission({
+          family: 'unknown_start',
+          seed,
+          support: 'guided',
+          startedInFamily: started,
+        });
+        expect(mission.templateId).toBe('unknown_start_v2');
+        const kinds = (mission.parameters as { changes: { kind: string }[] }).changes.map(
+          (change) => change.kind
+        );
+        expect(kinds).toContain('gain');
+        expect(kinds).toContain('loss');
+      }
+    }
+  });
 });

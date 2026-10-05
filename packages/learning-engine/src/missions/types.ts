@@ -144,12 +144,41 @@ export interface UnknownStartParameters {
 }
 
 /** Internal definition. Render through getMissionView to avoid revealing solutions. */
-export interface UnknownStartMission extends MissionBase<'unknown_start'> {
+export interface UnknownStartMissionV1 extends MissionBase<'unknown_start'> {
   templateId: 'unknown_start_v1';
   parameters: UnknownStartParameters;
   /** Amounts in story order, after "chục" is converted, and the original amount. */
   solution: { amounts: [number, number]; answer: number };
 }
+
+export type UnknownStartV2LossAction = UnknownStartAction;
+export type UnknownStartV2GainAction = 'receive' | 'buy' | 'pick_up';
+
+/** One event in the story: the amount goes down (loss) or up (gain). */
+export interface UnknownStartV2Change {
+  kind: 'gain' | 'loss';
+  action: UnknownStartV2LossAction | UnknownStartV2GainAction;
+  /** Spoken count: 4 means "4"; with unit "chuc" 1 means "1 chục" (10). */
+  count: number;
+  unit: 'one' | 'chuc';
+}
+
+export interface UnknownStartV2Parameters {
+  name: string;
+  item: UnknownStartItem;
+  /** Two or three events in the order the story tells them, each a gain or a loss. */
+  changes: UnknownStartV2Change[];
+  remaining: number;
+}
+
+export interface UnknownStartMissionV2 extends MissionBase<'unknown_start'> {
+  templateId: 'unknown_start_v2';
+  parameters: UnknownStartV2Parameters;
+  /** Unsigned amounts in story order, after "chục" is converted, and the original amount. */
+  solution: { amounts: number[]; answer: number };
+}
+
+export type UnknownStartMission = UnknownStartMissionV1 | UnknownStartMissionV2;
 
 /** Guided-only visual support. Cells for unanswered steps stay blank; independent has none. */
 export interface MissionDiagram {
