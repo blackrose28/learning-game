@@ -7,7 +7,9 @@ export default defineConfig({
   plugins: [
     react(),
     VitePWA({
-      registerType: 'autoUpdate',
+      registerType: 'prompt',
+      // Registration and activation are managed by our update banner.
+      injectRegister: false,
       includeAssets: [
         'favicon.ico',
         'favicon.svg',
@@ -67,6 +69,9 @@ export default defineConfig({
         ],
       },
       workbox: {
+        // Claim open clients only after the player activates the waiting update.
+        clientsClaim: true,
+        skipWaiting: false,
         globPatterns: ['**/*.{js,css,html,ico,png,svg,json}'],
         navigateFallback: '/index.html',
         runtimeCaching: [

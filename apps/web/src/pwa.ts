@@ -88,35 +88,4 @@ export async function promptInstall(): Promise<'accepted' | 'dismissed' | 'unava
   }
 }
 
-/**
- * Safe Service Worker registration.
- */
-export function registerServiceWorker(): void {
-  if (typeof window === 'undefined') return;
-
-  if ('serviceWorker' in navigator && process.env.NODE_ENV === 'production') {
-    window.addEventListener('load', () => {
-      navigator.serviceWorker
-        .register('/sw.js', { scope: '/' })
-        .then((registration) => {
-          // Check for SW updates periodically or on navigation
-          registration.onupdatefound = () => {
-            const installingWorker = registration.installing;
-            if (installingWorker) {
-              installingWorker.onstatechange = () => {
-                if (installingWorker.state === 'installed') {
-                  if (navigator.serviceWorker.controller) {
-                    // New content is available once all tabs are closed
-                    window.dispatchEvent(new CustomEvent('pwa-update-available'));
-                  }
-                }
-              };
-            }
-          };
-        })
-        .catch(() => {
-          // Service worker registration skipped or failed silently
-        });
-    });
-  }
-}
+export { registerServiceWorker } from './updates';

@@ -72,6 +72,16 @@ code that needs them. Existing Worker secrets remain managed in Cloudflare.
 To redeploy `main` without a new commit, open **Actions → Check and deploy → Run
 workflow** and select `main`. Check the run's summary for the live URL.
 
+## Game updates
+
+In production, the game checks for a new release when you return to the browser
+tab, regain connectivity, or switch game views. Checks are limited to once every
+30 seconds. When the service worker finishes downloading a new release, a
+**Reload to update** banner appears. Clicking it activates the new offline cache
+and reloads the game; updates never force a reload during play. Saved local
+progress is preserved. Offline checks fail silently and retry on the next check.
+The banner is disabled in local Vite development.
+
 ## Architecture & Roadmap
 
 - **[math-archer-plan.md](../math-archer-plan.md)**: Comprehensive game specifications, curriculum levels, and multi-phase roadmap.

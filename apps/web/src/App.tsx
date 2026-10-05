@@ -13,6 +13,7 @@ import { ParentDashboard } from './components/ParentDashboard';
 import { ParentGate } from './components/ParentGate';
 import { ChildProfilePicker, AVATAR_MAP } from './components/ChildProfilePicker';
 import { InstallPrompt } from './components/InstallPrompt';
+import { UpdatePrompt } from './components/UpdatePrompt';
 import { WorldMap } from './components/WorldMap';
 import { RewardsScreen } from './components/RewardsScreen';
 import { AuthProvider, useAuth } from './context/AuthContext';
@@ -134,6 +135,7 @@ export const AppContent: React.FC = () => {
   return (
     <main className="app-main-container">
       <InstallPrompt />
+      <UpdatePrompt activeTab={activeTab} />
       <header className="app-header">
         <div className="app-header-brand">
           <h1 className="app-title">🏹 Math Archer</h1>
