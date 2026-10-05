@@ -88,9 +88,7 @@ describe('growing-gap sequences', () => {
     expect(mission.solution.terms).toEqual([0, 2, 6, 12, 20, 30, 42]);
     expect(mission.solution.gaps).toEqual([2, 4, 6, 8, 10, 12]);
     expect(mission.solution.answer).toBe(42);
-    expect(mission.prompt).toBe(
-      'Viết số thứ 7 vào dãy số có quy luật sau: 0; 2; 6; 12; 20; … Quy luật: mỗi bước tăng nhiều hơn bước trước một số đơn vị không đổi.'
-    );
+    expect(mission.prompt).toBe('Viết số thứ 7 vào dãy số có quy luật sau: 0; 2; 6; 12; 20; …');
   });
 
   it('matches the reviewed independent and held-out transfer examples', () => {
@@ -105,9 +103,7 @@ describe('growing-gap sequences', () => {
       parameters: { first: 3, firstGap: 2, gapStep: 2, shown: 5, target: 7 },
     });
     expect(transfer.solution.answer).toBe(45);
-    expect(transfer.prompt).toBe(
-      'Mỗi bước tăng nhiều hơn bước trước một số đơn vị không đổi. Các số đầu là 3; 5; 9; 15; 23. Số ở vị trí thứ 7 là số nào?'
-    );
+    expect(transfer.prompt).toBe('Các số đầu là 3; 5; 9; 15; 23. Số ở vị trí thứ 7 là số nào?');
   });
 
   it('asks the position, the gap, the next gap, then each missing term in order', () => {
@@ -137,14 +133,13 @@ describe('growing-gap sequences', () => {
     ]);
   });
 
-  it('declares the kind of rule but never names the increase, which varies', () => {
+  it('gives no hint about the rule in the prompt or the first hint, and the increase varies', () => {
     const steps = new Set<number>();
     for (const seed of seeds) {
       const mission = generateGrowingGapSequence({ seed });
       steps.add(mission.parameters.gapStep);
       const prompt = `${mission.prompt} ${getMissionHint(mission, 'strategy')}`;
-      expect(prompt).toContain('một số đơn vị không đổi');
-      expect(prompt).not.toMatch(new RegExp(`bước trước ${mission.parameters.gapStep} đơn vị`));
+      expect(prompt).not.toMatch(/không đổi|nhiều hơn bước trước|Quy luật:/);
       expect(getMissionStepFeedback(mission, 'next_gap')).not.toMatch(/\d/);
     }
     expect([...steps].sort()).toEqual([1, 2, 3, 4]);

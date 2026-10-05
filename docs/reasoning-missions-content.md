@@ -174,11 +174,9 @@ Hints:
 
 Prerequisites: numbered positions, subtraction to find gaps, and addition within 100. Teach constant-gap patterns first, then increasing gaps; hold wording simple.
 
-Independent, with the kind of rule declared: “Các số đầu là 1; 3; 7; 13; 21. Mỗi bước
-tăng nhiều hơn bước trước một số đơn vị không đổi. Điền số thứ 7.” → **43**.
+Independent, with no rule stated: “Các số đầu là 1; 3; 7; 13; 21. Điền số thứ 7.” → **43**.
 
-Held-out transfer, with the kind of rule declared: “Mỗi bước tăng nhiều hơn bước trước
-một số đơn vị không đổi. Các số đầu là 3; 5; 9; 15; 23. Số ở vị trí thứ 7 là số nào?” → **45**.
+Held-out transfer, with no rule stated: “Các số đầu là 3; 5; 9; 15; 23. Số ở vị trí thứ 7 là số nào?” → **45**.
 
 ## 5. Maximum sum from digit cards: `max_sum_digit_cards`
 

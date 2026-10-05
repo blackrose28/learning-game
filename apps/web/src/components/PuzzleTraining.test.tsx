@@ -41,9 +41,7 @@ describe('growing-gap sequence Training', () => {
     const storage = setupFamily('growing_gap_sequence');
     fireEvent.click(screen.getByRole('button', { name: 'Bắt đầu' }));
     expect(
-      screen.getByText(
-        'Viết số thứ 7 vào dãy số có quy luật sau: 0; 2; 6; 12; 20; … Quy luật: mỗi bước tăng nhiều hơn bước trước một số đơn vị không đổi.'
-      )
+      screen.getByText('Viết số thứ 7 vào dãy số có quy luật sau: 0; 2; 6; 12; 20; …')
     ).toBeVisible();
     const diagram = screen.getByRole('figure', { name: 'Các số thứ tự' });
     expect(diagram).toHaveTextContent('Thứ 1: 0');

@@ -187,12 +187,11 @@ export function generateGrowingGapSequence(
   });
 
   const listed = terms.slice(0, shown).join('; ');
-  // The rule is declared but its number is not: the child works out the increase from the gaps.
-  const rule = 'mỗi bước tăng nhiều hơn bước trước một số đơn vị không đổi';
+  // The rule is not stated at all: the child has to spot it from the listed gaps.
   const prompt =
     wording === 'school'
-      ? `Viết số thứ ${target} vào dãy số có quy luật sau: ${listed}; … Quy luật: ${rule}.`
-      : `${rule[0].toUpperCase()}${rule.slice(1)}. Các số đầu là ${listed}. Số ở vị trí thứ ${target} là số nào?`;
+      ? `Viết số thứ ${target} vào dãy số có quy luật sau: ${listed}; …`
+      : `Các số đầu là ${listed}. Số ở vị trí thứ ${target} là số nào?`;
 
   return {
     schemaVersion: 1,

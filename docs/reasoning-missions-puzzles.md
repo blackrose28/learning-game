@@ -40,15 +40,14 @@ Parameters: `{ first, firstGap, gapStep, shown, target }`. Gap k (term k to term
 `firstGap + (k − 1) × gapStep`, so the original is `{ 0, 2, 2, 5, 7 }`: gaps +2, +4, +6,
 +8, +10, +12.
 
-A finite list fits many rules, so **every prompt declares the kind of rule** (“mỗi bước
-tăng nhiều hơn bước trước một số đơn vị không đổi”) but **never the number**: the child
-works out the increase from the listed gaps. Four to five listed terms give three to four
-gaps, enough to read the increase and check it. The school wording is the original
-sentence plus that rule. The plain wording puts the rule first (“Mỗi bước tăng nhiều hơn
-bước trước một số đơn vị không đổi. Các số đầu là 3; 5; 9; 15; 23. Số ở vị trí thứ 7 là
-số nào?” → 45). The first hint and the step feedback also leave the increase unnamed; only
-the worked hint spells it out. An unstated-rule variant is not offered, because the
-declared rule is what makes 42 the checked answer.
+**No prompt states the rule, in kind or in number**: a sentence such as “mỗi bước tăng
+nhiều hơn bước trước một số đơn vị không đổi” tells the child what to look for and removes
+the thinking. The child works out the increase from the listed gaps. Four to five listed
+terms give three to four gaps, enough to read the increase and check it. The school
+wording is the original sentence alone (“Viết số thứ 7 vào dãy số có quy luật sau: 0; 2;
+6; 12; 20; …”). The plain wording is “Các số đầu là 3; 5; 9; 15; 23. Số ở vị trí thứ 7 là
+số nào?” → 45. The first hint and the step feedback also leave the increase unnamed; only
+the worked hint spells it out.
 
 | Stage      | Range                                                                            |
 | ---------- | -------------------------------------------------------------------------------- |
