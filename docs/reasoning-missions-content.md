@@ -91,8 +91,21 @@ Independent: “Lấy hiệu của 12 và số liền sau của 5 rồi cộng v
 Held-out transfer: “Tìm số ngay sau 8. Lấy 16 trừ đi số vừa tìm được, sau đó
 thêm 5 vào kết quả. Em được số nào?” → **12**.
 
-Later vocabulary variant: “Lấy tổng của 6 và số liền trước của 5 rồi trừ đi 3.”
-→ **7**. Explicitly teach “tổng” and “số liền trước” before assessing this variant.
+Vocabulary variants, implemented as `instruction_chain_v2`. The guided flow is
+the same four steps, with the first two adapted to the phrase:
+
+| Phrase | Example and answer | Typical distractors for the number step |
+| --- | --- | --- |
+| số liền sau | Lấy hiệu của 14 và số liền sau của số 7 rồi cộng với 9 → **15** | 6 (trước), 7, 9 |
+| số liền trước | Lấy tổng của 6 và số liền trước của số 5 rồi trừ đi 3 → **7** | 6 (sau), 5, 3 |
+| số lớn hơn … đơn vị | Lấy hiệu của 14 và số lớn hơn 7 là 3 đơn vị rồi cộng với 9 → **13** | 4 (sai hướng), 8 (xem như liền sau), 11 |
+| số bé hơn … đơn vị | Lấy tổng của 5 và số bé hơn 9 là 2 đơn vị rồi trừ đi 4 → **8** | 11 (sai hướng), 8, 6 |
+
+“Tổng” uses the “Tổng của 6 và 4 được viết như thế nào?” step with choices such as
+6 + 4 and 6 − 4. The final instruction is “cộng với” or “trừ đi”. Plain wording:
+“số ngay sau/trước N”, “số hơn N là k đơn vị”, “số kém N là k đơn vị”.
+Teach one term at a time before combining vocabulary and dependent steps.
+**Parent review pending** for the “là k đơn vị” and “hơn/kém” phrasing.
 
 ## 3. Unknown starting amount: `unknown_start`
 

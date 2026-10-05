@@ -2,8 +2,16 @@ import type { Question } from '../questions/types';
 
 export type MissionSupport = 'guided' | 'independent';
 export type MissionObjective =
-  'successor_vocabulary' | 'difference_vocabulary' | 'step_order' | 'calculation';
-export type MissionStepId = 'successor' | 'difference' | 'next_operation' | 'final';
+  | 'successor_vocabulary'
+  | 'predecessor_vocabulary'
+  | 'greater_by_vocabulary'
+  | 'less_by_vocabulary'
+  | 'difference_vocabulary'
+  | 'sum_vocabulary'
+  | 'step_order'
+  | 'calculation';
+export type MissionStepId =
+  'successor' | 'difference' | 'find_number' | 'combine' | 'next_operation' | 'final';
 export type MissionHintLevel = 'strategy' | 'partial' | 'worked';
 
 export interface InstructionChainParameters {
@@ -27,21 +35,48 @@ export interface MissionStep {
   correctChoiceId: string;
 }
 
-/** Internal definition. Render through getMissionView to avoid revealing solutions. */
-export interface InstructionChainMission {
+/** The number the chain starts from: "liền sau/trước", or "lớn/bé hơn … đơn vị". */
+export type NumberRelation =
+  | { kind: 'successor'; number: number }
+  | { kind: 'predecessor'; number: number }
+  | { kind: 'greater'; number: number; offset: number }
+  | { kind: 'less'; number: number; offset: number };
+
+export interface InstructionChainV2Parameters {
+  relation: NumberRelation;
+  /** "hiệu" computes other − found; "tổng" computes other + found. */
+  combine: 'difference' | 'sum';
+  other: number;
+  finalOperation: 'add' | 'subtract';
+  amount: number;
+}
+
+interface InstructionChainMissionBase {
   schemaVersion: 1;
   id: string;
-  templateId: 'instruction_chain_v1';
   family: 'instruction_chain';
   locale: 'vi';
   seed: number;
   wording: 'school' | 'plain';
   support: MissionSupport;
-  parameters: InstructionChainParameters;
   prompt: string;
   steps: MissionStep[];
+}
+
+/** Internal definition. Render through getMissionView to avoid revealing solutions. */
+export interface InstructionChainMissionV1 extends InstructionChainMissionBase {
+  templateId: 'instruction_chain_v1';
+  parameters: InstructionChainParameters;
   solution: { successor: number; difference: number; answer: number };
 }
+
+export interface InstructionChainMissionV2 extends InstructionChainMissionBase {
+  templateId: 'instruction_chain_v2';
+  parameters: InstructionChainV2Parameters;
+  solution: { found: number; combined: number; answer: number };
+}
+
+export type InstructionChainMission = InstructionChainMissionV1 | InstructionChainMissionV2;
 
 export type LearningTask =
   | { kind: 'arithmetic'; schemaVersion: 1; question: Question }

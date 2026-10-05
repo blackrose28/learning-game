@@ -1,6 +1,13 @@
 import { createMulberry32 } from '../questions/generator';
+import { assertSeed, canonical } from './shared';
+import {
+  generateInstructionChainV2,
+  getInstructionChainV2Feedback,
+  getInstructionChainV2Hint,
+} from './instructionChainV2';
 import type {
   InstructionChainMission,
+  InstructionChainMissionV1,
   InstructionChainParameters,
   MissionChoice,
   MissionHintLevel,
@@ -13,12 +20,6 @@ export interface InstructionChainOptions {
   support?: MissionSupport;
   wording?: 'school' | 'plain';
   parameters?: InstructionChainParameters;
-}
-
-function assertSeed(seed: number): void {
-  if (!Number.isInteger(seed) || seed < 0 || seed > 0xffffffff) {
-    throw new Error('Mission seed must be an unsigned 32-bit integer');
-  }
 }
 
 export function solveInstructionChain(parameters: InstructionChainParameters) {
@@ -40,9 +41,10 @@ export function solveInstructionChain(parameters: InstructionChainParameters) {
   return { successor, difference, answer: difference + addend };
 }
 
+/** Frozen: persisted v1 records are validated by regenerating them. Add new content in v2. */
 export function generateInstructionChain(
   options: InstructionChainOptions
-): InstructionChainMission {
+): InstructionChainMissionV1 {
   assertSeed(options.seed);
   const support = options.support ?? 'guided';
   const wording = options.wording ?? 'school';
@@ -160,24 +162,17 @@ export function validateInstructionChain(value: unknown): value is InstructionCh
   const mission = value as InstructionChainMission;
   try {
     if (!mission.parameters || !mission.support || !mission.wording) return false;
-    const expected = generateInstructionChain({
-      seed: mission.seed,
-      parameters: mission.parameters,
-      support: mission.support,
-      wording: mission.wording,
-    });
-    return canonical(value) === canonical(expected);
+    const options = { seed: mission.seed, support: mission.support, wording: mission.wording };
+    const expected =
+      mission.templateId === 'instruction_chain_v2'
+        ? generateInstructionChainV2({ ...options, parameters: mission.parameters })
+        : mission.templateId === 'instruction_chain_v1'
+          ? generateInstructionChain({ ...options, parameters: mission.parameters })
+          : null;
+    return expected !== null && canonical(value) === canonical(expected);
   } catch {
     return false;
   }
-}
-
-function canonical(value: unknown): string {
-  return JSON.stringify(value, (_key, item: unknown) =>
-    item && typeof item === 'object' && !Array.isArray(item)
-      ? Object.fromEntries(Object.entries(item).sort(([a], [b]) => a.localeCompare(b)))
-      : item
-  );
 }
 
 /** The independent view contains no intermediate results, solution keys, or hints. */
@@ -198,6 +193,9 @@ export function getInstructionChainHint(
   mission: InstructionChainMission,
   level: MissionHintLevel
 ): string {
+  if (mission.templateId === 'instruction_chain_v2') {
+    return getInstructionChainV2Hint(mission, level);
+  }
   const { number, minuend, addend } = mission.parameters;
   const { successor, difference, answer } = mission.solution;
   switch (level) {
@@ -209,5 +207,25 @@ export function getInstructionChainHint(
       return `Số liền sau của ${number} là ${successor}. Hiệu của ${minuend} và ${successor} là ${difference}. Cộng ${difference} với ${addend} được ${answer}.`;
     default:
       throw new Error('Unknown mission hint level');
+  }
+}
+
+/** Short, specific remediation shown after a wrong first response. */
+export function getMissionStepFeedback(
+  mission: InstructionChainMission,
+  stepId: MissionStepId
+): string {
+  if (mission.templateId === 'instruction_chain_v2') {
+    return getInstructionChainV2Feedback(mission, stepId);
+  }
+  switch (stepId) {
+    case 'successor':
+      return '“Số liền sau” là số ngay sau số đã cho.';
+    case 'difference':
+      return '“Hiệu” dùng phép trừ. Giữ đúng thứ tự hai số trong đề.';
+    case 'next_operation':
+      return 'Từ “rồi” yêu cầu dùng kết quả vừa tính cho bước tiếp theo.';
+    default:
+      return 'Đọc lại từng việc trong đề, rồi kiểm tra phép tính.';
   }
 }

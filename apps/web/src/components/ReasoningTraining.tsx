@@ -1,9 +1,10 @@
 import { useEffect, useRef, useState } from 'react';
 import {
   compareMissionAttempts,
-  generateInstructionChain,
+  generateInstructionChainV2,
   getActiveMissionStep,
   getInstructionChainHint,
+  getMissionStepFeedback,
   getMissionView,
   recordMissionHint,
   recordMissionResponse,
@@ -127,11 +128,22 @@ export function ReasoningTraining({
     try {
       const history = loadMissionWorkspace(playerId, storage);
       const first = history.items.length === 0;
-      const mission = generateInstructionChain({
+      const mission = generateInstructionChainV2({
         seed: crypto.getRandomValues(new Uint32Array(1))[0],
         support,
         wording: history.items.length % 2 === 0 ? 'school' : 'plain',
-        ...(first ? { parameters: { number: 7, minuend: 14, addend: 9 } } : {}),
+        ...(first
+          ? {
+              // The original school example: hiệu của 14 và số liền sau của số 7, rồi cộng với 9.
+              parameters: {
+                relation: { kind: 'successor', number: 7 },
+                combine: 'difference',
+                other: 14,
+                finalOperation: 'add',
+                amount: 9,
+              },
+            }
+          : {}),
       });
       persist(
         startMissionAttempt(mission, playerId, crypto.randomUUID(), new Date().toISOString())
@@ -166,7 +178,7 @@ export function ReasoningTraining({
         correct: response.correct,
         text: response.correct
           ? `Đúng rồi: ${label}.`
-          : `Con đã chọn ${label}. ${stepId === 'successor' ? '“Số liền sau” là số ngay sau số đã cho.' : stepId === 'difference' ? '“Hiệu” dùng phép trừ. Giữ đúng thứ tự hai số trong đề.' : stepId === 'next_operation' ? 'Từ “rồi” yêu cầu dùng kết quả vừa tính cho bước tiếp theo.' : 'Đọc lại từng việc trong đề, rồi kiểm tra phép tính.'} Bấm Tiếp tục để thử lại.`,
+          : `Con đã chọn ${label}. ${getMissionStepFeedback(attempt.mission, stepId)} Bấm Tiếp tục để thử lại.`,
       });
     } catch (cause) {
       setError(`Chưa lưu được câu trả lời. Hãy thử lại. ${errorText(cause)}`);

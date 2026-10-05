@@ -28,7 +28,11 @@ interface ReasoningPanelProps {
 
 const labels = {
   successor_vocabulary: '“Số liền sau”',
+  predecessor_vocabulary: '“Số liền trước”',
+  greater_by_vocabulary: '“Lớn hơn … đơn vị”',
+  less_by_vocabulary: '“Bé hơn … đơn vị”',
   difference_vocabulary: '“Hiệu”',
+  sum_vocabulary: '“Tổng”',
   step_order: 'Choosing the next step',
   calculation: 'Guided calculation',
 };

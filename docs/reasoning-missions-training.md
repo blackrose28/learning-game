@@ -14,11 +14,14 @@ skill controls and preferences continue to apply to arithmetic practice.
 
 Choose **Từng bước** or **Tự giải** before starting a mission. The first mission
 uses the parent's original 14 / 7 / 9 question. Later missions alternate school
-wording and simpler wording with seeded parameter variants within 20. Support is
+wording and simpler wording with seeded parameter variants (all four number phrases,
+“hiệu” and “tổng”, adding or subtracting at the end) within 20. Support is
 chosen deliberately; automatic support fading and adaptation belong to M5.
 
-Guided practice asks for the successor, the difference expression, the next
-operation, then the final answer. Independent practice shows the full question
+Guided practice asks for the starting number (liền sau, liền trước, or lớn/bé hơn
+some units), the “hiệu” or “tổng” expression, the next operation, then the final
+answer. Missions are generated from `instruction_chain_v2`; the first one is
+still the original 14 / 7 / 9 question. Independent practice shows the full question
 and final choices, without the intermediate prompts or solution. Both allow
 optional strategy, incomplete-diagram, and worked-solution hints. The full problem
 stays visible while answering and reading feedback.

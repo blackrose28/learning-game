@@ -34,6 +34,31 @@ Freeze the v1 generator once records are persisted in a released client; changes
 to generated content or ordering require a new template/version and a reader for
 the existing version.
 
+### `instruction_chain_v2`
+
+v2 widens the vocabulary without touching v1 (frozen; saved v1 attempts still
+validate and restore). Training generates only v2; the original example is v2
+with `{ relation: successor 7, combine: difference, other: 14, finalOperation: add, amount: 9 }`.
+
+- **Starting number (`relation`):** `successor` (“số liền sau”), `predecessor`
+  (“số liền trước”), `greater` (“số lớn hơn N là k đơn vị”) or `less` (“số bé hơn N
+  là k đơn vị”), with `offset` 2–5 for `greater`/`less`.
+- **Combine:** `difference` (“hiệu”, other − found) or `sum` (“tổng”, other + found).
+- **Final instruction:** `add` (“cộng với”) or `subtract` (“trừ đi”) an amount of 1–9.
+- Every quantity and intermediate result is a positive integer within 20.
+- Steps: `find_number`, `combine`, `next_operation`, `final`. Objectives gain
+  `predecessor_vocabulary`, `greater_by_vocabulary`, `less_by_vocabulary` and
+  `sum_vocabulary`, so evidence separates a “liền trước” mistake from a “hơn/kém”
+  one. Distractors model typical misreadings, such as swapping trước and sau or
+  moving the wrong direction.
+- Parameters are copied field by field, so unknown keys make validation fail.
+  Choice order uses a separate seeded stream, so it is the same whether or not
+  parameters were supplied.
+- `getMissionStepFeedback` returns the retry explanation for either template.
+
+Deploy order: the API must ship before clients, since an API without v2 rejects
+v2 attempts. Older clients cannot read v2 attempts.
+
 ## Display and assistance
 
 Mission definitions include solutions for engine validation; they are internal

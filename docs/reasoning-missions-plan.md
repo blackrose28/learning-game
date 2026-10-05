@@ -257,10 +257,14 @@ The playable mission interface and child teaching review remain M2/M0 work.
 - [x] Show vocabulary/plan evidence, assistance, and independent outcomes in the
       parent dashboard; include insufficient-data states.
 - [x] Ship changed wording and parameter variants, including the original example.
+- [x] Broaden instruction-chain vocabulary beyond “số liền sau”: add “số liền
+      trước”, “số lớn/bé hơn … đơn vị”, “tổng”, and subtracting final steps as
+      `instruction_chain_v2`; Training generates v2 only. See
+      [M1 Engine Contracts](reasoning-missions-engine.md).
 - [ ] Run the engineering checks and a parent/child pilot; record observations and
       adjust confusing wording or interaction before expanding content.
 
-Engineering verification is complete; the parent/child observation remains pending.
+Engineering verification is complete (including the v2 vocabulary broadening); the parent/child observation remains pending.
 See [M2 Training Pilot](reasoning-missions-training.md) for entry, behavior, and the
 short observation procedure.
 
@@ -388,3 +392,4 @@ Keep completed work checked; revise decisions when evidence changes the plan.
 | 2026-10-05 | M1 server persistence           | Additive D1 migration and authenticated save/load/list API implemented. Append-only snapshots preserve stale/conflicting evidence; conditional revision updates handle concurrent writers. API suite: 57 tests pass, including 19 mission tests. API type check and changed-file lint pass. No production deployment.                                                                    | Browser API/offline queue, conflict recovery, opt-in preferences, and reasoning progress hydration.                        |
 | 2026-10-05 | M1 browser integration complete | Durable offline queue, paginated hydration, in-flight response preservation, old-API compatibility, shared evidence summaries, opt-in settings, and parent conflict recovery implemented. All 620 tests pass (261 engine / 60 API / 299 web), including actual Worker/D1 sync integration. Type checks, lint, engine build, and web/PWA production build pass. No production deployment. | M2 playable instruction-chain Training pilot; M0 parent review and baseline remain pending.                                |
 | 2026-10-05 | M2 playable Training engineering | Opt-in Training entry, guided/independent questions, original example and varied wording/parameters, elemental choices, step feedback, saved hints/responses, explicit continuation, resume, conflict blocking, and keyboard/Xbox input implemented. All 628 tests pass (261 engine / 60 API / 307 web); type checks, lint, and frontend/PWA build pass. No deployment or child observation. | Run the documented parent/child pilot and resolve confusing wording or interaction; M3 daily collection and unknown-start follows. |
+| 2026-10-05 | M2 vocabulary broadening | Pilot content was too narrow (only “số liền sau”). Added `instruction_chain_v2`: liền sau/trước, lớn/bé hơn 2–5 đơn vị, “hiệu”/“tổng”, add/subtract final step, new per-relation parent evidence labels and distractors. v1 frozen and still validates. All 641 tests pass (274 engine / 60 API / 307 web); type checks, lint, and production build pass. No deployment; deploy API before clients. | Parent reviews new Vietnamese phrasing (“là k đơn vị”, “hơn/kém”); run the pilot; a second number phrase per chain is not yet supported. M3 daily collection and unknown-start follows. |
