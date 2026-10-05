@@ -1,6 +1,8 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 import {
+  generateDailyCollection,
   generateInstructionChain,
+  generateUnknownStart,
   recordMissionHint,
   recordMissionResponse,
   startMissionAttempt,
@@ -93,6 +95,69 @@ describe('reasoning mission persistence and API', () => {
     );
     expect((await db.prepare('SELECT * FROM attempts').all()).results).toEqual(before.results);
     expect((await db.prepare('SELECT * FROM mission_attempts').all()).results).toEqual([]);
+  });
+
+  it('stores and replays the new story families, including either accepted plan order', async () => {
+    const daily = generateDailyCollection({
+      seed: 1,
+      parameters: { name: 'Hải', object: 'kun_cards', start: 8, perDay: 1, days: 5 },
+    });
+    const unknown = generateUnknownStart({
+      seed: 1,
+      parameters: {
+        name: 'Mai',
+        item: 'candy',
+        changes: [
+          { action: 'eat', count: 4, unit: 'one' },
+          { action: 'give_sister', count: 1, unit: 'chuc' },
+        ],
+        remaining: 34,
+      },
+    });
+    const play = (
+      mission: typeof daily | typeof unknown,
+      id: string,
+      choose: (step: (typeof daily.steps)[number]) => string
+    ) => {
+      let attempt = startMissionAttempt(mission, 'player-local', id, startedAt);
+      for (const step of mission.steps) {
+        attempt = recordMissionResponse(attempt, {
+          eventId: `${id}-${step.id}`,
+          stepId: step.id,
+          choiceId: choose(step),
+          timestamp: startedAt,
+          responseTimeMs: 1,
+        });
+      }
+      return attempt;
+    };
+    const dailyDone = play(daily, 'daily', (step) => step.correctChoiceId);
+    const otherOrder = play(
+      unknown,
+      'unknown',
+      (step) => step.acceptedChoiceIds?.at(-1) ?? step.correctChoiceId
+    );
+    expect(otherOrder.responses.every((response) => response.correct)).toBe(true);
+    for (const attempt of [dailyDone, otherOrder]) {
+      expect(await (await put(env, childToken, attempt)).json()).toMatchObject({
+        disposition: 'created',
+        attempt,
+      });
+      const restored = await request(env, 'GET', `?attemptId=${attempt.id}`, childToken);
+      expect(((await restored.json()) as { attempt: MissionAttempt }).attempt).toEqual(attempt);
+    }
+    // The server replays the ledger: a response marked correct for a wrong plan is rejected.
+    const forged = structuredClone(otherOrder);
+    const plan = forged.mission.steps.find((step) => step.id === 'reverse_plan')!;
+    const wrong = plan.choices.find((choice) => !plan.acceptedChoiceIds!.includes(choice.id))!;
+    forged.responses.find((response) => response.stepId === 'reverse_plan')!.choiceId = wrong.id;
+    forged.id = 'forged';
+    expect((await put(env, childToken, forged)).status).toBe(400);
+    // A tampered answer inside the stored mission is rejected as well.
+    const tampered = structuredClone(dailyDone);
+    tampered.id = 'tampered';
+    tampered.mission.solution.answer = 14;
+    expect((await put(env, childToken, tampered)).status).toBe(400);
   });
 
   it('saves and restores a resumable guided attempt using versioned responses', async () => {

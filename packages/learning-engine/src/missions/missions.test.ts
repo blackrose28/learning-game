@@ -4,10 +4,10 @@ import { createBaseQuestion } from '../questions/question';
 import {
   generateInstructionChain,
   getInstructionChainHint,
-  getMissionView,
   solveInstructionChain,
   validateInstructionChain,
 } from './instructionChain';
+import { getMissionView } from './mission';
 import {
   getActiveMissionStep,
   getMissionAttemptStorageKey,

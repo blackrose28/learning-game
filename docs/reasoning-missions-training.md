@@ -84,5 +84,7 @@ observations have not been collected.
    [Teaching Specification](reasoning-missions-content.md), then adjust wording or
    interaction as needed before treating M2 as complete.
 
-Next content milestone: M3 daily collection and unknown-start stories. Keep this
-loop and storage pipeline as the common foundation for those families.
+M3 daily collection and unknown-start stories now use this loop: enable them in the
+same parent panel and choose the type in Training. See
+[M3 Stories](reasoning-missions-stories.md). Next content milestone: M4 sequences and
+digit cards.

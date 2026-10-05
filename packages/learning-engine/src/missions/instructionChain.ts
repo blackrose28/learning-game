@@ -175,20 +175,6 @@ export function validateInstructionChain(value: unknown): value is InstructionCh
   }
 }
 
-/** The independent view contains no intermediate results, solution keys, or hints. */
-export function getMissionView(mission: InstructionChainMission, stepId: MissionStepId = 'final') {
-  const effectiveStep = mission.support === 'independent' ? 'final' : stepId;
-  const step = mission.steps.find((item) => item.id === effectiveStep);
-  if (!step) throw new Error('Unknown mission step');
-  return {
-    missionId: mission.id,
-    prompt: mission.prompt,
-    stepId: step.id,
-    stepPrompt: step.prompt,
-    choices: step.choices.map((choice) => ({ ...choice })),
-  };
-}
-
 export function getInstructionChainHint(
   mission: InstructionChainMission,
   level: MissionHintLevel
@@ -211,7 +197,7 @@ export function getInstructionChainHint(
 }
 
 /** Short, specific remediation shown after a wrong first response. */
-export function getMissionStepFeedback(
+export function getInstructionChainFeedback(
   mission: InstructionChainMission,
   stepId: MissionStepId
 ): string {

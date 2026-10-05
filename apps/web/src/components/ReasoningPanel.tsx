@@ -2,6 +2,9 @@ import React, { useEffect, useState } from 'react';
 import {
   defaultReasoningSettings,
   isReasoningSettings,
+  MISSION_FAMILIES,
+  type MissionFamily,
+  type MissionObjective,
   type ReasoningSettings,
   type SessionStorageAdapter,
   type ReasoningProgress,
@@ -26,7 +29,7 @@ interface ReasoningPanelProps {
   busy: boolean;
 }
 
-const labels = {
+const labels: Record<MissionObjective, string> = {
   successor_vocabulary: '“Số liền sau”',
   predecessor_vocabulary: '“Số liền trước”',
   greater_by_vocabulary: '“Lớn hơn … đơn vị”',
@@ -34,7 +37,29 @@ const labels = {
   difference_vocabulary: '“Hiệu”',
   sum_vocabulary: '“Tổng”',
   step_order: 'Choosing the next step',
-  calculation: 'Guided calculation',
+  starting_amount: 'Finding the starting amount',
+  repeated_change: 'Repeated daily change',
+  choose_operation: 'Choosing the calculation',
+  dozen_vocabulary: '“Chục” (dozens)',
+  find_unknown: 'Finding what is asked (“lúc đầu”)',
+  reverse_changes: 'Reversing the changes',
+  calculation: 'Guided calculation up to 20',
+  calculation_over_20: 'Guided calculation above 20',
+};
+
+const families: Record<MissionFamily, { name: string; description: string }> = {
+  instruction_chain: {
+    name: 'Instruction chains',
+    description: 'Understand “số liền sau”, “hiệu”, and the order of steps.',
+  },
+  daily_collection: {
+    name: 'Daily collection',
+    description: 'Start amount, the same change each day, and repeated addition.',
+  },
+  unknown_start: {
+    name: 'Unknown starting amount',
+    description: 'Use “1 chục” and “còn lại” to work backwards to “lúc đầu”.',
+  },
 };
 
 export const ReasoningPanel: React.FC<ReasoningPanelProps> = ({
@@ -90,11 +115,15 @@ export const ReasoningPanel: React.FC<ReasoningPanelProps> = ({
     };
   }, [playerId, preview, storage]);
 
-  const toggle = async () => {
+  const toggle = async (family: MissionFamily) => {
     if (!update) return;
     const next: ReasoningSettings = {
       schemaVersion: 1,
-      enabledFamilies: settings.enabledFamilies.length ? [] : ['instruction_chain'],
+      enabledFamilies: MISSION_FAMILIES.filter((item) =>
+        item === family
+          ? !settings.enabledFamilies.includes(item)
+          : settings.enabledFamilies.includes(item)
+      ),
     };
     setSaving(true);
     setFeedback(null);
@@ -137,21 +166,27 @@ export const ReasoningPanel: React.FC<ReasoningPanelProps> = ({
     <section className="practice-skills-panel" aria-labelledby="reasoning-practice-title">
       <h2 id="reasoning-practice-title">Reasoning practice</h2>
       <p>Practice understanding Vietnamese questions and choosing solution steps.</p>
-      <p>When enabled, open Play → Training → “Đọc đề, chọn bước”. Choose guided steps or an independent answer before each mission.</p>
-      <label className="practice-skill-row">
-        <span>
-          <strong>Instruction chains</strong>
-          <small>Understand “số liền sau”, “hiệu”, and the order of steps.</small>
-        </span>
-        <input
-          type="checkbox"
-          role="switch"
-          aria-label="Instruction chains"
-          checked={settings.enabledFamilies.includes('instruction_chain')}
-          disabled={preview || busy || saving || !update || !!error}
-          onChange={() => void toggle()}
-        />
-      </label>
+      <p>
+        When enabled, open Play → Training → “Đọc đề, chọn bước”. Choose guided steps or an
+        independent answer before each mission. With several types enabled, choose the type each
+        time.
+      </p>
+      {MISSION_FAMILIES.map((family) => (
+        <label className="practice-skill-row" key={family}>
+          <span>
+            <strong>{families[family].name}</strong>
+            <small>{families[family].description}</small>
+          </span>
+          <input
+            type="checkbox"
+            role="switch"
+            aria-label={families[family].name}
+            checked={settings.enabledFamilies.includes(family)}
+            disabled={preview || busy || saving || !update || !!error}
+            onChange={() => void toggle(family)}
+          />
+        </label>
+      ))}
       {preview ? (
         <p>Switch to real data to change reasoning practice.</p>
       ) : (
@@ -165,6 +200,21 @@ export const ReasoningPanel: React.FC<ReasoningPanelProps> = ({
               ? `${progress.independentSuccesses}/${progress.independentAttempts} independent first answers correct.`
               : 'No independent attempts yet.'}
           </p>
+          {progress &&
+            MISSION_FAMILIES.map((family) => {
+              const counts = progress.families[family];
+              return (
+                counts && (
+                  <p key={family}>
+                    {families[family].name}: {counts.completedMissions}/{counts.startedMissions}{' '}
+                    missions completed; {counts.assistedCompletions} with help;{' '}
+                    {counts.independentAttempts
+                      ? `${counts.independentSuccesses}/${counts.independentAttempts} independent first answers correct.`
+                      : 'no independent attempts yet.'}
+                  </p>
+                )
+              );
+            })}
           {progress &&
             Object.entries(progress.objectives).map(
               ([objective, evidence]) =>

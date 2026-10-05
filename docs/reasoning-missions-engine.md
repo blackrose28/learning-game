@@ -4,6 +4,9 @@ Status: M1 engineering groundwork implemented, including engine, local persisten
 D1/API storage, browser offline sync, per-child settings, and evidence summaries.
 See [M1 Browser Sync and Parent Controls](reasoning-missions-browser.md).
 The player-facing Training mission screen is implemented in [M2 Training Pilot](reasoning-missions-training.md).
+The daily collection and unknown-start families added in M3 are described in
+[M3 Stories](reasoning-missions-stories.md); they widen the mission union and
+add `acceptedChoiceIds`, but leave the contracts below unchanged.
 
 ## Task and template boundaries
 

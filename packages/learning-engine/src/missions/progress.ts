@@ -1,9 +1,10 @@
 import { restoreMissionAttempt, summarizeMissionAttempt } from './attempt';
-import type { MissionAttempt, MissionObjective } from './types';
+import { MISSION_FAMILIES } from './types';
+import type { MissionAttempt, MissionFamily, MissionObjective } from './types';
 
 export interface ReasoningSettings {
   schemaVersion: 1;
-  enabledFamilies: 'instruction_chain'[];
+  enabledFamilies: MissionFamily[];
 }
 
 export function defaultReasoningSettings(): ReasoningSettings {
@@ -16,8 +17,8 @@ export function isReasoningSettings(value: unknown): value is ReasoningSettings 
   return (
     settings.schemaVersion === 1 &&
     Array.isArray(settings.enabledFamilies) &&
-    settings.enabledFamilies.length <= 1 &&
-    settings.enabledFamilies.every((family) => family === 'instruction_chain')
+    settings.enabledFamilies.every((family) => MISSION_FAMILIES.includes(family)) &&
+    new Set(settings.enabledFamilies).size === settings.enabledFamilies.length
   );
 }
 
@@ -61,14 +62,19 @@ export interface ReasoningEvidence {
   unassistedCorrect: number;
 }
 
-export interface ReasoningProgress {
-  schemaVersion: 1;
-  playerId: string;
+export interface ReasoningFamilyProgress {
   startedMissions: number;
   completedMissions: number;
   assistedCompletions: number;
   independentAttempts: number;
   independentSuccesses: number;
+}
+
+export interface ReasoningProgress extends ReasoningFamilyProgress {
+  schemaVersion: 1;
+  playerId: string;
+  /** Per-family counts; a family with no missions is absent. Totals above are their sum. */
+  families: Partial<Record<MissionFamily, ReasoningFamilyProgress>>;
   objectives: Partial<Record<MissionObjective, ReasoningEvidence>>;
 }
 
@@ -94,18 +100,29 @@ export function computeReasoningProgress(
     assistedCompletions: 0,
     independentAttempts: 0,
     independentSuccesses: 0,
+    families: {},
     objectives: {},
   };
   for (const attempt of unique.values()) {
     const summary = summarizeMissionAttempt(attempt);
-    if (summary.completed) progress.completedMissions++;
-    if (summary.assistedCompletion) progress.assistedCompletions++;
-    if (summary.independentSuccess) progress.independentSuccesses++;
-    if (
-      attempt.mission.support === 'independent' &&
-      summary.firstResponses.some((response) => !response.assisted)
-    ) {
-      progress.independentAttempts++;
+    const family = (progress.families[attempt.mission.family] ??= {
+      startedMissions: 0,
+      completedMissions: 0,
+      assistedCompletions: 0,
+      independentAttempts: 0,
+      independentSuccesses: 0,
+    });
+    family.startedMissions++;
+    for (const counts of [progress, family]) {
+      if (summary.completed) counts.completedMissions++;
+      if (summary.assistedCompletion) counts.assistedCompletions++;
+      if (summary.independentSuccess) counts.independentSuccesses++;
+      if (
+        attempt.mission.support === 'independent' &&
+        summary.firstResponses.some((response) => !response.assisted)
+      ) {
+        counts.independentAttempts++;
+      }
     }
     for (const response of summary.firstResponses) {
       if (!response.objective) continue;

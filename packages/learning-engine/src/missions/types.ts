@@ -1,6 +1,12 @@
 import type { Question } from '../questions/types';
 
 export type MissionSupport = 'guided' | 'independent';
+export type MissionFamily = 'instruction_chain' | 'daily_collection' | 'unknown_start';
+export const MISSION_FAMILIES: readonly MissionFamily[] = [
+  'instruction_chain',
+  'daily_collection',
+  'unknown_start',
+];
 export type MissionObjective =
   | 'successor_vocabulary'
   | 'predecessor_vocabulary'
@@ -9,9 +15,27 @@ export type MissionObjective =
   | 'difference_vocabulary'
   | 'sum_vocabulary'
   | 'step_order'
-  | 'calculation';
+  | 'starting_amount'
+  | 'repeated_change'
+  | 'choose_operation'
+  | 'dozen_vocabulary'
+  | 'find_unknown'
+  | 'reverse_changes'
+  | 'calculation'
+  | 'calculation_over_20';
 export type MissionStepId =
-  'successor' | 'difference' | 'find_number' | 'combine' | 'next_operation' | 'final';
+  | 'successor'
+  | 'difference'
+  | 'find_number'
+  | 'combine'
+  | 'next_operation'
+  | 'start_amount'
+  | 'repeated_change'
+  | 'plan'
+  | 'dozen_value'
+  | 'find_unknown'
+  | 'reverse_plan'
+  | 'final';
 export type MissionHintLevel = 'strategy' | 'partial' | 'worked';
 
 export interface InstructionChainParameters {
@@ -33,6 +57,8 @@ export interface MissionStep {
   dependsOn: MissionStepId[];
   choices: MissionChoice[];
   correctChoiceId: string;
+  /** Equivalent valid plans (for example, add-backs in either order). Includes correctChoiceId. */
+  acceptedChoiceIds?: string[];
 }
 
 /** The number the chain starts from: "liền sau/trước", or "lớn/bé hơn … đơn vị". */
@@ -51,10 +77,10 @@ export interface InstructionChainV2Parameters {
   amount: number;
 }
 
-interface InstructionChainMissionBase {
+interface MissionBase<Family extends MissionFamily> {
   schemaVersion: 1;
   id: string;
-  family: 'instruction_chain';
+  family: Family;
   locale: 'vi';
   seed: number;
   wording: 'school' | 'plain';
@@ -64,13 +90,13 @@ interface InstructionChainMissionBase {
 }
 
 /** Internal definition. Render through getMissionView to avoid revealing solutions. */
-export interface InstructionChainMissionV1 extends InstructionChainMissionBase {
+export interface InstructionChainMissionV1 extends MissionBase<'instruction_chain'> {
   templateId: 'instruction_chain_v1';
   parameters: InstructionChainParameters;
   solution: { successor: number; difference: number; answer: number };
 }
 
-export interface InstructionChainMissionV2 extends InstructionChainMissionBase {
+export interface InstructionChainMissionV2 extends MissionBase<'instruction_chain'> {
   templateId: 'instruction_chain_v2';
   parameters: InstructionChainV2Parameters;
   solution: { found: number; combined: number; answer: number };
@@ -78,9 +104,65 @@ export interface InstructionChainMissionV2 extends InstructionChainMissionBase {
 
 export type InstructionChainMission = InstructionChainMissionV1 | InstructionChainMissionV2;
 
+export type DailyObjectKey = 'kun_cards' | 'stickers' | 'marbles' | 'stamps' | 'shells';
+
+export interface DailyCollectionParameters {
+  /** One of the generator's reviewed names. */
+  name: string;
+  object: DailyObjectKey;
+  /** Amount before the first collection day. */
+  start: number;
+  /** Amount added on each of the days; 1 first, then repeated addition of 2 or more. */
+  perDay: number;
+  days: number;
+}
+
+/** Internal definition. Render through getMissionView to avoid revealing solutions. */
+export interface DailyCollectionMission extends MissionBase<'daily_collection'> {
+  templateId: 'daily_collection_v1';
+  parameters: DailyCollectionParameters;
+  solution: { added: number; answer: number };
+}
+
+export type UnknownStartAction =
+  'eat' | 'give_sister' | 'give_friend' | 'use' | 'take_out' | 'lose';
+export type UnknownStartItem = 'candy' | 'orange' | 'sticker' | 'marble';
+
+export interface UnknownStartChange {
+  action: UnknownStartAction;
+  /** Spoken count: 4 means "4"; with unit "chuc" 1 means "1 chục" (10). */
+  count: number;
+  unit: 'one' | 'chuc';
+}
+
+export interface UnknownStartParameters {
+  name: string;
+  item: UnknownStartItem;
+  /** Two removals, in the order the story tells them. */
+  changes: [UnknownStartChange, UnknownStartChange];
+  remaining: number;
+}
+
+/** Internal definition. Render through getMissionView to avoid revealing solutions. */
+export interface UnknownStartMission extends MissionBase<'unknown_start'> {
+  templateId: 'unknown_start_v1';
+  parameters: UnknownStartParameters;
+  /** Amounts in story order, after "chục" is converted, and the original amount. */
+  solution: { amounts: [number, number]; answer: number };
+}
+
+/** Guided-only visual support. Cells for unanswered steps stay blank; independent has none. */
+export interface MissionDiagram {
+  caption: string;
+  rows: string[][];
+}
+
+export type ReasoningMission =
+  InstructionChainMission | DailyCollectionMission | UnknownStartMission;
+
 export type LearningTask =
   | { kind: 'arithmetic'; schemaVersion: 1; question: Question }
-  | { kind: 'reasoning'; schemaVersion: 1; mission: InstructionChainMission };
+  | { kind: 'reasoning'; schemaVersion: 1; mission: ReasoningMission };
 
 /** Normalize already-validated legacy questions without changing their history or IDs. */
 export function normalizeLearningTask(task: Question | LearningTask): LearningTask {
@@ -110,7 +192,7 @@ export interface MissionAttempt {
   schemaVersion: 1;
   id: string;
   playerId: string;
-  mission: InstructionChainMission;
+  mission: ReasoningMission;
   mode: 'training';
   startedAt: string;
   completedAt?: string;

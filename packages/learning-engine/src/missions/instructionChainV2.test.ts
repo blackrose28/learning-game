@@ -2,10 +2,9 @@ import { describe, expect, it } from 'vitest';
 import {
   generateInstructionChain,
   getInstructionChainHint,
-  getMissionStepFeedback,
-  getMissionView,
   validateInstructionChain,
 } from './instructionChain';
+import { getMissionStepFeedback, getMissionView } from './mission';
 import { generateInstructionChainV2, solveInstructionChainV2 } from './instructionChainV2';
 import {
   recordMissionResponse,

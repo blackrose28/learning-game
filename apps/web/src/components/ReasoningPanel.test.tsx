@@ -2,6 +2,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { fireEvent, render, screen, waitFor, cleanup } from '@testing-library/react';
 import {
   createMemoryStorage,
+  generateDailyCollection,
   generateInstructionChain,
   recordMissionResponse,
   startMissionAttempt,
@@ -46,6 +47,68 @@ describe('parent reasoning controls and recovery', () => {
     await screen.findByText('Save failed');
     expect(toggle).toBeChecked();
     expect(loadReasoningSettings('other', storage).enabledFamilies).toEqual([]);
+  });
+
+  it('toggles each family independently, keeping the enabled set in a stable order', async () => {
+    const storage = createMemoryStorage();
+    const update = vi.fn(async (reasoningSettings) => ({
+      id: 'child',
+      name: 'Child',
+      avatar: 'archer-1',
+      grade: '1',
+      hasPin: false,
+      reasoningSettings,
+    }));
+    render(
+      <ReasoningPanel
+        playerId="child"
+        storage={storage}
+        update={update}
+        preview={false}
+        busy={false}
+      />
+    );
+    const unknown = screen.getByRole('switch', { name: 'Unknown starting amount' });
+    const daily = screen.getByRole('switch', { name: 'Daily collection' });
+    fireEvent.click(unknown);
+    await waitFor(() => expect(unknown).toBeChecked());
+    fireEvent.click(daily);
+    await waitFor(() => expect(daily).toBeChecked());
+    expect(loadReasoningSettings('child', storage).enabledFamilies).toEqual([
+      'daily_collection',
+      'unknown_start',
+    ]);
+    expect(screen.getByRole('switch', { name: 'Instruction chains' })).not.toBeChecked();
+    fireEvent.click(unknown);
+    await waitFor(() => expect(unknown).not.toBeChecked());
+    expect(loadReasoningSettings('child', storage).enabledFamilies).toEqual(['daily_collection']);
+  });
+
+  it('reports family counts and above-20 calculation evidence separately', async () => {
+    const storage = createMemoryStorage();
+    const time = '2026-10-05T10:00:00.000Z';
+    const mission = generateDailyCollection({
+      seed: 1,
+      parameters: { name: 'Hải', object: 'kun_cards', start: 30, perDay: 2, days: 3 },
+    });
+    let attempt = startMissionAttempt(mission, 'child', 'daily', time);
+    for (const step of mission.steps) {
+      attempt = recordMissionResponse(attempt, {
+        eventId: step.id,
+        stepId: step.id,
+        choiceId: step.correctChoiceId,
+        timestamp: time,
+        responseTimeMs: 1,
+      });
+    }
+    queueMissionAttempt(attempt, storage);
+    render(<ReasoningPanel playerId="child" storage={storage} preview={false} busy={false} />);
+    expect(
+      await screen.findByText(/Daily collection: 1\/1 missions completed; 0 with help/)
+    ).toBeVisible();
+    expect(screen.getByText(/Guided calculation above 20: 1\/1/)).toBeVisible();
+    expect(screen.getByText(/Finding the starting amount: 1\/1/)).toBeVisible();
+    expect(screen.queryByText(/Instruction chains:/)).not.toBeInTheDocument();
   });
 
   it('disables preview edits and rejects a server that ignores the preference', async () => {

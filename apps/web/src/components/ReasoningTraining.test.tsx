@@ -4,6 +4,7 @@ import {
   createMemoryStorage,
   generateInstructionChain,
   startMissionAttempt,
+  type MissionFamily,
 } from '@math-archer/learning-engine';
 import { ReasoningTraining } from './ReasoningTraining';
 import {
@@ -152,5 +153,131 @@ describe('instruction-chain Training', () => {
     act(() => gamepadManager.simulateButtonDown(XboxButton.B));
     act(() => gamepadManager.simulateButtonUp(XboxButton.B));
     expect(back).toHaveBeenCalledOnce();
+  });
+});
+
+const setupFamilies = (families: MissionFamily[]) => {
+  const storage = createMemoryStorage();
+  return {
+    storage,
+    ...render(
+      <ReasoningTraining playerId="child" storage={storage} families={families} onBack={vi.fn()} />
+    ),
+  };
+};
+const attemptOf = (storage: ReturnType<typeof createMemoryStorage>, index = 0) =>
+  loadMissionWorkspace('child', storage).items[index].local;
+
+describe('story-family Training', () => {
+  it('only shows a type chooser when several families are enabled', () => {
+    setupFamilies(['instruction_chain']);
+    expect(screen.queryByText('Chọn loại bài')).not.toBeInTheDocument();
+    cleanup();
+    setupFamilies(['daily_collection', 'unknown_start']);
+    expect(screen.getByRole('button', { name: 'Sưu tầm mỗi ngày' })).toHaveAttribute(
+      'aria-pressed',
+      'true'
+    );
+    expect(screen.getByRole('button', { name: 'Tìm số lúc đầu' })).toHaveAttribute(
+      'aria-pressed',
+      'false'
+    );
+  });
+
+  it('plays the original daily-collection question to 13 with the day slots filling in', () => {
+    const { storage } = setupFamilies(['daily_collection']);
+    fireEvent.click(screen.getByRole('button', { name: 'Bắt đầu' }));
+    expect(
+      screen.getByText(
+        'Hải có 8 thẻ Kun. Mỗi ngày, Hải sưu tầm thêm được 1 thẻ nữa. Hỏi sau 5 ngày, Hải có tất cả bao nhiêu thẻ Kun?'
+      )
+    ).toBeVisible();
+    // Blank slots only; nothing from the answer has been revealed yet.
+    const diagram = screen.getByRole('figure', { name: 'Các ngày' });
+    expect(diagram).toHaveTextContent('Có sẵn: □');
+    expect(diagram).toHaveTextContent('Tất cả: ?');
+    for (let i = 0; i < 4; i++) {
+      choose(storage, i);
+      next();
+    }
+    expect(attemptOf(storage).mission.family).toBe('daily_collection');
+    expect(attemptOf(storage).responses.at(-1)).toMatchObject({ stepId: 'final', correct: true });
+    expect(screen.getByText('Hoàn thành!')).toBeVisible();
+    expect(screen.getByText(/8 \+ 5 = 13 thẻ/)).toBeVisible();
+    const progress = loadReasoningProgress('child', storage);
+    expect(progress.families.daily_collection?.completedMissions).toBe(1);
+    expect(progress.objectives.starting_amount?.firstCorrect).toBe(1);
+  });
+
+  it('plays the original unknown-start question to 48, accepting the add-back plan in either order', () => {
+    for (const planIndex of [0, 1]) {
+      const { storage, unmount } = setupFamilies(['unknown_start']);
+      fireEvent.click(screen.getByRole('button', { name: 'Bắt đầu' }));
+      const mission = attemptOf(storage).mission;
+      expect(mission.prompt).toContain('34 cái kẹo');
+      expect(screen.getByRole('figure')).toHaveTextContent('Lúc đầu: ?');
+      choose(storage, 0); // 1 chục = 10
+      expect(screen.getByRole('figure')).toHaveTextContent('cho em gái 1 chục = 10');
+      next();
+      choose(storage, 1);
+      next();
+      const plan = mission.steps[2];
+      const accepted = plan.acceptedChoiceIds![planIndex];
+      fireEvent.keyDown(screen.getByRole('region'), {
+        key: String(plan.choices.findIndex((choice) => choice.id === accepted) + 1),
+      });
+      expect(attemptOf(storage).responses.at(-1)).toMatchObject({ correct: true, assisted: false });
+      // The rewind row appears only once the plan is answered.
+      expect(screen.getAllByRole('list')).toHaveLength(2);
+      next();
+      choose(storage, 3);
+      next();
+      expect(screen.getByText('Hoàn thành!')).toBeVisible();
+      expect(screen.getByText(/44 \+ 4 = 48/)).toBeVisible();
+      expect(attemptOf(storage).completedAt).toBeDefined();
+      unmount();
+    }
+  });
+
+  it('shows only the school-style final question, with no diagram, in independent practice', () => {
+    const { storage } = setupFamilies(['unknown_start']);
+    fireEvent.click(screen.getByRole('button', { name: 'Tự giải' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Bắt đầu' }));
+    expect(screen.queryByRole('figure')).not.toBeInTheDocument();
+    expect(screen.queryByText(/chục cái kẹo là bao nhiêu/)).not.toBeInTheDocument();
+    expect(screen.getByText('Lúc đầu Mai có bao nhiêu cái kẹo?')).toBeVisible();
+    choose(storage, 3);
+    expect(attemptOf(storage).responses[0]).toMatchObject({ stepId: 'final', correct: true });
+    expect(
+      loadReasoningProgress('child', storage).families.unknown_start?.independentSuccesses
+    ).toBe(1);
+  });
+
+  it('starts the chosen family, numbering each family separately', () => {
+    const { storage } = setupFamilies(['instruction_chain', 'daily_collection']);
+    fireEvent.click(screen.getByRole('button', { name: 'Sưu tầm mỗi ngày' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Bắt đầu' }));
+    expect(attemptOf(storage).mission.parameters).toMatchObject({ start: 8, perDay: 1, days: 5 });
+    for (let i = 0; i < 4; i++) {
+      choose(storage, i);
+      next();
+    }
+    // The first instruction chain is still the original example, even after a daily mission.
+    fireEvent.click(screen.getByRole('button', { name: 'Chuỗi lệnh' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Bài tiếp theo' }));
+    expect(screen.getByText(problem)).toBeVisible();
+    expect(
+      loadMissionWorkspace('child', storage)
+        .items.map((item) => item.local.mission.family)
+        .sort()
+    ).toEqual(['daily_collection', 'instruction_chain']);
+  });
+
+  it('ignores a choice key beyond the number of choices instead of failing', () => {
+    const { storage } = setupFamilies(['daily_collection']);
+    fireEvent.click(screen.getByRole('button', { name: 'Bắt đầu' }));
+    const before = attemptOf(storage).responses.length;
+    fireEvent.keyDown(screen.getByRole('region'), { key: '9' });
+    expect(attemptOf(storage).responses).toHaveLength(before);
   });
 });

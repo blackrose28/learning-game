@@ -59,6 +59,32 @@ describe('per-child reasoning opt-in', () => {
     ).toBe(200);
   });
 
+  it('stores several enabled families and keeps single-family settings readable', async () => {
+    const env = { DB: createTestD1Database(), JWT_SECRET: TEST_JWT_SECRET };
+    const token = await createTestParentToken();
+    const update = (reasoningSettings: unknown) =>
+      worker.fetch(
+        new Request('https://test/api/parent/children/player-local', {
+          method: 'PUT',
+          headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+          body: JSON.stringify({ reasoningSettings }),
+        }),
+        env
+      );
+    const all = {
+      schemaVersion: 1,
+      enabledFamilies: ['instruction_chain', 'daily_collection', 'unknown_start'],
+    };
+    expect(await (await update(all)).json()).toMatchObject({ child: { reasoningSettings: all } });
+    const stories = { schemaVersion: 1, enabledFamilies: ['unknown_start'] };
+    expect(await (await update(stories)).json()).toMatchObject({
+      child: { reasoningSettings: stories },
+    });
+    expect(
+      (await update({ schemaVersion: 1, enabledFamilies: ['growing_gap_sequence'] })).status
+    ).toBe(400);
+  });
+
   it('rejects invalid settings and child edits', async () => {
     const env = { DB: createTestD1Database(), JWT_SECRET: TEST_JWT_SECRET };
     const parent = await createTestParentToken();

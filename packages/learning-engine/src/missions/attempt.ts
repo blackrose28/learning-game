@@ -1,12 +1,12 @@
 import type { SessionStorageAdapter } from '../session/types';
 import { getDefaultStorage } from '../session/storage';
-import { validateInstructionChain } from './instructionChain';
+import { isAcceptedChoice, validateMission } from './mission';
 import type {
-  InstructionChainMission,
   MissionAttempt,
   MissionHintEvent,
   MissionResponse,
   MissionStepId,
+  ReasoningMission,
 } from './types';
 
 function assertTimestamp(timestamp: string): void {
@@ -16,12 +16,12 @@ function assertTimestamp(timestamp: string): void {
 }
 
 export function startMissionAttempt(
-  mission: InstructionChainMission,
+  mission: ReasoningMission,
   playerId: string,
   id: string,
   startedAt: string
 ): MissionAttempt {
-  if (!validateInstructionChain(mission) || !playerId.trim() || !id.trim()) {
+  if (!validateMission(mission) || !playerId.trim() || !id.trim()) {
     throw new Error('Invalid mission attempt identity or definition');
   }
   assertTimestamp(startedAt);
@@ -90,7 +90,7 @@ export function recordMissionResponse(
   const step = attempt.mission.steps.find((item) => item.id === input.stepId)!;
   if (!step.choices.some((choice) => choice.id === input.choiceId))
     throw new Error('Unknown mission choice');
-  const correct = input.choiceId === step.correctChoiceId;
+  const correct = isAcceptedChoice(step, input.choiceId);
   // Hints or earlier remediation make later responses assisted, including later steps.
   const assisted =
     attempt.hints.length > 0 || attempt.responses.some((response) => !response.correct);

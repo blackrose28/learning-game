@@ -1,15 +1,16 @@
 import { useEffect, useRef, useState } from 'react';
 import {
   compareMissionAttempts,
-  generateInstructionChainV2,
   getActiveMissionStep,
-  getInstructionChainHint,
+  getMissionDiagram,
+  getMissionHint,
   getMissionStepFeedback,
   getMissionView,
   recordMissionHint,
   recordMissionResponse,
   startMissionAttempt,
   type MissionAttempt,
+  type MissionFamily,
   type MissionHintLevel,
   type MissionStepId,
   type MissionSupport,
@@ -23,11 +24,14 @@ import {
   syncMissionAttempts,
 } from '../sync/missions';
 import { useGamepad, XboxButton } from '../input/useGamepad';
+import { createMission, familyLabels } from '../reasoningMissionFactory';
 import './ReasoningTraining.css';
 
 export interface ReasoningTrainingProps {
   playerId: string;
   onBack: () => void;
+  /** Families the parent has enabled. Defaults to the original pilot family. */
+  families?: MissionFamily[];
   api?: MathArcherApiClient;
   storage?: SessionStorageAdapter;
 }
@@ -40,16 +44,20 @@ const browserStorage: SessionStorageAdapter = {
 const elements = ['🔥 Lửa', '❄️ Băng', '🌬️ Gió', '🌿 Đất'];
 const hintLabels = ['Gợi ý cách làm', 'Sơ đồ còn thiếu', 'Xem bài giải'];
 const hintLevels: MissionHintLevel[] = ['strategy', 'partial', 'worked'];
+const defaultFamilies: MissionFamily[] = ['instruction_chain'];
 const errorText = (error: unknown) => (error instanceof Error ? error.message : String(error));
 
 export function ReasoningTraining({
   playerId,
   onBack,
+  families = defaultFamilies,
   api,
   storage = browserStorage,
 }: ReasoningTrainingProps) {
   const [attempt, setAttempt] = useState<MissionAttempt | null>(null);
   const [support, setSupport] = useState<MissionSupport>('guided');
+  const [chosenFamily, setChosenFamily] = useState<MissionFamily>(families[0]);
+  const family = families.includes(chosenFamily) ? chosenFamily : families[0];
   const [error, setError] = useState('');
   const [blocked, setBlocked] = useState(false);
   const [feedback, setFeedback] = useState<{
@@ -127,23 +135,12 @@ export function ReasoningTraining({
     busy.current = true;
     try {
       const history = loadMissionWorkspace(playerId, storage);
-      const first = history.items.length === 0;
-      const mission = generateInstructionChainV2({
+      const mission = createMission({
+        family,
         seed: crypto.getRandomValues(new Uint32Array(1))[0],
         support,
-        wording: history.items.length % 2 === 0 ? 'school' : 'plain',
-        ...(first
-          ? {
-              // The original school example: hiệu của 14 và số liền sau của số 7, rồi cộng với 9.
-              parameters: {
-                relation: { kind: 'successor', number: 7 },
-                combine: 'difference',
-                other: 14,
-                finalOperation: 'add',
-                amount: 9,
-              },
-            }
-          : {}),
+        startedInFamily: history.items.filter((item) => item.local.mission.family === family)
+          .length,
       });
       persist(
         startMissionAttempt(mission, playerId, crypto.randomUUID(), new Date().toISOString())
@@ -159,6 +156,12 @@ export function ReasoningTraining({
   const stepId = attempt ? getActiveMissionStep(attempt) : null;
   const displayedStep = feedback?.stepId ?? stepId;
   const view = attempt && displayedStep ? getMissionView(attempt.mission, displayedStep) : null;
+  const diagram = attempt
+    ? getMissionDiagram(
+        attempt.mission,
+        attempt.responses.filter((response) => response.correct).map((response) => response.stepId)
+      )
+    : null;
   const answer = (choiceId: string) => {
     if (!attempt || !stepId || feedback || blocked || busy.current) return;
     busy.current = true;
@@ -198,7 +201,7 @@ export function ReasoningTraining({
         timestamp: new Date().toISOString(),
       });
       persist(next);
-      setFeedback({ stepId, text: getInstructionChainHint(attempt.mission, level) });
+      setFeedback({ stepId, text: getMissionHint(attempt.mission, level) });
     } catch (cause) {
       setError(`Chưa lưu được gợi ý. ${errorText(cause)}`);
     } finally {
@@ -252,9 +255,10 @@ export function ReasoningTraining({
           event.preventDefault();
           moveFocus(event.key === 'ArrowLeft' || event.key === 'ArrowUp' ? -1 : 1);
         }
-        if (/^[1-4]$/.test(event.key) && view && !feedback) {
+        const keyed = /^[1-4]$/.test(event.key) ? view?.choices[Number(event.key) - 1] : undefined;
+        if (keyed && !feedback) {
           event.preventDefault();
-          answer(view.choices[Number(event.key) - 1].id);
+          answer(keyed.id);
         }
       }}
     >
@@ -267,7 +271,7 @@ export function ReasoningTraining({
           {attempt?.completedAt && (
             <div role="status" className="mission-complete">
               <h2>Hoàn thành!</h2>
-              <p>{getInstructionChainHint(attempt.mission, 'worked')}</p>
+              <p>{getMissionHint(attempt.mission, 'worked')}</p>
               <p>
                 {attempt.mission.support === 'independent' &&
                 !attempt.hints.length &&
@@ -276,6 +280,20 @@ export function ReasoningTraining({
                   : 'Con đã luyện các bước giải bài.'}
               </p>
             </div>
+          )}
+          {families.length > 1 && (
+            <fieldset disabled={blocked}>
+              <legend>Chọn loại bài</legend>
+              {families.map((item) => (
+                <button
+                  key={item}
+                  aria-pressed={family === item}
+                  onClick={() => setChosenFamily(item)}
+                >
+                  {familyLabels[item]}
+                </button>
+              ))}
+            </fieldset>
           )}
           <fieldset disabled={blocked}>
             <legend>Chọn cách luyện cho bài tiếp theo</legend>
@@ -302,6 +320,18 @@ export function ReasoningTraining({
             <strong>Đề bài</strong>
             <p>{attempt.mission.prompt}</p>
           </div>
+          {diagram && (
+            <figure className="mission-diagram" aria-label={diagram.caption}>
+              <figcaption>{diagram.caption}</figcaption>
+              {diagram.rows.map((row, rowIndex) => (
+                <ol key={rowIndex}>
+                  {row.map((cell, cellIndex) => (
+                    <li key={cellIndex}>{cell}</li>
+                  ))}
+                </ol>
+              ))}
+            </figure>
+          )}
           {view && (
             <>
               <h2>{view.stepPrompt}</h2>
