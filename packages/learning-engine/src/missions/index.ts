@@ -10,3 +10,4 @@ export * from './mission';
 export * from './attempt';
 export * from './progress';
 export * from './adaptive';
+export * from './adventureMix';

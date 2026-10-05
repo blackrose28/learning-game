@@ -1,4 +1,10 @@
-import { restoreMissionAttempt, compareMissionAttempts } from '@math-archer/learning-engine';
+import {
+  compareMissionAttempts,
+  isCleanMissionCompletion,
+  restoreMissionAttempt,
+  type MissionAttempt,
+} from '@math-archer/learning-engine';
+import { chargeMissionArrowInDb } from './db';
 import type { MissionAttemptPage, MissionSaveResponse, StoredMissionAttempt } from './types';
 
 interface MissionRow {
@@ -53,6 +59,21 @@ export async function getMissionAttemptFromDb(
   return row ? restoreRow(row) : null;
 }
 
+/** The one transition that spends an arrow: an Adventure mission becoming complete. */
+async function chargeCompletedAdventureMission(
+  db: D1Database,
+  incoming: MissionAttempt,
+  previous?: MissionAttempt
+): Promise<void> {
+  if (incoming.mode !== 'adventure' || !incoming.completedAt || previous?.completedAt) return;
+  await chargeMissionArrowInDb(
+    db,
+    incoming.playerId,
+    incoming.completedAt.slice(0, 10),
+    isCleanMissionCompletion(incoming)
+  );
+}
+
 /** Append-only snapshots, keyed by child and attempt ID; CAS guards concurrent writers. */
 export async function saveMissionAttemptInDb(
   db: D1Database,
@@ -81,13 +102,15 @@ export async function saveMissionAttemptInDb(
           new Date().toISOString()
         )
         .first<{ revision: number }>();
-      if (inserted)
+      if (inserted) {
+        await chargeCompletedAdventureMission(db, incoming);
         return {
           schemaVersion: 1,
           disposition: 'created',
           attempt: incoming,
           revision: inserted.revision,
         };
+      }
       continue;
     }
     const comparison = compareMissionAttempts(incoming, current.attempt);
@@ -110,13 +133,15 @@ export async function saveMissionAttemptInDb(
         current.revision
       )
       .first<{ revision: number }>();
-    if (updated)
+    if (updated) {
+      await chargeCompletedAdventureMission(db, incoming, current.attempt);
       return {
         schemaVersion: 1,
         disposition: 'advanced',
         attempt: incoming,
         revision: updated.revision,
       };
+    }
   }
   throw new MissionBusyError();
 }

@@ -284,12 +284,15 @@ export interface MissionHintEvent {
   timestamp: string;
 }
 
+/** Training is unlimited; an Adventure mission spends one daily arrow when it completes. */
+export type MissionMode = 'training' | 'adventure';
+
 export interface MissionAttempt {
   schemaVersion: 1;
   id: string;
   playerId: string;
   mission: ReasoningMission;
-  mode: 'training';
+  mode: MissionMode;
   startedAt: string;
   completedAt?: string;
   responses: MissionResponse[];

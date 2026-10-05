@@ -11,6 +11,7 @@ import { getMissionView } from './mission';
 import {
   getActiveMissionStep,
   getMissionAttemptStorageKey,
+  isCleanMissionCompletion,
   loadMissionAttempt,
   recordMissionHint,
   recordMissionResponse,
@@ -289,5 +290,26 @@ describe('local mission attempts and evidence', () => {
         timestamp: '2026-10-04T09:00:00.000Z',
       })
     ).toThrow('chronological');
+  });
+});
+
+describe('Adventure mission mode', () => {
+  it('replays an adventure attempt with its mode and flags clean completions', () => {
+    let attempt = startMissionAttempt(mission, 'child-1', 'adv', timestamp, 'adventure');
+    for (const step of mission.steps) attempt = respond(attempt, step.id);
+    expect(attempt.completedAt).toBeDefined();
+    expect(restoreMissionAttempt(JSON.parse(JSON.stringify(attempt)))).toEqual(attempt);
+    expect(restoreMissionAttempt(attempt).mode).toBe('adventure');
+    expect(isCleanMissionCompletion(attempt)).toBe(true);
+
+    let corrected = startMissionAttempt(mission, 'child-1', 'adv2', timestamp, 'adventure');
+    corrected = respond(corrected, mission.steps[0].id, false);
+    for (const step of mission.steps) corrected = respond(corrected, step.id);
+    expect(isCleanMissionCompletion(corrected)).toBe(false);
+    expect(isCleanMissionCompletion(start())).toBe(false);
+  });
+
+  it('rejects an unknown mode', () => {
+    expect(() => restoreMissionAttempt({ ...start(), mode: 'challenge' })).toThrow('Unsupported');
   });
 });

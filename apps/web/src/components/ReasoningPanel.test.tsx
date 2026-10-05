@@ -84,6 +84,46 @@ describe('parent reasoning controls and recovery', () => {
     expect(loadReasoningSettings('child', storage).enabledFamilies).toEqual(['daily_collection']);
   });
 
+  it('saves the Adventure switch only after the server confirms it and keeps it across family changes', async () => {
+    const storage = createMemoryStorage();
+    const update = vi.fn(async (reasoningSettings) => ({
+      id: 'child',
+      name: 'Child',
+      avatar: 'archer-1',
+      grade: '1',
+      hasPin: false,
+      reasoningSettings,
+    }));
+    render(
+      <ReasoningPanel
+        playerId="child"
+        storage={storage}
+        update={update}
+        preview={false}
+        busy={false}
+      />
+    );
+    const adventure = screen.getByRole('switch', { name: 'Include in Adventure' });
+    fireEvent.click(adventure);
+    await waitFor(() => expect(adventure).toBeChecked());
+    expect(loadReasoningSettings('child', storage).adventureEnabled).toBe(true);
+    const daily = screen.getByRole('switch', { name: 'Daily collection' });
+    fireEvent.click(daily);
+    await waitFor(() => expect(daily).toBeChecked());
+    expect(loadReasoningSettings('child', storage)).toEqual({
+      schemaVersion: 1,
+      enabledFamilies: ['daily_collection'],
+      adventureEnabled: true,
+    });
+    update.mockRejectedValueOnce(new Error('Save failed'));
+    fireEvent.click(adventure);
+    await screen.findByText('Save failed');
+    expect(adventure).toBeChecked();
+    fireEvent.click(adventure);
+    await waitFor(() => expect(adventure).not.toBeChecked());
+    expect(loadReasoningSettings('child', storage).adventureEnabled).toBeUndefined();
+  });
+
   it('reports family counts and above-20 calculation evidence separately', async () => {
     const storage = createMemoryStorage();
     const time = '2026-10-05T10:00:00.000Z';

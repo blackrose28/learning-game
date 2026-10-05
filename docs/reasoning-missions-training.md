@@ -30,7 +30,7 @@ stays visible while answering and reading feedback.
 Choices reuse the game's fire, ice, wind, and earth identities. Correct choices
 show target feedback; mistakes explain the relevant wording and allow a retry.
 **Tiếp tục** advances after each response or hint. Completion shows the worked
-chain and offers a new mission. There is no countdown, arrow charge, reward grant,
+chain and offers a new mission. In Training there is no countdown, arrow charge, reward grant,
 or arithmetic mastery update.
 
 Touch/click works throughout. Use Tab/Enter or Space for buttons, arrow keys for

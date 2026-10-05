@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import {
+  chooseAdventureMission,
   compareMissionAttempts,
   computeReasoningProgress,
   describeCardArrangement,
@@ -18,11 +19,13 @@ import {
   type SupportRecommendation,
   type MissionFamily,
   type MissionHintLevel,
+  type MissionMode,
   type MissionStepId,
   type MissionSupport,
   type SessionStorageAdapter,
 } from '@math-archer/learning-engine';
 import type { MathArcherApiClient } from '../api/client';
+import type { AdventureMissionCompletion } from '../adventureMission';
 import {
   getResumableMission,
   loadMissionWorkspace,
@@ -42,6 +45,15 @@ export interface ReasoningTrainingProps {
   families?: MissionFamily[];
   api?: MathArcherApiClient;
   storage?: SessionStorageAdapter;
+  /**
+   * Training is unlimited. Adventure offers one parent-enabled mission that spends one arrow when
+   * it completes; the family and suggested support come from the child's evidence.
+   */
+  mode?: MissionMode;
+  /** Adventure: spend the arrow and grant the reward. Must be safe to call twice for one attempt. */
+  onMissionComplete?: (attempt: MissionAttempt) => AdventureMissionCompletion;
+  /** Adventure: the child chose not to do the offered mission now. */
+  onDecline?: () => void;
 }
 // Use real browser storage so an unavailable/quota-limited store cannot silently become an ephemeral save.
 const browserStorage: SessionStorageAdapter = {
@@ -72,12 +84,17 @@ export function ReasoningTraining({
   families = defaultFamilies,
   api,
   storage = browserStorage,
+  mode = 'training',
+  onMissionComplete,
+  onDecline,
 }: ReasoningTrainingProps) {
+  const adventure = mode === 'adventure';
   const [attempt, setAttempt] = useState<MissionAttempt | null>(null);
   // The child's own choice for the next mission; null follows the recommendation.
   const [chosenSupport, setChosenSupport] = useState<MissionSupport | null>(null);
   const [chosenFamily, setChosenFamily] = useState<MissionFamily>(families[0]);
-  const family = families.includes(chosenFamily) ? chosenFamily : families[0];
+  const trainingFamily = families.includes(chosenFamily) ? chosenFamily : families[0];
+  const [completion, setCompletion] = useState<AdventureMissionCompletion | null>(null);
   const [error, setError] = useState('');
   const [blocked, setBlocked] = useState(false);
   const [feedback, setFeedback] = useState<{
@@ -103,7 +120,7 @@ export function ReasoningTraining({
         setAttempt((current) => {
           const saved = current
             ? workspace.items.find((item) => item.local.id === current.id)?.local
-            : getResumableMission(playerId, storage);
+            : getResumableMission(playerId, storage, mode);
           return saved ?? current;
         });
       } catch (cause) {
@@ -118,7 +135,7 @@ export function ReasoningTraining({
       window.removeEventListener('math-archer-reasoning-change', refresh);
       window.removeEventListener('storage', refresh);
     };
-  }, [playerId, storage]);
+  }, [playerId, storage, mode]);
 
   const sync = () => {
     if (!api) {
@@ -163,15 +180,22 @@ export function ReasoningTraining({
     if (blocked) return null;
     try {
       const attempts = loadMissionWorkspace(playerId, storage).items.map((item) => item.local);
+      // Adventure picks the family from the evidence; Training lets the child choose.
+      const adventureChoice = adventure
+        ? chooseAdventureMission(playerId, attempts, families)
+        : null;
+      const adviceFamily = adventureChoice?.family ?? trainingFamily;
       return {
-        support: recommendSupport(attempts, family),
-        stability: summarizeIndependentStability(attempts, family),
+        family: adviceFamily,
+        support: adventureChoice?.support ?? recommendSupport(attempts, adviceFamily),
+        stability: summarizeIndependentStability(attempts, adviceFamily),
         focus: recommendFocus(computeReasoningProgress(playerId, attempts), families),
       };
     } catch {
       return null;
     }
   })();
+  const family = adventure && advice ? advice.family : trainingFamily;
   const support = chosenSupport ?? advice?.support.support ?? 'guided';
   const start = () => {
     if (busy.current || blocked) return;
@@ -189,7 +213,7 @@ export function ReasoningTraining({
         new Set(inFamily.map((item) => item.local.mission.prompt))
       );
       persist(
-        startMissionAttempt(mission, playerId, crypto.randomUUID(), new Date().toISOString())
+        startMissionAttempt(mission, playerId, crypto.randomUUID(), new Date().toISOString(), mode)
       );
       setChosenSupport(null);
       setFeedback(null);
@@ -200,6 +224,9 @@ export function ReasoningTraining({
       busy.current = false;
     }
   };
+  // Leaving an unstarted Adventure offer is declining it, so it is not offered again at once.
+  const leave = adventure && !attempt ? (onDecline ?? onBack) : onBack;
+  const showStart = !attempt || (attempt.completedAt && !feedback);
   const stepId = attempt ? getActiveMissionStep(attempt) : null;
   const displayedStep = feedback?.stepId ?? stepId;
   const view = attempt && displayedStep ? getMissionView(attempt.mission, displayedStep) : null;
@@ -221,6 +248,15 @@ export function ReasoningTraining({
         responseTimeMs: Math.max(0, Date.now() - startedStep.current),
       });
       persist(next);
+      // Charged right after the completed attempt is durable; the daily session dedupes repeats.
+      if (adventure && next.completedAt && onMissionComplete) {
+        try {
+          const result = onMissionComplete(next);
+          if (result.charged) setCompletion(result);
+        } catch (cause) {
+          setError(`Bài đã lưu nhưng chưa tính được mũi tên. ${errorText(cause)}`);
+        }
+      }
       const response = next.responses.at(-1)!;
       const label =
         view!.input === 'cards'
@@ -273,7 +309,7 @@ export function ReasoningTraining({
   useGamepad({
     onDirection: (direction) => moveFocus(direction === 'left' || direction === 'up' ? -1 : 1),
     onButtonDown: (button) => {
-      if (button === XboxButton.B) onBack();
+      if (button === XboxButton.B) leave();
       if (button === XboxButton.A) {
         const target = document.activeElement as HTMLButtonElement;
         if (controls().includes(target)) target.click();
@@ -300,7 +336,7 @@ export function ReasoningTraining({
           event.preventDefault();
           return;
         }
-        if (event.key === 'Escape') onBack();
+        if (event.key === 'Escape') leave();
         if (['ArrowLeft', 'ArrowUp', 'ArrowRight', 'ArrowDown'].includes(event.key)) {
           event.preventDefault();
           moveFocus(event.key === 'ArrowLeft' || event.key === 'ArrowUp' ? -1 : 1);
@@ -312,12 +348,69 @@ export function ReasoningTraining({
         }
       }}
     >
-      <button onClick={onBack}>← Về luyện tính</button>
-      <h1>🏹 Đọc đề, chọn bước</h1>
-      <p>Luyện tập không giới hạn. Đọc chậm, nghĩ kỹ rồi chọn. Không dùng mũi tên hằng ngày.</p>
+      <button onClick={leave}>
+        {adventure
+          ? attempt && !attempt.completedAt
+            ? '← Tạm dừng, làm tiếp sau'
+            : '← Về trò chơi'
+          : '← Về luyện tính'}
+      </button>
+      <h1>{adventure ? '🏹 Nhiệm vụ suy luận' : '🏹 Đọc đề, chọn bước'}</h1>
+      <p>
+        {adventure
+          ? 'Đọc chậm, nghĩ kỹ rồi chọn. Cả nhiệm vụ chỉ dùng 1 mũi tên, khi con làm xong.'
+          : 'Luyện tập không giới hạn. Đọc chậm, nghĩ kỹ rồi chọn. Không dùng mũi tên hằng ngày.'}
+      </p>
       {error && <p role="alert">{error}</p>}
       {blocked && <button onClick={reset}>Xoá lịch sử luyện tập để bắt đầu lại</button>}
-      {!attempt || (attempt.completedAt && !feedback) ? (
+      {showStart && adventure ? (
+        attempt?.completedAt ? (
+          <div role="status" className="mission-complete">
+            <h2>Hoàn thành nhiệm vụ!</h2>
+            <p>{getMissionHint(attempt.mission, 'worked')}</p>
+            <p>
+              {completion
+                ? `Nhiệm vụ dùng 1 mũi tên. +${completion.xpAwarded} XP ⭐`
+                : 'Nhiệm vụ đã được tính một mũi tên.'}
+            </p>
+            <button data-primary onClick={onBack}>
+              Tiếp tục
+            </button>
+          </div>
+        ) : (
+          <>
+            <p>
+              {advice
+                ? `Nhiệm vụ hôm nay: ${familyLabels[advice.family]}.`
+                : 'Nhiệm vụ suy luận đang chờ con.'}
+            </p>
+            <fieldset disabled={blocked}>
+              <legend>Chọn cách làm</legend>
+              <button
+                aria-pressed={support === 'guided'}
+                onClick={() => setChosenSupport('guided')}
+              >
+                Từng bước
+              </button>
+              <button
+                aria-pressed={support === 'independent'}
+                onClick={() => setChosenSupport('independent')}
+              >
+                Tự giải
+              </button>
+            </fieldset>
+            {advice && (
+              <p role="note" className="mission-advice">
+                {supportAdvice(advice.support)}
+              </p>
+            )}
+            <button data-primary disabled={blocked} onClick={start}>
+              Bắt đầu nhiệm vụ
+            </button>
+            <button onClick={onDecline ?? onBack}>Để sau</button>
+          </>
+        )
+      ) : showStart ? (
         <>
           {attempt?.completedAt && (
             <div role="status" className="mission-complete">

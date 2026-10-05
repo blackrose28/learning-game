@@ -11,6 +11,7 @@ import {
   type MissionAttempt,
 } from '@math-archer/learning-engine';
 import worker from './index';
+import { getTodaySessionFromDb } from './db';
 import { getMissionAttemptFromDb, saveMissionAttemptInDb } from './missions';
 import {
   createTestChildToken,
@@ -540,5 +541,59 @@ describe('reasoning mission persistence and API', () => {
     expect(deleted.status).toBe(200);
     expect(await getMissionAttemptFromDb(env.DB, 'player-local', 'mission-1')).toBeNull();
     expect(await getMissionAttemptFromDb(env.DB, 'child_mia', 'mission-1')).not.toBeNull();
+  });
+});
+
+describe('Adventure mission arrow charging', () => {
+  const adventure = (id: string) =>
+    startMissionAttempt(mission, 'player-local', id, startedAt, 'adventure');
+  const complete = (id: string, correctOnly = true) => {
+    let attempt = adventure(id);
+    if (!correctOnly) attempt = respond(attempt, false);
+    for (let i = 0; i < 4; i++) attempt = respond(attempt);
+    return attempt;
+  };
+  const session = (db: D1Database) =>
+    getTodaySessionFromDb(db, 'player-local', startedAt.slice(0, 10));
+
+  it('spends one arrow when the mission completes, however often it is saved', async () => {
+    const db = createTestD1Database();
+    let partial = adventure('adv-1');
+    await saveMissionAttemptInDb(db, partial);
+    partial = respond(partial);
+    await saveMissionAttemptInDb(db, partial);
+    expect(await session(db)).toBeNull();
+
+    const done = complete('adv-1');
+    expect((await saveMissionAttemptInDb(db, done)).disposition).toBe('advanced');
+    expect(await session(db)).toMatchObject({ arrowsUsed: 1, hits: 1 });
+    // A retry, a stale shorter snapshot and a repeat of the whole sync change nothing.
+    expect((await saveMissionAttemptInDb(db, done)).disposition).toBe('unchanged');
+    expect((await saveMissionAttemptInDb(db, partial)).disposition).toBe('stale');
+    expect(await session(db)).toMatchObject({ arrowsUsed: 1, hits: 1 });
+  });
+
+  it('charges a mission first saved already complete, without a hit after a correction', async () => {
+    const db = createTestD1Database();
+    expect((await saveMissionAttemptInDb(db, complete('adv-2', false))).disposition).toBe(
+      'created'
+    );
+    expect(await session(db)).toMatchObject({ arrowsUsed: 1, hits: 0 });
+  });
+
+  it('never charges Training missions and stops at the daily limit', async () => {
+    const db = createTestD1Database();
+    await saveMissionAttemptInDb(db, finish());
+    expect(await session(db)).toBeNull();
+    await db
+      .prepare(`INSERT INTO players (id, name, created_at, updated_at) VALUES (?, ?, ?, ?)`)
+      .bind('player-local', 'Player', startedAt, startedAt)
+      .run()
+      .catch(() => undefined);
+    await saveMissionAttemptInDb(db, complete('adv-3'));
+    await db.prepare(`UPDATE sessions SET arrows_used = 49`).run();
+    await saveMissionAttemptInDb(db, complete('adv-4'));
+    await saveMissionAttemptInDb(db, complete('adv-5'));
+    expect(await session(db)).toMatchObject({ arrowsUsed: 50, status: 'completed' });
   });
 });

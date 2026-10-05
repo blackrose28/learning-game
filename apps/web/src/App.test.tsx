@@ -1,8 +1,16 @@
 import { describe, it, expect, beforeEach } from 'vitest';
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { cleanup, render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { App } from './App';
 import { saveReasoningSettings } from './reasoningPreferences';
-import { getTodayDateString, saveAttempt, saveDailySession } from '@math-archer/learning-engine';
+import {
+  getActiveDailySession,
+  getTodayDateString,
+  loadPlayerRewards,
+  saveAttempt,
+  saveDailySession,
+  startDailySession,
+} from '@math-archer/learning-engine';
+import { loadMissionWorkspace } from './sync/missions';
 
 beforeEach(() => {
   localStorage.clear();
@@ -188,5 +196,92 @@ describe('reasoning Training entry', () => {
     render(<App />);
     fireEvent.click(screen.getByTestId('mode-tab-training'));
     expect(screen.queryByRole('button', { name: /Đọc đề, chọn bước/ })).not.toBeInTheDocument();
+  });
+});
+
+describe('Adventure reasoning missions', () => {
+  const enable = (arrowsUsed: number, adventureEnabled = true) => {
+    saveReasoningSettings('player-local', {
+      schemaVersion: 1,
+      enabledFamilies: ['instruction_chain'],
+      ...(adventureEnabled ? { adventureEnabled } : {}),
+    });
+    saveDailySession({
+      ...startDailySession({ playerId: 'player-local', storage: localStorage }),
+      arrowsUsed,
+    });
+  };
+  const today = () => getActiveDailySession({ playerId: 'player-local', storage: localStorage })!;
+  const attempts = () =>
+    loadMissionWorkspace('player-local', localStorage).items.map((i) => i.local);
+  const solveStep = (index: number) => {
+    const step = attempts()[0].mission.steps[index];
+    const choice = step.choices.findIndex((item) => item.id === step.correctChoiceId);
+    fireEvent.keyDown(screen.getByRole('region'), { key: String(choice + 1) });
+    fireEvent.click(screen.getByRole('button', { name: 'Tiếp tục' }));
+  };
+
+  it('offers nothing before five arrows or when the parent has not opted in', () => {
+    enable(4);
+    render(<App />);
+    expect(screen.getByTestId('question-expression')).toBeInTheDocument();
+    cleanup();
+    enable(9, false);
+    render(<App />);
+    expect(screen.getByTestId('question-expression')).toBeInTheDocument();
+  });
+
+  it('spends one arrow and grants one reward only when the mission completes', async () => {
+    enable(5);
+    const xpBefore = loadPlayerRewards('player-local', localStorage).totalXp;
+    render(<App />);
+    expect(await screen.findByRole('heading', { name: /Nhiệm vụ suy luận/ })).toBeVisible();
+    fireEvent.click(screen.getByRole('button', { name: 'Bắt đầu nhiệm vụ' }));
+    for (let i = 0; i < 3; i++) {
+      solveStep(i);
+      expect(today().arrowsUsed).toBe(5);
+    }
+    const step = attempts()[0].mission.steps[3];
+    fireEvent.keyDown(screen.getByRole('region'), {
+      key: String(step.choices.findIndex((item) => item.id === step.correctChoiceId) + 1),
+    });
+    expect(today()).toMatchObject({ arrowsUsed: 6, hits: 1 });
+    expect(today().missionAttemptIds).toEqual([attempts()[0].id]);
+    fireEvent.click(screen.getByRole('button', { name: 'Tiếp tục' }));
+    expect(screen.getByText(/Nhiệm vụ dùng 1 mũi tên/)).toBeVisible();
+    const xp = loadPlayerRewards('player-local', localStorage).totalXp;
+    expect(xp).toBeGreaterThan(xpBefore);
+    fireEvent.click(screen.getByRole('button', { name: 'Tiếp tục' }));
+    expect(await screen.findByTestId('question-expression')).toBeInTheDocument();
+    expect(today().arrowsUsed).toBe(6);
+    expect(loadPlayerRewards('player-local', localStorage).totalXp).toBe(xp);
+    expect(attempts()[0]).toMatchObject({ mode: 'adventure' });
+  });
+
+  it('declining spends nothing and waits another five arrows', async () => {
+    enable(5);
+    render(<App />);
+    fireEvent.click(await screen.findByRole('button', { name: 'Để sau' }));
+    expect(await screen.findByTestId('question-expression')).toBeInTheDocument();
+    expect(today()).toMatchObject({ arrowsUsed: 5, missionOfferedAtArrow: 5 });
+    expect(attempts()).toHaveLength(0);
+    cleanup();
+    render(<App />);
+    expect(screen.getByTestId('question-expression')).toBeInTheDocument();
+  });
+
+  it('resumes a paused mission after a reload without charging an arrow', async () => {
+    enable(5);
+    render(<App />);
+    fireEvent.click(await screen.findByRole('button', { name: 'Bắt đầu nhiệm vụ' }));
+    solveStep(0);
+    fireEvent.click(screen.getByRole('button', { name: /Tạm dừng/ }));
+    expect(await screen.findByTestId('question-expression')).toBeInTheDocument();
+    expect(today().arrowsUsed).toBe(5);
+    cleanup();
+    render(<App />);
+    expect(await screen.findByText('Hiệu của 14 và 8 được viết như thế nào?')).toBeVisible();
+    expect(attempts()).toHaveLength(1);
+    expect(attempts()[0].responses).toHaveLength(1);
   });
 });

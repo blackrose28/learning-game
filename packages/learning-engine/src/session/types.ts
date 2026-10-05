@@ -50,6 +50,18 @@ export interface DailySession {
    * Optional metadata for the most recently submitted attempt.
    */
   lastAttempt?: Attempt;
+
+  /**
+   * Reasoning mission attempts that already spent their arrow today, so a refresh or a retry
+   * cannot charge one mission twice.
+   */
+  missionAttemptIds?: string[];
+
+  /**
+   * `arrowsUsed` when a reasoning mission was last offered, started, or declined. Missions are
+   * offered at most once per interval after this point.
+   */
+  missionOfferedAtArrow?: number;
 }
 
 /**

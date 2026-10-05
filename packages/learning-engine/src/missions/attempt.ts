@@ -5,6 +5,7 @@ import { isAcceptedChoice, validateMission } from './mission';
 import type {
   MissionAttempt,
   MissionHintEvent,
+  MissionMode,
   MissionResponse,
   MissionStepId,
   ReasoningMission,
@@ -20,7 +21,8 @@ export function startMissionAttempt(
   mission: ReasoningMission,
   playerId: string,
   id: string,
-  startedAt: string
+  startedAt: string,
+  mode: MissionMode = 'training'
 ): MissionAttempt {
   if (!validateMission(mission) || !playerId.trim() || !id.trim()) {
     throw new Error('Invalid mission attempt identity or definition');
@@ -31,7 +33,7 @@ export function startMissionAttempt(
     id,
     playerId,
     mission: structuredClone(mission),
-    mode: 'training',
+    mode,
     startedAt,
     responses: [],
     hints: [],
@@ -135,6 +137,11 @@ export function recordMissionHint(
   return { ...attempt, hints: [...attempt.hints, { ...input, sequence: nextSequence(attempt) }] };
 }
 
+/** A completed mission with no incorrect response; the only kind that counts as an Adventure hit. */
+export function isCleanMissionCompletion(attempt: MissionAttempt): boolean {
+  return !!attempt.completedAt && attempt.responses.every((response) => response.correct);
+}
+
 /** Evidence only: no mastery thresholds, speed penalties, arrows, or rewards. */
 export function summarizeMissionAttempt(attempt: MissionAttempt) {
   const firstResponses = attempt.responses.filter(
@@ -168,13 +175,19 @@ export function restoreMissionAttempt(value: unknown): MissionAttempt {
   const saved = value as MissionAttempt;
   if (
     saved.schemaVersion !== 1 ||
-    saved.mode !== 'training' ||
+    (saved.mode !== 'training' && saved.mode !== 'adventure') ||
     !Array.isArray(saved.responses) ||
     !Array.isArray(saved.hints)
   ) {
     throw new Error('Unsupported saved mission attempt');
   }
-  let attempt = startMissionAttempt(saved.mission, saved.playerId, saved.id, saved.startedAt);
+  let attempt = startMissionAttempt(
+    saved.mission,
+    saved.playerId,
+    saved.id,
+    saved.startedAt,
+    saved.mode
+  );
   const events = [
     ...saved.responses.map((response) => ({ kind: 'response' as const, event: response })),
     ...saved.hints.map((hint) => ({ kind: 'hint' as const, event: hint })),

@@ -5,6 +5,8 @@ import type { MissionAttempt, MissionFamily, MissionObjective } from './types';
 export interface ReasoningSettings {
   schemaVersion: 1;
   enabledFamilies: MissionFamily[];
+  /** Parent opt-in to offer reasoning missions in Adventure. Absent means off. */
+  adventureEnabled?: boolean;
 }
 
 export function defaultReasoningSettings(): ReasoningSettings {
@@ -16,6 +18,7 @@ export function isReasoningSettings(value: unknown): value is ReasoningSettings 
   const settings = value as ReasoningSettings;
   return (
     settings.schemaVersion === 1 &&
+    (settings.adventureEnabled === undefined || typeof settings.adventureEnabled === 'boolean') &&
     Array.isArray(settings.enabledFamilies) &&
     settings.enabledFamilies.every((family) => MISSION_FAMILIES.includes(family)) &&
     new Set(settings.enabledFamilies).size === settings.enabledFamilies.length

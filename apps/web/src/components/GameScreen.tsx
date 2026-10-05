@@ -186,6 +186,11 @@ export interface GameScreenProps {
   /**
    * Optional callback fired when the active world area changes.
    */
+  /**
+   * Adventure only: at a question boundary, ask the app to offer a reasoning mission when due.
+   * The app owns the mission screen; this component keeps no mission state.
+   */
+  missionOffer?: { isDue: (session: DailySession) => boolean; onOffer: () => void };
   onAreaChange?: (areaId: WorldAreaId) => void;
 }
 
@@ -246,6 +251,7 @@ export const GameScreen: React.FC<GameScreenProps> = ({
   syncManager,
   initialAreaId,
   onAreaChange,
+  missionOffer,
 }) => {
   // Test Controlled Profile switcher toolbar must be hidden in production and only show in dev
   const isDev = Boolean(import.meta.env?.DEV);
@@ -463,6 +469,19 @@ export const GameScreen: React.FC<GameScreenProps> = ({
       setIsCompleted(true);
     }
   }, [mode, session.status, session.arrowsUsed, maxArrows]);
+
+  // Offer a reasoning mission only between questions: nothing is selected, shooting or finished.
+  useEffect(() => {
+    if (
+      gameMode === 'adventure' &&
+      !isCompleted &&
+      !isTransitioning &&
+      selectedChoice === null &&
+      missionOffer?.isDue(session)
+    ) {
+      missionOffer.onOffer();
+    }
+  }, [gameMode, isCompleted, isTransitioning, selectedChoice, session, missionOffer]);
 
   const [stats, setStats] = useState(() => ({
     hits: session.hits,

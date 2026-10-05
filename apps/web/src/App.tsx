@@ -2,6 +2,10 @@ import React, { useState, useEffect } from 'react';
 import {
   getEngineInfo,
   isReasoningSettings,
+  getDefaultStorage,
+  markMissionOffered,
+  startDailySession,
+  type ReasoningSettings,
   type MissionFamily,
   solveExpression,
   getAllCurriculumLevels,
@@ -10,6 +14,7 @@ import {
   clearLocalProgress,
   type LocalProgress,
 } from '@math-archer/learning-engine';
+import { completeAdventureMission, isAdventureMissionDue } from './adventureMission';
 import { ReasoningTraining } from './components/ReasoningTraining';
 import { GameScreen } from './components/GameScreen';
 import { ParentDashboard } from './components/ParentDashboard';
@@ -23,6 +28,7 @@ import { AuthProvider, useAuth } from './context/AuthContext';
 import type { MathArcherApiClient } from './api/client';
 import { useGamepad, XboxButton } from './input/useGamepad';
 import { hydratePlayerProgress, syncMissionAttempts } from './sync';
+import { getResumableMission } from './sync/missions';
 import { loadReasoningSettings, saveReasoningSettings } from './reasoningPreferences';
 import { audioFx } from './audio/AudioFx';
 import './App.css';
@@ -40,10 +46,17 @@ export const AppContent: React.FC = () => {
   const [isMuted, setIsMuted] = useState<boolean>(() => audioFx.getIsMuted());
   const [reasoningOpen, setReasoningOpen] = useState(false);
   const [returnToTraining, setReturnToTraining] = useState(false);
+  const [missionOpen, setMissionOpen] = useState(false);
+  // Set when the child pauses or declines, so the same mission is not re-offered on this page.
+  const [missionDeferred, setMissionDeferred] = useState(false);
   let reasoningFamilies: MissionFamily[] = [];
+  let reasoningSettings: ReasoningSettings | null = null;
   try {
     const settings = activeChild.reasoningSettings ?? loadReasoningSettings(activeChild.id);
-    if (isReasoningSettings(settings)) reasoningFamilies = settings.enabledFamilies;
+    if (isReasoningSettings(settings)) {
+      reasoningFamilies = settings.enabledFamilies;
+      reasoningSettings = settings;
+    }
   } catch {
     /* Preserve unreadable preferences and keep the activity disabled. */
   }
@@ -51,6 +64,8 @@ export const AppContent: React.FC = () => {
   useEffect(() => {
     setReasoningOpen(false);
     setReturnToTraining(false);
+    setMissionOpen(false);
+    setMissionDeferred(false);
   }, [activeChild.id]);
   const [isMenuOpen, setIsMenuOpen] = useState<boolean>(false);
 
@@ -480,7 +495,40 @@ export const AppContent: React.FC = () => {
 
       {/* Screen Render: Primary Game Views (Play, World Map, Royal Armory) are single-screen 100vh; secondary views are scrollable */}
       {activeTab === 'game' ? (
-        reasoningOpen && reasoningEnabled ? (
+        missionOpen && reasoningEnabled && !reasoningOpen ? (
+          <ReasoningTraining
+            key={`${activeChild.id}_adventure`}
+            mode="adventure"
+            playerId={activeChild.id}
+            families={reasoningFamilies}
+            api={apiClient}
+            onMissionComplete={(attempt) =>
+              completeAdventureMission(attempt, getDefaultStorage(), apiClient ?? undefined)
+            }
+            onDecline={() => {
+              markMissionOffered(
+                startDailySession({ playerId: activeChild.id, storage: getDefaultStorage() }),
+                getDefaultStorage()
+              );
+              setMissionOpen(false);
+              setMissionDeferred(true);
+              setSyncTick((t) => t + 1);
+            }}
+            onBack={() => {
+              setMissionOpen(false);
+              // A paused mission is not re-offered on this page; a finished one is simply done.
+              try {
+                if (getResumableMission(activeChild.id, getDefaultStorage(), 'adventure')) {
+                  setMissionDeferred(true);
+                }
+              } catch {
+                setMissionDeferred(true);
+              }
+              // Reload today's arrows: a completed mission has just spent one.
+              setSyncTick((t) => t + 1);
+            }}
+          />
+        ) : reasoningOpen && reasoningEnabled ? (
           <ReasoningTraining
             key={activeChild.id}
             playerId={activeChild.id}
@@ -497,6 +545,20 @@ export const AppContent: React.FC = () => {
             playerId={activeChild.id}
             mode={returnToTraining ? 'training' : 'adventure'}
             onReasoningTraining={reasoningEnabled ? () => setReasoningOpen(true) : undefined}
+            missionOffer={
+              reasoningSettings && !missionDeferred && !returnToTraining
+                ? {
+                    isDue: (session) =>
+                      isAdventureMissionDue(
+                        activeChild.id,
+                        reasoningSettings,
+                        session,
+                        getDefaultStorage()
+                      ),
+                    onOffer: () => setMissionOpen(true),
+                  }
+                : undefined
+            }
           />
         )
       ) : activeTab === 'world' ? (

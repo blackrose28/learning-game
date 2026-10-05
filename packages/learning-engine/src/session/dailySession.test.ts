@@ -6,6 +6,10 @@ import {
   completeSession,
   getActiveDailySession,
   clearDailySessions,
+  saveDailySession,
+  spendMissionArrow,
+  markMissionOffered,
+  getArrowsSinceMissionOffer,
   createMemoryStorage,
   DEFAULT_DAILY_ARROWS,
   type SessionStorageAdapter,
@@ -302,5 +306,54 @@ describe('Task 3.3 — Daily 50-arrow session', () => {
 
     clearDailySessions(storage);
     expect(getActiveDailySession({ playerId: testPlayerId, date: testDate, storage })).toBeNull();
+  });
+});
+
+describe('Adventure reasoning mission arrow', () => {
+  const options = { playerId: 'child', date: '2026-10-06' };
+
+  it('charges one arrow once per attempt, across reloads', () => {
+    const storage = createMemoryStorage();
+    const session = startDailySession({ ...options, storage });
+    const first = spendMissionArrow({ session, attemptId: 'm1', hit: true, storage });
+    expect(first.charged).toBe(true);
+    expect(first.session).toMatchObject({ arrowsUsed: 1, hits: 1, missionOfferedAtArrow: 1 });
+    // A repeat with a stale copy of the session, or after a reload, charges nothing more.
+    expect(spendMissionArrow({ session, attemptId: 'm1', hit: true, storage }).charged).toBe(false);
+    const reloaded = getActiveDailySession({ ...options, storage })!;
+    expect(spendMissionArrow({ session: reloaded, attemptId: 'm1', hit: true, storage })).toEqual({
+      session: reloaded,
+      charged: false,
+    });
+    expect(reloaded.arrowsUsed).toBe(1);
+    const second = spendMissionArrow({ session: reloaded, attemptId: 'm2', hit: false, storage });
+    expect(second.session).toMatchObject({ arrowsUsed: 2, hits: 1 });
+  });
+
+  it('never exceeds the daily limit but still records the attempt as charged', () => {
+    const storage = createMemoryStorage();
+    const session = { ...startDailySession({ ...options, storage }), arrowsUsed: 50 };
+    saveDailySession(session, storage);
+    const result = spendMissionArrow({ session, attemptId: 'late', hit: true, storage });
+    expect(result.session.arrowsUsed).toBe(50);
+    expect(result.session.missionAttemptIds).toEqual(['late']);
+  });
+
+  it('completes the session when the mission is the last arrow', () => {
+    const storage = createMemoryStorage();
+    const session = { ...startDailySession({ ...options, storage }), arrowsUsed: 49 };
+    saveDailySession(session, storage);
+    const result = spendMissionArrow({ session, attemptId: 'last', hit: false, storage });
+    expect(result.session).toMatchObject({ arrowsUsed: 50, status: 'completed' });
+  });
+
+  it('declining spends nothing and restarts the interval', () => {
+    const storage = createMemoryStorage();
+    const session = { ...startDailySession({ ...options, storage }), arrowsUsed: 7 };
+    expect(getArrowsSinceMissionOffer(session)).toBe(7);
+    const declined = markMissionOffered(session, storage);
+    expect(declined.arrowsUsed).toBe(7);
+    expect(getArrowsSinceMissionOffer(declined)).toBe(0);
+    expect(getArrowsSinceMissionOffer({ ...declined, arrowsUsed: 12 })).toBe(5);
   });
 });

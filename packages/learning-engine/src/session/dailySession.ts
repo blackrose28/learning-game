@@ -257,6 +257,64 @@ export function submitAnswer(params: SubmitAnswerParams): SubmitAnswerResult {
   };
 }
 
+export interface MissionArrowResult {
+  session: DailySession;
+  /** False when this mission attempt had already been charged. */
+  charged: boolean;
+}
+
+/**
+ * Charges exactly one arrow for a completed Adventure reasoning mission, once per attempt ID.
+ * Intermediate steps and retries never call this. If the day's arrows are already spent (for
+ * example on another device) the mission is recorded as charged without going over the limit.
+ */
+export function spendMissionArrow(params: {
+  session: DailySession;
+  attemptId: string;
+  /** Count a target hit when the mission needed no corrections. */
+  hit: boolean;
+  storage?: SessionStorageAdapter;
+}): MissionArrowResult {
+  const storage = params.storage ?? getDefaultStorage();
+  const { attemptId } = params;
+  // Storage is authoritative: a stale in-memory copy must not charge an attempt a second time.
+  const stored = getActiveDailySession({
+    playerId: params.session.playerId,
+    date: params.session.date,
+    storage,
+  });
+  const session = stored?.id === params.session.id ? stored : params.session;
+  const charged = session.missionAttemptIds ?? [];
+  if (charged.includes(attemptId)) return { session, charged: false };
+  const next: DailySession = { ...session, missionAttemptIds: [...charged, attemptId] };
+  if (next.arrowsUsed < next.arrowsAllowed) {
+    next.arrowsUsed += 1;
+    if (params.hit) next.hits += 1;
+    if (next.arrowsUsed >= next.arrowsAllowed) {
+      next.status = 'completed';
+      next.completedAt = new Date().toISOString();
+    }
+  }
+  next.missionOfferedAtArrow = next.arrowsUsed;
+  saveDailySession(next, storage);
+  return { session: next, charged: true };
+}
+
+/** Arrows spent since a reasoning mission was last offered, started, or declined. */
+export function getArrowsSinceMissionOffer(session: DailySession): number {
+  return Math.max(0, session.arrowsUsed - (session.missionOfferedAtArrow ?? 0));
+}
+
+/** Starting or declining an offer spends nothing; it only delays the next offer by one interval. */
+export function markMissionOffered(
+  session: DailySession,
+  storage: SessionStorageAdapter = getDefaultStorage()
+): DailySession {
+  const next = { ...session, missionOfferedAtArrow: session.arrowsUsed };
+  saveDailySession(next, storage);
+  return next;
+}
+
 /**
  * Marks a session as completed.
  */

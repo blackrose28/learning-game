@@ -4,6 +4,7 @@ import {
   getDefaultStorage,
   restoreMissionAttempt,
   type MissionAttempt,
+  type MissionMode,
   type StoredMissionAttempt,
   type SessionStorageAdapter,
 } from '@math-archer/learning-engine';
@@ -169,13 +170,15 @@ export function loadReasoningProgress(
   );
 }
 
+/** Training and Adventure missions resume separately, so one never hijacks the other. */
 export function getResumableMission(
   playerId: string,
-  storage: SessionStorageAdapter = getDefaultStorage()
+  storage: SessionStorageAdapter = getDefaultStorage(),
+  mode: MissionMode = 'training'
 ): MissionAttempt | null {
   return (
     loadMissionWorkspace(playerId, storage)
-      .items.filter((item) => !item.conflict && !item.local.completedAt)
+      .items.filter((item) => !item.conflict && !item.local.completedAt && item.local.mode === mode)
       .sort(
         (a, b) =>
           b.local.startedAt.localeCompare(a.local.startedAt) || b.local.id.localeCompare(a.local.id)

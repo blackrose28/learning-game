@@ -86,6 +86,14 @@ describe('per-child reasoning opt-in', () => {
     expect(await (await update(stories)).json()).toMatchObject({
       child: { reasoningSettings: stories },
     });
+    const adventure = {
+      schemaVersion: 1,
+      enabledFamilies: ['unknown_start'],
+      adventureEnabled: true,
+    };
+    expect(await (await update(adventure)).json()).toMatchObject({
+      child: { reasoningSettings: adventure },
+    });
     expect(
       (await update({ schemaVersion: 1, enabledFamilies: ['multiplication_tables'] })).status
     ).toBe(400);
@@ -101,6 +109,7 @@ describe('per-child reasoning opt-in', () => {
       { schemaVersion: 2, enabledFamilies: [] },
       { schemaVersion: 1, enabledFamilies: ['unknown'] },
       { schemaVersion: 1, enabledFamilies: ['instruction_chain', 'instruction_chain'] },
+      { schemaVersion: 1, enabledFamilies: [], adventureEnabled: 'yes' },
     ]) {
       expect(
         (

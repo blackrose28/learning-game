@@ -79,7 +79,8 @@ before displaying its content, then save the resulting attempt.
 
 ## Local attempt and event contracts
 
-The initial attempt mode is Training. The caller supplies a unique attempt ID,
+The attempt mode is `training` (the default) or `adventure`; an Adventure mission spends one
+daily arrow when it completes (see [M5 Adaptive Practice](reasoning-missions-adaptive.md)). The caller supplies a unique attempt ID,
 child ID, and canonical ISO start timestamp. The mission definition is cloned
 into the attempt so mutating a generation result cannot alter saved evidence.
 

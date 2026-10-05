@@ -177,6 +177,31 @@ export async function getAllSessionsForPlayer(
   }));
 }
 
+/**
+ * Spend one daily arrow for a completed Adventure reasoning mission. Callers invoke this only on
+ * the transition to completed, so a mission is charged once. Never exceeds the daily allowance.
+ */
+export async function chargeMissionArrowInDb(
+  db: D1Database,
+  playerId: string,
+  date: string,
+  hit: boolean
+): Promise<void> {
+  const session = await getOrCreateSession(db, playerId, date);
+  await db
+    .prepare(
+      `UPDATE sessions
+       SET arrows_used = MIN(arrows_used + 1, arrows_allowed),
+           hits = hits + ?,
+           status = CASE WHEN arrows_used + 1 >= arrows_allowed THEN 'completed' ELSE status END,
+           completed_at = CASE WHEN arrows_used + 1 >= arrows_allowed
+             THEN COALESCE(completed_at, ?) ELSE completed_at END
+       WHERE id = ? AND arrows_used < arrows_allowed`
+    )
+    .bind(hit ? 1 : 0, new Date().toISOString(), session.id)
+    .run();
+}
+
 export async function countDailyAdventureAttempts(
   db: D1Database,
   playerId: string,

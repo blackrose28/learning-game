@@ -131,16 +131,29 @@ export const ReasoningPanel: React.FC<ReasoningPanelProps> = ({
     };
   }, [playerId, preview, storage]);
 
-  const toggle = async (family: MissionFamily) => {
+  const withSettings = (enabledFamilies: MissionFamily[], adventureEnabled: boolean) => {
+    const next: ReasoningSettings = { schemaVersion: 1, enabledFamilies };
+    if (adventureEnabled) next.adventureEnabled = true;
+    return next;
+  };
+
+  const toggle = (family: MissionFamily) =>
+    save(
+      withSettings(
+        MISSION_FAMILIES.filter((item) =>
+          item === family
+            ? !settings.enabledFamilies.includes(item)
+            : settings.enabledFamilies.includes(item)
+        ),
+        settings.adventureEnabled === true
+      )
+    );
+
+  const toggleAdventure = () =>
+    save(withSettings(settings.enabledFamilies, settings.adventureEnabled !== true));
+
+  const save = async (next: ReasoningSettings) => {
     if (!update) return;
-    const next: ReasoningSettings = {
-      schemaVersion: 1,
-      enabledFamilies: MISSION_FAMILIES.filter((item) =>
-        item === family
-          ? !settings.enabledFamilies.includes(item)
-          : settings.enabledFamilies.includes(item)
-      ),
-    };
     setSaving(true);
     setFeedback(null);
     try {
@@ -203,6 +216,23 @@ export const ReasoningPanel: React.FC<ReasoningPanelProps> = ({
           />
         </label>
       ))}
+      <label className="practice-skill-row">
+        <span>
+          <strong>Include in Adventure</strong>
+          <small>
+            Occasionally offer one reasoning mission (at most one per five arrows) from the types
+            enabled above. Training is unchanged.
+          </small>
+        </span>
+        <input
+          type="checkbox"
+          role="switch"
+          aria-label="Include in Adventure"
+          checked={settings.adventureEnabled === true}
+          disabled={preview || busy || saving || !update || !!error}
+          onChange={() => void toggleAdventure()}
+        />
+      </label>
       {preview ? (
         <p>Switch to real data to change reasoning practice.</p>
       ) : (
