@@ -102,13 +102,16 @@ describe('Item 6: Procedural Audio Mute Setting Persistence', () => {
     };
 
     // Attach mock AudioContext to window
-    (window as unknown as { AudioContext: unknown }).AudioContext = vi.fn().mockImplementation(() => fakeCtx);
+    (window as unknown as { AudioContext: unknown }).AudioContext = vi
+      .fn()
+      .mockImplementation(() => fakeCtx);
 
     // Muted
     audioFx.setMuted(true);
     audioFx.playBowRelease('fire');
     audioFx.playArrowFlight('fire');
     audioFx.playTargetHit('hit', 'fire');
+    audioFx.playShotgunReload();
 
     // Should not interact with audio context when muted
     expect(fakeCtx.createOscillator).not.toHaveBeenCalled();
@@ -117,6 +120,12 @@ describe('Item 6: Procedural Audio Mute Setting Persistence', () => {
     audioFx.setMuted(false);
     audioFx.playBowRelease('fire');
     expect(fakeCtx.createOscillator).toHaveBeenCalled();
+    fakeCtx.createOscillator.mockClear();
+    audioFx.playShotgunReload();
+    expect(fakeCtx.createOscillator).toHaveBeenCalledTimes(3);
+    expect(fakeOsc.start).toHaveBeenCalledWith(10.12);
+    expect(fakeOsc.start).toHaveBeenCalledWith(10.42);
+    expect(fakeOsc.start).toHaveBeenCalledWith(10.54);
   });
 
   it('renders audio mute toggle button in App header and allows toggling', async () => {

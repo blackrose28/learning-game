@@ -6,7 +6,7 @@ import { WeaponHeroGraphic } from './WeaponHeroGraphic';
 
 export interface CharacterGraphicProps extends Omit<ArcherGraphicProps, 'state'> {
   character?: CharacterType;
-  state: 'idle' | 'drawing' | 'released';
+  state: 'idle' | 'drawing' | 'released' | 'reloading';
 }
 
 export const CharacterGraphic: React.FC<CharacterGraphicProps> = ({
@@ -32,7 +32,7 @@ export const CharacterGraphic: React.FC<CharacterGraphicProps> = ({
   if (character === 'wizard') {
     return (
       <WizardGraphic
-        state={state}
+        state={state === 'reloading' ? 'idle' : state}
         element={element}
         className={className}
         equippedOutfit={equippedOutfit}
@@ -43,7 +43,7 @@ export const CharacterGraphic: React.FC<CharacterGraphicProps> = ({
 
   return (
     <ArcherGraphic
-      state={state}
+      state={state === 'reloading' ? 'idle' : state}
       element={element}
       className={className}
       equippedOutfit={equippedOutfit}

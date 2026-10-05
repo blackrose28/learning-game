@@ -196,7 +196,7 @@ export const ELEMENT_INFO: Record<ElementType, { icon: string; label: string }> 
 };
 
 export type ShotPhase = 'idle' | 'shooting' | 'impact';
-export type ArcherState = 'idle' | 'drawing' | 'released';
+export type ArcherState = 'idle' | 'drawing' | 'released' | 'reloading';
 export type TargetHitState = 'idle' | 'hit' | 'miss';
 
 export interface ActiveShot {
@@ -603,10 +603,14 @@ export const GameScreen: React.FC<GameScreenProps> = ({
   const questionStartTimeRef = useRef<number>(Date.now());
   const flightTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const advanceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const reloadTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const reloadEndTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Clean up any pending timers on unmount
   useEffect(() => {
     return () => {
+      if (reloadTimerRef.current) clearTimeout(reloadTimerRef.current);
+      if (reloadEndTimerRef.current) clearTimeout(reloadEndTimerRef.current);
       if (flightTimerRef.current) {
         clearTimeout(flightTimerRef.current);
       }
@@ -693,6 +697,13 @@ export const GameScreen: React.FC<GameScreenProps> = ({
 
       // Procedural audio effects (Task 9.1 & 9.2)
       audioFx.playCharacterAttack(currentChar, choice.element);
+      if (currentChar === 'gunner') {
+        reloadTimerRef.current = setTimeout(() => {
+          setArcherState('reloading');
+          audioFx.playShotgunReload();
+        }, 160);
+        reloadEndTimerRef.current = setTimeout(() => setArcherState('idle'), 800);
+      }
       audioFx.playArrowFlight(choice.element);
 
       const attempt: Attempt = {
@@ -883,7 +894,9 @@ export const GameScreen: React.FC<GameScreenProps> = ({
         }
       };
 
-      if (autoAdvanceDelayMs > 0) {
+      const advanceDelay =
+        currentChar === 'gunner' ? Math.max(autoAdvanceDelayMs, 800) : autoAdvanceDelayMs;
+      if (advanceDelay > 0) {
         if (flightDelay > 0) {
           flightTimerRef.current = setTimeout(() => {
             // Phase 3 & 4: Arrow hits target -> impact reaction and feedback!
@@ -898,7 +911,7 @@ export const GameScreen: React.FC<GameScreenProps> = ({
         }
 
         // Phase 5: Next question after delay
-        advanceTimerRef.current = setTimeout(advance, autoAdvanceDelayMs);
+        advanceTimerRef.current = setTimeout(advance, advanceDelay);
       } else {
         setShotPhase('impact');
         setTargetHitState(outcome);

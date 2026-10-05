@@ -30,6 +30,7 @@ export const WeaponHeroGraphic: React.FC<
       className={`archer-graphic-container ${character}-graphic-container state-${state} ${className}`}
       data-testid={`${character}-graphic`}
       data-state={state}
+      data-weapon={gunner ? 'shotgun' : 'axe'}
       data-outfit={equippedOutfit}
       data-bow={equippedBow}
     >
@@ -136,28 +137,64 @@ export const WeaponHeroGraphic: React.FC<
           <path d="M70 54 L86 60" stroke={primary} strokeWidth="8" strokeLinecap="round" />
           <circle cx="87" cy="60" r="4" fill="#fed7aa" />
           {gunner ? (
-            <g data-testid="gunner-gun">
-              <path d="M86 56 L82 68 H88 L92 57" fill="#78350f" stroke="#451a03" />
-              <rect
-                x="83"
-                y="46"
-                width="29"
-                height="11"
-                rx="3"
-                fill={metal}
-                stroke="#334155"
-                strokeWidth="2"
-              />
-              <rect
-                x="102"
-                y="48"
-                width="15"
-                height="7"
-                rx="2"
-                fill={weapon?.secondaryColor || '#475569'}
-              />
-              <path d="M89 44 H104" stroke={accent} strokeWidth="3" />
-              <circle cx="96" cy="51" r="3" fill={glow} />
+            <g data-testid="gunner-gun" className="gunner-shotgun">
+              <g data-testid="gunner-shotgun">
+                <path
+                  d="M68 51 L82 48 L88 54 L75 62 L66 59Z"
+                  fill="#78350f"
+                  stroke="#451a03"
+                  strokeWidth="2"
+                />
+                <rect
+                  x="81"
+                  y="47"
+                  width="16"
+                  height="11"
+                  rx="2"
+                  fill={metal}
+                  stroke="#334155"
+                  strokeWidth="2"
+                />
+                <path d="M85 57 L82 66 H87 L91 57" fill="#78350f" stroke="#451a03" />
+                <path d="M90 58 Q97 66 99 56" stroke="#334155" strokeWidth="2" />
+                <rect
+                  x="95"
+                  y="47"
+                  width="24"
+                  height="5"
+                  rx="1"
+                  fill={weapon?.secondaryColor || '#475569'}
+                  stroke="#334155"
+                />
+                <path d="M96 55 H116" stroke={metal} strokeWidth="3" />
+                <path d="M114 45 H117" stroke={accent} strokeWidth="2" />
+                <g className="shotgun-pump" data-testid="shotgun-pump">
+                  <rect
+                    x="99"
+                    y="52"
+                    width="13"
+                    height="7"
+                    rx="2"
+                    fill="#92400e"
+                    stroke="#451a03"
+                  />
+                  <path d="M102 53 V58 M106 53 V58 M110 53 V58" stroke={accent} />
+                </g>
+                <circle cx="89" cy="51" r="2.5" fill={glow} />
+                {state === 'reloading' && (
+                  <g data-testid="shotgun-reload" className="shotgun-loading-hand">
+                    <rect x="88" y="65" width="5" height="9" rx="1" fill={glow} stroke="#78350f" />
+                    <path d="M88 73 H93" stroke="#fbbf24" strokeWidth="3" />
+                    <path
+                      d="M73 67 L85 74"
+                      stroke={primary}
+                      strokeWidth="7"
+                      strokeLinecap="round"
+                    />
+                    <circle cx="87" cy="73" r="4" fill="#fed7aa" />
+                  </g>
+                )}
+              </g>
               {state === 'released' && (
                 <path
                   data-testid="gunner-muzzle-flash"

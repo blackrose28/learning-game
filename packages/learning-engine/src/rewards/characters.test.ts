@@ -53,7 +53,7 @@ describe('Gunner and Warrior rewards', () => {
     (character) => {
       for (const item of getCosmeticsByCategory('bow'))
         expect(getCharacterCosmetic(item, character).name).toContain(
-          character === 'gunner' ? 'Gun' : 'Axe'
+          character === 'gunner' ? 'Shotgun' : 'Axe'
         );
     }
   );

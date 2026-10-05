@@ -1,5 +1,6 @@
 import { CHARACTER_PROFILES, getCharacterCosmetic } from '@math-archer/learning-engine';
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
+import { audioFx } from '../audio/AudioFx';
 import {
   type SessionStorageAdapter,
   type PlayerRewardsState,
@@ -59,6 +60,8 @@ export const RewardsScreen: React.FC<RewardsScreenProps> = ({
     initialAreaId || worldProgression.activeAreaId || 'castle'
   );
   const [testShotActive, setTestShotActive] = useState(false);
+  const [testShotReloading, setTestShotReloading] = useState(false);
+  const [testShotReleased, setTestShotReleased] = useState(false);
 
   const activeCharacter: CharacterType = rewardsState.equippedCosmetics?.character || 'archer';
   const hero = CHARACTER_PROFILES[activeCharacter];
@@ -66,6 +69,9 @@ export const RewardsScreen: React.FC<RewardsScreenProps> = ({
 
   const handleSwitchCharacter = (char: CharacterType) => {
     if (char === activeCharacter) return;
+    setTestShotActive(false);
+    setTestShotReloading(false);
+    setTestShotReleased(false);
     const next = switchCharacter(rewardsState, char);
     savePlayerRewards(next, storage);
     setRewardsState(next);
@@ -82,11 +88,33 @@ export const RewardsScreen: React.FC<RewardsScreenProps> = ({
     activeApiClient?.updatePlayerRewards(next, playerId).catch(() => {});
   };
 
+  useEffect(() => {
+    if (!testShotActive) return;
+    setTestShotReleased(true);
+    audioFx.playCharacterAttack(activeCharacter, 'fire');
+    const timers: ReturnType<typeof setTimeout>[] = [];
+    if (activeCharacter === 'gunner') {
+      timers.push(
+        setTimeout(() => {
+          setTestShotReleased(false);
+          setTestShotReloading(true);
+          audioFx.playShotgunReload();
+        }, 160)
+      );
+      timers.push(setTimeout(() => setTestShotReloading(false), 800));
+    }
+    timers.push(
+      setTimeout(() => {
+        setTestShotActive(false);
+        setTestShotReleased(false);
+      }, 1800)
+    );
+    return () => timers.forEach(clearTimeout);
+  }, [testShotActive, activeCharacter]);
+
   const handleTriggerTestShot = () => {
+    if (testShotActive) return;
     setTestShotActive(true);
-    setTimeout(() => {
-      setTestShotActive(false);
-    }, 1800);
   };
 
   useGamepad({
@@ -374,7 +402,9 @@ export const RewardsScreen: React.FC<RewardsScreenProps> = ({
                 >
                   <CharacterGraphic
                     character={activeCharacter}
-                    state={testShotActive ? 'released' : 'drawing'}
+                    state={
+                      testShotReloading ? 'reloading' : testShotReleased ? 'released' : 'drawing'
+                    }
                     element="fire"
                     equippedOutfit={rewardsState.equippedCosmetics.outfit}
                     equippedBow={rewardsState.equippedCosmetics.bow}
