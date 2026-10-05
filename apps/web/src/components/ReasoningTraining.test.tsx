@@ -134,6 +134,17 @@ describe('instruction-chain Training', () => {
     expect(screen.getByRole('alert')).toHaveTextContent('hai thiết bị');
     expect(screen.getByRole('button', { name: 'Bắt đầu' })).toBeDisabled();
   });
+  it('offers a reset that clears blocked or unreadable history', () => {
+    const storage = createMemoryStorage();
+    storage.setItem(getMissionWorkspaceKey('child'), '{"schemaVersion":99}');
+    render(<ReasoningTraining playerId="child" storage={storage} onBack={vi.fn()} />);
+    expect(screen.getByRole('button', { name: 'Bắt đầu' })).toBeDisabled();
+    fireEvent.click(screen.getByRole('button', { name: /Xoá lịch sử/ }));
+    expect(storage.getItem(getMissionWorkspaceKey('child'))).toBeNull();
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /Xoá lịch sử/ })).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Bắt đầu' })).toBeEnabled();
+  });
   it('supports controller focus and ignores held keyboard activation', () => {
     const { storage, back } = setup();
     act(() => gamepadManager.simulateButtonDown(XboxButton.A));

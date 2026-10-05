@@ -89,6 +89,17 @@ function saveWorkspace(value: MissionWorkspace, storage: SessionStorageAdapter):
   }
 }
 
+/** Drops this child's whole local reasoning history, including conflicts and unreadable data. */
+export function resetMissionWorkspace(
+  playerId: string,
+  storage: SessionStorageAdapter = getDefaultStorage()
+): void {
+  storage.removeItem(getMissionWorkspaceKey(playerId));
+  if (typeof window !== 'undefined') {
+    window.dispatchEvent(new CustomEvent('math-archer-reasoning-change', { detail: playerId }));
+  }
+}
+
 export function queueMissionAttempt(
   attempt: MissionAttempt,
   storage: SessionStorageAdapter = getDefaultStorage()

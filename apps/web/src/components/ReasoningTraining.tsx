@@ -22,6 +22,7 @@ import {
   getResumableMission,
   loadMissionWorkspace,
   queueMissionAttempt,
+  resetMissionWorkspace,
   syncMissionAttempts,
 } from '../sync/missions';
 import { useGamepad, XboxButton } from '../input/useGamepad';
@@ -131,6 +132,15 @@ export function ReasoningTraining({
       throw new Error('Bài đã thay đổi trên thiết bị khác. Hãy đọc bước hiện tại.');
     setError('');
     sync();
+  };
+  // Escape hatch for a blocked panel: forget the local history so training can start fresh.
+  const reset = () => {
+    resetMissionWorkspace(playerId, storage);
+    setAttempt(null);
+    setFeedback(null);
+    setError('');
+    setSyncText('');
+    setBlocked(false);
   };
   const start = () => {
     if (busy.current || blocked) return;
@@ -271,6 +281,7 @@ export function ReasoningTraining({
       <h1>🏹 Đọc đề, chọn bước</h1>
       <p>Luyện tập không giới hạn. Đọc chậm, nghĩ kỹ rồi chọn. Không dùng mũi tên hằng ngày.</p>
       {error && <p role="alert">{error}</p>}
+      {blocked && <button onClick={reset}>Xoá lịch sử luyện tập để bắt đầu lại</button>}
       {!attempt || (attempt.completedAt && !feedback) ? (
         <>
           {attempt?.completedAt && (
