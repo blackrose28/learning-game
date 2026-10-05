@@ -11,6 +11,7 @@ export * from './dashboard';
 export * from './world';
 export * from './rewards';
 export * from './gameSpeed';
+export * from './missions';
 
 export interface EngineInfo {
   name: string;

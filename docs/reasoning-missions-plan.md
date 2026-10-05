@@ -24,29 +24,29 @@ This document governs the expansion; `mvp-boundary.md` describes the original MV
 
 Verified in the repository when this plan was created:
 
-| Foundation | Relevant code | Consequence for this expansion |
-| --- | --- | --- |
-| Seven arithmetic skills | `packages/learning-engine/src/curriculum.ts` | Add a separate reasoning catalog and explicit integration; adding IDs alone is insufficient. |
-| Questions contain two operands and one add/subtract operation | `packages/learning-engine/src/questions/types.ts` | Model missions as structured problems with steps; do not disguise them as one arithmetic expression. |
-| Strategy, partial, and full explanation hints | `packages/learning-engine/src/teaching/hints.ts` | Reuse the support progression, with family-specific content. |
-| Adventure, Training, Challenge and controller input | `apps/web/src/components/GameScreen.tsx` | Pilot in Training and reuse the answer/input experience. |
-| Mastery includes a penalty for answers slower than six seconds | `packages/learning-engine/src/skills/profile.ts` | Reasoning needs its own scoring; reading and thinking time must not reduce mastery. |
-| Arithmetic attempts update operand-pair progress | `packages/learning-engine/src/skills/recordAttempt.ts` | Mission evidence must not create invented arithmetic pairs or inflate arithmetic mastery. |
-| Local history, offline sync, API attempts, and D1 skill progress | Engine history/storage, `apps/web/src/sync/`, `apps/api/src/db.ts` | Extend the complete persistence path, including retries and profile hydration. |
-| Per-child skill switches and animation speed | `apps/web/src/skillPreferences.ts`, API child profile types | Reasoning preferences must sync; explanation advancement must be explicit regardless of animation speed. |
+| Foundation                                                       | Relevant code                                                      | Consequence for this expansion                                                                           |
+| ---------------------------------------------------------------- | ------------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------- |
+| Seven arithmetic skills                                          | `packages/learning-engine/src/curriculum.ts`                       | Add a separate reasoning catalog and explicit integration; adding IDs alone is insufficient.             |
+| Questions contain two operands and one add/subtract operation    | `packages/learning-engine/src/questions/types.ts`                  | Model missions as structured problems with steps; do not disguise them as one arithmetic expression.     |
+| Strategy, partial, and full explanation hints                    | `packages/learning-engine/src/teaching/hints.ts`                   | Reuse the support progression, with family-specific content.                                             |
+| Adventure, Training, Challenge and controller input              | `apps/web/src/components/GameScreen.tsx`                           | Pilot in Training and reuse the answer/input experience.                                                 |
+| Mastery includes a penalty for answers slower than six seconds   | `packages/learning-engine/src/skills/profile.ts`                   | Reasoning needs its own scoring; reading and thinking time must not reduce mastery.                      |
+| Arithmetic attempts update operand-pair progress                 | `packages/learning-engine/src/skills/recordAttempt.ts`             | Mission evidence must not create invented arithmetic pairs or inflate arithmetic mastery.                |
+| Local history, offline sync, API attempts, and D1 skill progress | Engine history/storage, `apps/web/src/sync/`, `apps/api/src/db.ts` | Extend the complete persistence path, including retries and profile hydration.                           |
+| Per-child skill switches and animation speed                     | `apps/web/src/skillPreferences.ts`, API child profile types        | Reasoning preferences must sync; explanation advancement must be explicit regardless of animation speed. |
 
 Follow the existing characters, visual themes, and rewards. A new world or a new
 RPG progression is not required to teach these skills.
 
 ## 3. Content scope: all five families
 
-| Family / proposed ID | School example and checked answer | Main reasoning objectives | Guided interaction |
-| --- | --- | --- | --- |
-| Daily collection / `daily_collection` | 8 cards, one more each day for five days: **13** | Identify starting amount, repeated change, duration, and requested total. | Starting pile and five day slots; later choose the calculation. |
-| Instruction chains / `instruction_chain` | Difference of 14 and the successor of 7, then add 9: **15** | Interpret “hiệu”, “số liền sau”, “rồi”; preserve dependencies. | Successor 7 → 8; 14 − 8 → 6; 6 + 9 → 15. |
-| Unknown starting amount / `unknown_start` | After eating 4 and giving away a dozen, 34 remain: **48** | Interpret “1 chục”, “còn lại”, “lúc đầu”; reverse the changes. | Rewind 34 → 44 → 48; also accept 34 + 4 + 10. |
-| Growing-gap sequences / `growing_gap_sequence` | Seventh term of 0; 2; 6; 12; 20; …: **42** under gaps +2, +4, +6, +8, +10, +12 | Distinguish term position from value; infer and extend changing gaps. | Numbered stepping stones and spaces for gaps; sixth term 30, seventh 42. |
-| Maximum sum from digit cards / `max_sum_digit_cards` | Cards 3, 2, 5, 4, 1; use four once each for two two-digit numbers: **95** | Choose cards, use place value, optimize the total. | Two tens slots and two units slots; 5 and 4 in tens, 3 and 2 in units. |
+| Family / proposed ID                                 | School example and checked answer                                              | Main reasoning objectives                                                 | Guided interaction                                                       |
+| ---------------------------------------------------- | ------------------------------------------------------------------------------ | ------------------------------------------------------------------------- | ------------------------------------------------------------------------ |
+| Daily collection / `daily_collection`                | 8 cards, one more each day for five days: **13**                               | Identify starting amount, repeated change, duration, and requested total. | Starting pile and five day slots; later choose the calculation.          |
+| Instruction chains / `instruction_chain`             | Difference of 14 and the successor of 7, then add 9: **15**                    | Interpret “hiệu”, “số liền sau”, “rồi”; preserve dependencies.            | Successor 7 → 8; 14 − 8 → 6; 6 + 9 → 15.                                 |
+| Unknown starting amount / `unknown_start`            | After eating 4 and giving away a dozen, 34 remain: **48**                      | Interpret “1 chục”, “còn lại”, “lúc đầu”; reverse the changes.            | Rewind 34 → 44 → 48; also accept 34 + 4 + 10.                            |
+| Growing-gap sequences / `growing_gap_sequence`       | Seventh term of 0; 2; 6; 12; 20; …: **42** under gaps +2, +4, +6, +8, +10, +12 | Distinguish term position from value; infer and extend changing gaps.     | Numbered stepping stones and spaces for gaps; sixth term 30, seventh 42. |
+| Maximum sum from digit cards / `max_sum_digit_cards` | Cards 3, 2, 5, 4, 1; use four once each for two two-digit numbers: **95**      | Choose cards, use place value, optimize the total.                        | Two tens slots and two units slots; 5 and 4 in tens, 3 and 2 in units.   |
 
 Content rules:
 
@@ -210,13 +210,13 @@ PR should link this plan and update the relevant checkboxes and handoff notes.
 ### M0 — Content specification and baseline
 
 - [x] Draft Vietnamese templates, solution steps, hints, and misconception choices
-  for the five original examples in [M0 Teaching Specification](reasoning-missions-content.md).
+      for the five original examples in [M0 Teaching Specification](reasoning-missions-content.md).
 - [ ] Complete parent review of Vietnamese wording and teaching clarity.
 - [x] Define easy prerequisites and independent transfer variants for each family.
 - [x] Sketch the question panel, step choices, explanation, and card placement for
-  phone, desktop, and controller input.
+      phone, desktop, and controller input.
 - [ ] Establish a short baseline: ask the child to interpret and plan easy problems
-  before calculating; record where assistance is needed.
+      before calculating; record where assistance is needed.
 
 Exit: implementers have a concrete teaching flow and the parent has baseline
 observations. Parent/child observations are recorded when available; do not
@@ -224,16 +224,20 @@ invent them or block unrelated engineering work while waiting for them.
 
 ### M1 — Task contracts, mission engine, and compatible storage
 
-- [ ] Finalize task envelope, mission/step contracts, response types, and evidence
-  aggregation; define how legacy arithmetic records are normalized.
-- [ ] Add deterministic instruction-chain generation and independent validation.
-- [ ] Add mission-specific hints and meaningful, unique distractors.
-- [ ] Implement resumable local mission state, evidence storage, sync payloads,
-  additive D1 migration, API validation, and idempotent submission.
+- [x] Implement the versioned task envelope, instruction-chain mission/step contracts,
+      response types, first-response evidence summaries, and wrapping of validated legacy
+      arithmetic questions. See [M1 Engine Contracts](reasoning-missions-engine.md).
+- [ ] Finalize server payloads, reasoning progress aggregation, and hydration boundaries.
+- [x] Add deterministic instruction-chain generation and independent validation.
+- [x] Add mission-specific hints and meaningful, unique distractors.
+- [x] Implement resumable local mission state and validated evidence storage,
+      including idempotent event retries and assistance tracking.
+- [ ] Implement sync payloads, additive D1 migration, API validation, and idempotent
+      server submission.
 - [ ] Add per-child reasoning settings and versioned progress hydration; existing
-  children begin with reasoning disabled until the parent opts in.
+      children begin with reasoning disabled until the parent opts in.
 - [ ] Verify older profiles, queued arithmetic attempts, and disabled skill
-  preferences still load and behave correctly.
+      preferences still load and behave correctly.
 
 Exit: one mission can be generated, answered, saved offline, synced, and restored
 without affecting arithmetic history or scoring.
@@ -241,14 +245,14 @@ without affecting arithmetic history or scoring.
 ### M2 — Complete instruction-chain Training pilot
 
 - [ ] Implement mission panel, guided and independent modes, progressive hints,
-  retry feedback, and explicit advancement.
+      retry feedback, and explicit advancement.
 - [ ] Reuse elemental feedback and support touch, keyboard, and Xbox navigation.
 - [ ] Add Training entry and parent enable/focus controls for the pilot family.
 - [ ] Show vocabulary/plan evidence, assistance, and independent outcomes in the
-  parent dashboard; include insufficient-data states.
+      parent dashboard; include insufficient-data states.
 - [ ] Ship changed wording and parameter variants, including the original example.
 - [ ] Run the engineering checks and a parent/child pilot; record observations and
-  adjust confusing wording or interaction before expanding content.
+      adjust confusing wording or interaction before expanding content.
 
 Exit: the complete loop is usable end to end, and the dashboard can distinguish
 an observed vocabulary mistake from an observed plan or calculation mistake.
@@ -256,12 +260,12 @@ an observed vocabulary mistake from an observed plan or calculation mistake.
 ### M3 — Daily collection and unknown-start stories
 
 - [ ] Add daily collection models, repeated-addition variants, and distractors for
-  missed days or omitted starting amounts.
+      missed days or omitted starting amounts.
 - [ ] Add unknown-start stories, dozens vocabulary, rewind visuals, and alternative
-  valid addition plans.
+      valid addition plans.
 - [ ] Add prerequisite checks for arithmetic above 20 and family-specific support.
 - [ ] Extend the same storage, evidence, parent focus, and independent practice
-  pipeline; avoid a second parallel implementation of the mission loop.
+      pipeline; avoid a second parallel implementation of the mission loop.
 
 Exit: all three story/instruction families work in Training, including the original
 answers 13, 15, and 48, and school-style text can be attempted without visuals.
@@ -270,9 +274,9 @@ answers 13, 15, and 48, and school-style text can be attempted without visuals.
 
 - [ ] Add explicit term numbering, growing-gap models, and sequence-rule hints.
 - [ ] Add select-then-place digit slots, no-card-reuse validation, reset/undo, and
-  accessible controller focus behavior.
+      accessible controller focus behavior.
 - [ ] Compute the maximum independently by enumerating valid arrangements; accept
-  all arrangements achieving it.
+      all arrangements achieving it.
 - [ ] Integrate family/objective evidence and independent transfer variants.
 
 Exit: the seventh term is validated as 42 under the declared rule, and every
@@ -281,16 +285,16 @@ valid maximum-sum arrangement for the original cards is accepted as 95.
 ### M5 — Adaptive integration, Adventure, and Challenge
 
 - [ ] Implement and calibrate support fading and objective-aware selection using
-  the pilot evidence; document any threshold changes here.
+      the pilot evidence; document any threshold changes here.
 - [ ] Add parent-controlled Adventure inclusion. Suggested initial mix: at most
-  one reasoning mission per five daily arrows, with adjustable reasoning-focused
-  Training available. This is a default to evaluate, not a required quota.
+      one reasoning mission per five daily arrows, with adjustable reasoning-focused
+      Training available. This is a default to evaluate, not a required quota.
 - [ ] Integrate one-arrow/one-reward completion and interrupted-mission recovery.
 - [ ] Add independent Challenge missions without hints or time pressure.
 - [ ] Confirm disabled families never enter selection and all-disabled reasoning
-  falls back to the existing arithmetic experience.
+      falls back to the existing arithmetic experience.
 - [ ] Keep arithmetic and reasoning summaries separate in dashboard comparisons
-  and recommendations, with counts and transparent reasons.
+      and recommendations, with counts and transparent reasons.
 
 Exit: all modes use the same mission contracts, preferences, and durable evidence;
 daily limits and progression count completed missions exactly once.
@@ -299,14 +303,14 @@ daily limits and progression count completed missions exactly once.
 
 - [ ] Run applicable engine/API/web tests, type checks, lint, and production build.
 - [ ] Check migration and legacy profile hydration; refresh mid-mission, offline
-  completion, retry, duplicate submission, and cross-device child preferences.
+      completion, retry, duplicate submission, and cross-device child preferences.
 - [ ] Check phone layout and readable Vietnamese text; touch, keyboard, and Xbox
-  controller completion for every interaction type.
+      controller completion for every interaction type.
 - [ ] Review all five original questions and representative generated variants.
 - [ ] Observe independent transfer to new school-style wording over at least two
-  sessions; compare with the baseline and document remaining difficulty.
+      sessions; compare with the baseline and document remaining difficulty.
 - [ ] Update user-facing docs, record release details, and leave a concrete handoff
-  for any remaining work. Deploy using the existing repository workflow.
+      for any remaining work. Deploy using the existing repository workflow.
 
 Exit: engineering acceptance passes and learning observations are documented.
 If observations are unavailable, label learning validation pending; do not claim
@@ -336,14 +340,14 @@ experience. Passing automated tests does not verify those learning outcomes.
 - [ ] All five families support guided, independent, and transfer practice.
 - [ ] The original examples produce 13, 15, 48, 42, and 95 with reviewed explanations.
 - [ ] A child can identify quantities and choose steps before calculating; support
-  can fade without removing the original Vietnamese question.
+      can fade without removing the original Vietnamese question.
 - [ ] Parent insights distinguish observed interpretation, planning, and calculation
-  evidence, assisted completion, and independent task success.
+      evidence, assisted completion, and independent task success.
 - [ ] Reasoning has no fluency-speed penalty and cannot corrupt arithmetic progress.
 - [ ] Offline persistence, cross-device preferences, input support, daily limits,
-  rewards, and legacy compatibility meet the milestone checks.
+      rewards, and legacy compatibility meet the milestone checks.
 - [ ] Release checks pass; baseline and transfer observations are recorded, or the
-  learning review is explicitly marked pending.
+      learning review is explicitly marked pending.
 
 ## 10. Deferred enhancements and open decisions
 
@@ -353,12 +357,12 @@ These are not prerequisites for completing this plan.
 
 Decisions to settle during their implementation milestone:
 
-| Decision | Current direction | Settle in |
-| --- | --- | --- |
-| Exact task/API schema and compatibility boundaries | Discriminated tasks, additive mission records, legacy normalization | M1 |
-| Evidence thresholds and support fading | Conservative independent evidence; no speed penalty | M2 pilot, M5 calibration |
-| Adventure frequency | Parent opt-in; initially at most one mission per five arrows | M5 |
-| Read-aloud implementation | Optional later enhancement; core offline flow first | Follow-up |
+| Decision                                           | Current direction                                                   | Settle in                |
+| -------------------------------------------------- | ------------------------------------------------------------------- | ------------------------ |
+| Exact task/API schema and compatibility boundaries | Discriminated tasks, additive mission records, legacy normalization | M1                       |
+| Evidence thresholds and support fading             | Conservative independent evidence; no speed penalty                 | M2 pilot, M5 calibration |
+| Adventure frequency                                | Parent opt-in; initially at most one mission per five arrows        | M5                       |
+| Read-aloud implementation                          | Optional later enhancement; core offline flow first                 | Follow-up                |
 
 ## 11. Progress and handoff log
 
@@ -366,7 +370,8 @@ Update this section after each milestone with the implementation commit/PR,
 checks run, concrete observations, unresolved issues, and next unchecked task.
 Keep completed work checked; revise decisions when evidence changes the plan.
 
-| Date | Milestone | Result / evidence | Next action |
-| --- | --- | --- | --- |
-| 2026-10-05 | Planning | Repository inspected; parent reports strong calculation and difficulty with wording/planning. No implementation or child pilot completed. | M0 content specification, then M1 contracts and persistence. |
-| 2026-10-05 | M0 content draft | Teaching specification added for all five families with checked answers, hint ladders, candidate misconceptions, transfer variants, and interaction sketches. Parent review and child baseline remain pending. | M1 instruction-chain task contracts and persistence; gather baseline observations when available. |
+| Date       | Milestone            | Result / evidence                                                                                                                                                                                                                                                                                   | Next action                                                                                                                |
+| ---------- | -------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------- |
+| 2026-10-05 | Planning             | Repository inspected; parent reports strong calculation and difficulty with wording/planning. No implementation or child pilot completed.                                                                                                                                                           | M0 content specification, then M1 contracts and persistence.                                                               |
+| 2026-10-05 | M0 content draft     | Teaching specification added for all five families with checked answers, hint ladders, candidate misconceptions, transfer variants, and interaction sketches. Parent review and child baseline remain pending.                                                                                      | M1 instruction-chain task contracts and persistence; gather baseline observations when available.                          |
+| 2026-10-05 | M1 engine foundation | Versioned instruction-chain generation, views/hints, validated local resume, first-response evidence, and retry handling implemented. Engine suite: 257 tests pass, including 20 mission tests and 1,000 generated mission seeds. Engine type check and changed-file lint pass. M1 is not complete. | Add D1/API mission persistence, offline sync, opt-in preferences, and reasoning progress hydration before the M2 UI pilot. |
