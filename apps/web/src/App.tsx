@@ -45,6 +45,7 @@ export const AppContent: React.FC = () => {
   const [showChildPicker, setShowChildPicker] = useState<boolean>(false);
   const [isMuted, setIsMuted] = useState<boolean>(() => audioFx.getIsMuted());
   const [reasoningOpen, setReasoningOpen] = useState(false);
+  const [challengeOpen, setChallengeOpen] = useState(false);
   const [returnToTraining, setReturnToTraining] = useState(false);
   const [missionOpen, setMissionOpen] = useState(false);
   // Set when the child pauses or declines, so the same mission is not re-offered on this page.
@@ -63,6 +64,7 @@ export const AppContent: React.FC = () => {
   const reasoningEnabled = reasoningFamilies.length > 0;
   useEffect(() => {
     setReasoningOpen(false);
+    setChallengeOpen(false);
     setReturnToTraining(false);
     setMissionOpen(false);
     setMissionDeferred(false);
@@ -495,7 +497,19 @@ export const AppContent: React.FC = () => {
 
       {/* Screen Render: Primary Game Views (Play, World Map, Royal Armory) are single-screen 100vh; secondary views are scrollable */}
       {activeTab === 'game' ? (
-        missionOpen && reasoningEnabled && !reasoningOpen ? (
+        challengeOpen && reasoningEnabled ? (
+          <ReasoningTraining
+            key={`${activeChild.id}_challenge`}
+            mode="challenge"
+            playerId={activeChild.id}
+            families={reasoningFamilies}
+            api={apiClient}
+            onBack={() => {
+              setChallengeOpen(false);
+              setReturnToTraining(true);
+            }}
+          />
+        ) : missionOpen && reasoningEnabled && !reasoningOpen ? (
           <ReasoningTraining
             key={`${activeChild.id}_adventure`}
             mode="adventure"
@@ -545,6 +559,7 @@ export const AppContent: React.FC = () => {
             playerId={activeChild.id}
             mode={returnToTraining ? 'training' : 'adventure'}
             onReasoningTraining={reasoningEnabled ? () => setReasoningOpen(true) : undefined}
+            onReasoningChallenge={reasoningEnabled ? () => setChallengeOpen(true) : undefined}
             missionOffer={
               reasoningSettings && !missionDeferred && !returnToTraining
                 ? {

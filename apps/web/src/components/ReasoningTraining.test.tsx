@@ -344,3 +344,48 @@ describe('support recommendation', () => {
     expect(started.local.mission.support).toBe('independent');
   });
 });
+
+describe('Challenge missions', () => {
+  const setupChallenge = () => {
+    const storage = createMemoryStorage();
+    const back = vi.fn();
+    const complete = vi.fn();
+    render(
+      <ReasoningTraining
+        playerId="child"
+        storage={storage}
+        mode="challenge"
+        onBack={back}
+        onMissionComplete={complete}
+      />
+    );
+    return { storage, back, complete };
+  };
+
+  it('starts independent missions with no support choice, no hints and no advice', () => {
+    const { storage } = setupChallenge();
+    expect(screen.queryByRole('button', { name: 'Từng bước' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Tự giải' })).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'Bắt đầu thử thách' }));
+    const attempt = current(storage);
+    expect(attempt.mode).toBe('challenge');
+    expect(attempt.mission.support).toBe('independent');
+    expect(screen.getByText(attempt.mission.prompt)).toBeVisible();
+    expect(screen.queryByRole('button', { name: 'Gợi ý cách làm' })).not.toBeInTheDocument();
+  });
+
+  it('gives neutral retry feedback, then completes without an arrow or reward', () => {
+    const { storage, complete } = setupChallenge();
+    fireEvent.click(screen.getByRole('button', { name: 'Bắt đầu thử thách' }));
+    const step = current(storage).mission.steps.find((item) => item.id === 'final')!;
+    const wrong = step.choices.findIndex((choice) => choice.id !== step.correctChoiceId);
+    fireEvent.keyDown(screen.getByRole('region'), { key: String(wrong + 1) });
+    expect(screen.getByText(/Chưa đúng\. Đọc lại đề rồi thử lại/)).toBeVisible();
+    next();
+    choose(storage, current(storage).mission.steps.length - 1);
+    expect(current(storage).completedAt).toBeDefined();
+    expect(current(storage).hints).toHaveLength(0);
+    expect(complete).not.toHaveBeenCalled();
+    expect(storage.getItem('math_archer_progress_child')).toBeNull();
+  });
+});

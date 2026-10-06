@@ -310,6 +310,42 @@ describe('Adventure mission mode', () => {
   });
 
   it('rejects an unknown mode', () => {
-    expect(() => restoreMissionAttempt({ ...start(), mode: 'challenge' })).toThrow('Unsupported');
+    expect(() => restoreMissionAttempt({ ...start(), mode: 'bogus' })).toThrow('Unsupported');
+  });
+});
+
+describe('Challenge mission mode', () => {
+  const independent = generateInstructionChain({
+    seed: 42,
+    parameters: original,
+    support: 'independent',
+  });
+  const challenge = () =>
+    startMissionAttempt(independent, 'child-1', 'challenge-1', timestamp, 'challenge');
+
+  it('only starts independent missions', () => {
+    expect(() => startMissionAttempt(mission, 'child-1', 'c', timestamp, 'challenge')).toThrow(
+      'must be independent'
+    );
+    expect(challenge().mode).toBe('challenge');
+  });
+
+  it('refuses hints, including when restoring a saved attempt', () => {
+    const hint = {
+      eventId: 'hint-1',
+      stepId: 'final' as MissionStepId,
+      level: 'strategy' as const,
+      timestamp,
+    };
+    expect(() => recordMissionHint(challenge(), hint)).toThrow('no hints');
+    const tampered = { ...challenge(), hints: [{ ...hint, sequence: 0 }] };
+    expect(() => restoreMissionAttempt(tampered)).toThrow('no hints');
+  });
+
+  it('completes, replays and stays clean with a correct first answer', () => {
+    const done = respond(challenge(), 'final');
+    expect(done.completedAt).toBeDefined();
+    expect(isCleanMissionCompletion(done)).toBe(true);
+    expect(restoreMissionAttempt(JSON.parse(JSON.stringify(done)))).toEqual(done);
   });
 });

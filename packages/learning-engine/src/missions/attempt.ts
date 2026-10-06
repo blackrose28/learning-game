@@ -27,6 +27,9 @@ export function startMissionAttempt(
   if (!validateMission(mission) || !playerId.trim() || !id.trim()) {
     throw new Error('Invalid mission attempt identity or definition');
   }
+  if (mode === 'challenge' && mission.support !== 'independent') {
+    throw new Error('A Challenge mission must be independent');
+  }
   assertTimestamp(startedAt);
   return {
     schemaVersion: 1,
@@ -131,6 +134,7 @@ export function recordMissionHint(
   }
   if (attempt.responses.some((response) => response.eventId === input.eventId))
     throw new Error('Duplicate mission event ID');
+  if (attempt.mode === 'challenge') throw new Error('A Challenge mission has no hints');
   assertEvent(attempt, input.eventId, input.stepId, input.timestamp);
   if (!['strategy', 'partial', 'worked'].includes(input.level))
     throw new Error('Unknown mission hint level');
@@ -175,7 +179,7 @@ export function restoreMissionAttempt(value: unknown): MissionAttempt {
   const saved = value as MissionAttempt;
   if (
     saved.schemaVersion !== 1 ||
-    (saved.mode !== 'training' && saved.mode !== 'adventure') ||
+    !['training', 'adventure', 'challenge'].includes(saved.mode) ||
     !Array.isArray(saved.responses) ||
     !Array.isArray(saved.hints)
   ) {

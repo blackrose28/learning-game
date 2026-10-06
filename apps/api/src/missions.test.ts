@@ -597,3 +597,52 @@ describe('Adventure mission arrow charging', () => {
     expect(await session(db)).toMatchObject({ arrowsUsed: 50, status: 'completed' });
   });
 });
+
+describe('Challenge missions', () => {
+  const independent = generateInstructionChain({
+    seed: 7,
+    parameters: { number: 7, minuend: 14, addend: 9 },
+    support: 'independent',
+  });
+  const challenge = (id: string) => {
+    const final = independent.steps.find((step) => step.id === 'final')!;
+    return recordMissionResponse(
+      startMissionAttempt(independent, 'player-local', id, startedAt, 'challenge'),
+      {
+        eventId: 'response-0',
+        stepId: 'final',
+        choiceId: final.correctChoiceId,
+        timestamp: startedAt,
+        responseTimeMs: 50000,
+      }
+    );
+  };
+
+  it('stores a completed Challenge mission without spending an arrow', async () => {
+    const db = createTestD1Database();
+    const done = challenge('challenge-1');
+    expect(done.completedAt).toBeDefined();
+    expect((await saveMissionAttemptInDb(db, done)).disposition).toBe('created');
+    expect(await getMissionAttemptFromDb(db, 'player-local', 'challenge-1')).toMatchObject({
+      attempt: { mode: 'challenge' },
+    });
+    expect(await getTodaySessionFromDb(db, 'player-local', startedAt.slice(0, 10))).toBeNull();
+  });
+
+  it('rejects a Challenge attempt that carries a hint', async () => {
+    const db = createTestD1Database();
+    const tampered = {
+      ...challenge('challenge-2'),
+      hints: [
+        {
+          sequence: 0,
+          eventId: 'hint-0',
+          stepId: 'final',
+          level: 'strategy',
+          timestamp: startedAt,
+        },
+      ],
+    };
+    await expect(saveMissionAttemptInDb(db, tampered)).rejects.toThrow();
+  });
+});

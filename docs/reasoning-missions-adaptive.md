@@ -89,3 +89,26 @@ arrow charge and reward for that one mission rather than risking a double charge
 **Compatibility.** `mode` is widened on schema version 1. An older client or API rejects an
 `adventure` attempt, so deploy the API first and keep the Adventure switch off until clients
 update.
+
+## Challenge missions
+
+A Challenge mission is a `MissionAttempt` with `mode: 'challenge'`: independent problems with
+no hints and no time pressure, for checking what the child can do unaided. Training's
+**Thử thách suy luận** button opens it for the families the parent enabled (none enabled, no
+button; arithmetic is unchanged).
+
+- **Independent only.** `startMissionAttempt` rejects a guided mission in this mode, and the
+  support chooser, suggestion text and hint button are not shown.
+- **No hints.** `recordMissionHint` throws for a Challenge attempt, so a saved attempt carrying a
+  hint fails `restoreMissionAttempt` in the browser and the API alike.
+- **No reveal, no clock.** A wrong answer says only to reread the question and try again, rather
+  than explaining the relationship as Training does. Step time is recorded as usual and never
+  displayed or scored. The finished question shows its worked solution.
+- **No arrow, no reward.** Challenge is unlimited like Training; the server charges an arrow only
+  for `adventure`. Paying a reward here would let unlimited retries farm XP.
+- **Evidence.** It uses the shared storage, sync and progress pipeline, so independent results feed
+  support fading, focus and parent summaries. Challenge resumes separately from Training and
+  Adventure.
+
+**Compatibility.** `mode` is widened on schema version 1. An older client or API rejects a
+`challenge` attempt, so deploy the API first.

@@ -284,8 +284,11 @@ export interface MissionHintEvent {
   timestamp: string;
 }
 
-/** Training is unlimited; an Adventure mission spends one daily arrow when it completes. */
-export type MissionMode = 'training' | 'adventure';
+/**
+ * Training is unlimited; an Adventure mission spends one daily arrow when it completes. A Challenge
+ * mission is independent only: no hints, no timer, no arrow and no reward, evidence only.
+ */
+export type MissionMode = 'training' | 'adventure' | 'challenge';
 
 export interface MissionAttempt {
   schemaVersion: 1;

@@ -196,6 +196,21 @@ describe('reasoning Training entry', () => {
     render(<App />);
     fireEvent.click(screen.getByTestId('mode-tab-training'));
     expect(screen.queryByRole('button', { name: /Đọc đề, chọn bước/ })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /Thử thách suy luận/ })).not.toBeInTheDocument();
+  });
+  it('opens a hint-free Challenge mission and returns to Training', () => {
+    saveReasoningSettings('player-local', {
+      schemaVersion: 1,
+      enabledFamilies: ['instruction_chain'],
+    });
+    render(<App />);
+    fireEvent.click(screen.getByTestId('mode-tab-training'));
+    fireEvent.click(screen.getByRole('button', { name: /Thử thách suy luận/ }));
+    expect(screen.getByRole('heading', { name: /Thử thách suy luận/ })).toBeVisible();
+    fireEvent.click(screen.getByRole('button', { name: 'Bắt đầu thử thách' }));
+    expect(screen.queryByRole('button', { name: 'Gợi ý cách làm' })).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: '← Về luyện tính' }));
+    expect(screen.getByTestId('training-mode-banner')).toBeVisible();
   });
 });
 

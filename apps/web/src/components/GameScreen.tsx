@@ -67,6 +67,8 @@ export type GameMode = 'adventure' | 'training' | 'challenge';
 
 export interface GameScreenProps {
   onReasoningTraining?: () => void;
+  /** Opens independent, hint-free reasoning missions (no arrows, no timer). */
+  onReasoningChallenge?: () => void;
   /**
    * Optional initial question to display (useful for deterministic tests or presets).
    */
@@ -228,6 +230,7 @@ function getCategoryInfo(category?: SelectionCategory): { label: string; classNa
 
 export const GameScreen: React.FC<GameScreenProps> = ({
   onReasoningTraining,
+  onReasoningChallenge,
   initialQuestion,
   mode = 'adventure',
   initialProfile,
@@ -1720,6 +1723,11 @@ export const GameScreen: React.FC<GameScreenProps> = ({
           {onReasoningTraining && (
             <button type="button" onClick={onReasoningTraining}>
               🏹 Đọc đề, chọn bước (tay cầm: RS)
+            </button>
+          )}
+          {onReasoningChallenge && (
+            <button type="button" onClick={onReasoningChallenge}>
+              🔥 Thử thách suy luận (tự giải, không gợi ý)
             </button>
           )}
           <div className="deliberate-practice-header">

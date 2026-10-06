@@ -47,7 +47,8 @@ export interface ReasoningTrainingProps {
   storage?: SessionStorageAdapter;
   /**
    * Training is unlimited. Adventure offers one parent-enabled mission that spends one arrow when
-   * it completes; the family and suggested support come from the child's evidence.
+   * it completes; the family and suggested support come from the child's evidence. Challenge is
+   * independent only: no hints, no timer, no arrow and no reward.
    */
   mode?: MissionMode;
   /** Adventure: spend the arrow and grant the reward. Must be safe to call twice for one attempt. */
@@ -89,6 +90,7 @@ export function ReasoningTraining({
   onDecline,
 }: ReasoningTrainingProps) {
   const adventure = mode === 'adventure';
+  const challenge = mode === 'challenge';
   const [attempt, setAttempt] = useState<MissionAttempt | null>(null);
   // The child's own choice for the next mission; null follows the recommendation.
   const [chosenSupport, setChosenSupport] = useState<MissionSupport | null>(null);
@@ -196,7 +198,9 @@ export function ReasoningTraining({
     }
   })();
   const family = adventure && advice ? advice.family : trainingFamily;
-  const support = chosenSupport ?? advice?.support.support ?? 'guided';
+  const support = challenge
+    ? 'independent'
+    : (chosenSupport ?? advice?.support.support ?? 'guided');
   const start = () => {
     if (busy.current || blocked) return;
     busy.current = true;
@@ -267,7 +271,9 @@ export function ReasoningTraining({
         correct: response.correct,
         text: response.correct
           ? `Đúng rồi: ${label}.`
-          : `Con đã chọn ${label}. ${getMissionStepFeedback(attempt.mission, stepId)} Bấm Tiếp tục để thử lại.`,
+          : challenge
+            ? `Con đã chọn ${label}. Chưa đúng. Đọc lại đề rồi thử lại. Bấm Tiếp tục.`
+            : `Con đã chọn ${label}. ${getMissionStepFeedback(attempt.mission, stepId)} Bấm Tiếp tục để thử lại.`,
       });
     } catch (cause) {
       setError(`Chưa lưu được câu trả lời. Hãy thử lại. ${errorText(cause)}`);
@@ -276,6 +282,7 @@ export function ReasoningTraining({
     }
   };
   const hint = () => {
+    if (challenge) return;
     if (!attempt || !stepId || feedback || blocked || busy.current) return;
     busy.current = true;
     try {
@@ -355,11 +362,19 @@ export function ReasoningTraining({
             : '← Về trò chơi'
           : '← Về luyện tính'}
       </button>
-      <h1>{adventure ? '🏹 Nhiệm vụ suy luận' : '🏹 Đọc đề, chọn bước'}</h1>
+      <h1>
+        {adventure
+          ? '🏹 Nhiệm vụ suy luận'
+          : challenge
+            ? '🔥 Thử thách suy luận'
+            : '🏹 Đọc đề, chọn bước'}
+      </h1>
       <p>
         {adventure
           ? 'Đọc chậm, nghĩ kỹ rồi chọn. Cả nhiệm vụ chỉ dùng 1 mũi tên, khi con làm xong.'
-          : 'Luyện tập không giới hạn. Đọc chậm, nghĩ kỹ rồi chọn. Không dùng mũi tên hằng ngày.'}
+          : challenge
+            ? 'Tự giải, không có gợi ý và không tính giờ. Đọc chậm, nghĩ kỹ rồi chọn. Không dùng mũi tên hằng ngày.'
+            : 'Luyện tập không giới hạn. Đọc chậm, nghĩ kỹ rồi chọn. Không dùng mũi tên hằng ngày.'}
       </p>
       {error && <p role="alert">{error}</p>}
       {blocked && <button onClick={reset}>Xoá lịch sử luyện tập để bắt đầu lại</button>}
@@ -457,19 +472,24 @@ export function ReasoningTraining({
               </button>
             </p>
           )}
-          <fieldset disabled={blocked}>
-            <legend>Chọn cách luyện cho bài tiếp theo</legend>
-            <button aria-pressed={support === 'guided'} onClick={() => setChosenSupport('guided')}>
-              Từng bước
-            </button>
-            <button
-              aria-pressed={support === 'independent'}
-              onClick={() => setChosenSupport('independent')}
-            >
-              Tự giải
-            </button>
-          </fieldset>
-          {advice && (
+          {!challenge && (
+            <fieldset disabled={blocked}>
+              <legend>Chọn cách luyện cho bài tiếp theo</legend>
+              <button
+                aria-pressed={support === 'guided'}
+                onClick={() => setChosenSupport('guided')}
+              >
+                Từng bước
+              </button>
+              <button
+                aria-pressed={support === 'independent'}
+                onClick={() => setChosenSupport('independent')}
+              >
+                Tự giải
+              </button>
+            </fieldset>
+          )}
+          {advice && !challenge && (
             <p role="note" className="mission-advice">
               {supportAdvice(advice.support)}
               {advice.stability.stable &&
@@ -477,7 +497,7 @@ export function ReasoningTraining({
             </p>
           )}
           <button data-primary disabled={blocked} onClick={start}>
-            {attempt ? 'Bài tiếp theo' : 'Bắt đầu'}
+            {attempt ? 'Bài tiếp theo' : challenge ? 'Bắt đầu thử thách' : 'Bắt đầu'}
           </button>
         </>
       ) : (
@@ -529,7 +549,7 @@ export function ReasoningTraining({
                   </button>
                 ))}
               </div>
-              {!feedback && (
+              {!feedback && !challenge && (
                 <button disabled={blocked} onClick={hint}>
                   {hintLabels[Math.min(attempt.hints.length, 2)]}
                 </button>
