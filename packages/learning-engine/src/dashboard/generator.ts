@@ -84,15 +84,21 @@ export function computeParentDashboardData(options: {
   }
 
   const todayAttemptsCount = todayAttempts.length;
+  // Reasoning missions spend arrows (and session hits) too, but their evidence lives in the
+  // reasoning progress. Arithmetic accuracy must not borrow the session's mixed totals then.
+  const missionArrows = todaySession?.missionAttemptIds?.length ?? 0;
+  const sessionHitsAreArithmetic = missionArrows === 0;
   const todayHitsCount =
     todayAttemptsCount > 0
       ? todayAttempts.filter((a) => a.correct).length
-      : (todaySession?.hits ?? 0);
+      : sessionHitsAreArithmetic
+        ? (todaySession?.hits ?? 0)
+        : 0;
 
   const todayAccuracy =
     todayAttemptsCount > 0
       ? Number((todayHitsCount / todayAttemptsCount).toFixed(4))
-      : arrowsUsed > 0 && todaySession
+      : arrowsUsed > 0 && todaySession && sessionHitsAreArithmetic
         ? Number((todaySession.hits / arrowsUsed).toFixed(4))
         : 0;
 
@@ -122,6 +128,7 @@ export function computeParentDashboardData(options: {
     arrowsUsed,
     arrowsAllowed,
     arrowsRemaining,
+    missionArrows,
     sessionStatus,
     attemptsCount: todayAttemptsCount,
     hitsCount: todayHitsCount,
@@ -316,14 +323,20 @@ export function computeParentDashboardData(options: {
   // 6. Performance Improvement & Historical Trend (Question 6: Is performance improving?)
   // -------------------------------------------------------------
   // Group attempts and sessions by date to build daily history
-  const dateMap = new Map<string, { arrowsUsed: number; attempts: number; hits: number }>();
+  // Session hits stand in only for a day with no recorded arithmetic attempts, and never when
+  // reasoning missions spent some of that day's arrows (their hits are not arithmetic).
+  const dateMap = new Map<
+    string,
+    { arrowsUsed: number; attempts: number; hits: number; sessionHits: number }
+  >();
 
   // Add session data
   for (const s of sessions) {
     dateMap.set(s.date, {
       arrowsUsed: s.arrowsUsed,
       attempts: 0,
-      hits: s.hits,
+      hits: 0,
+      sessionHits: s.missionAttemptIds?.length ? 0 : s.hits,
     });
   }
 
@@ -331,7 +344,12 @@ export function computeParentDashboardData(options: {
   for (const a of attempts) {
     if (!a.timestamp) continue;
     const dateKey = a.timestamp.slice(0, 10);
-    const existing = dateMap.get(dateKey) || { arrowsUsed: 0, attempts: 0, hits: 0 };
+    const existing = dateMap.get(dateKey) || {
+      arrowsUsed: 0,
+      attempts: 0,
+      hits: 0,
+      sessionHits: 0,
+    };
     existing.attempts += 1;
     if (a.correct) {
       existing.hits += 1;
@@ -343,14 +361,15 @@ export function computeParentDashboardData(options: {
   const sortedDates = Array.from(dateMap.keys()).sort();
   const history: DailyChartPoint[] = sortedDates.map((dateKey) => {
     const data = dateMap.get(dateKey)!;
+    const hits = data.attempts > 0 ? data.hits : data.sessionHits;
     const totalCount = data.attempts > 0 ? data.attempts : data.arrowsUsed;
-    const acc = totalCount > 0 ? Number((data.hits / totalCount).toFixed(4)) : 0;
+    const acc = totalCount > 0 ? Number((hits / totalCount).toFixed(4)) : 0;
     return {
       date: dateKey,
       dayOfWeek: getDayOfWeek(dateKey),
       arrowsUsed: data.arrowsUsed > 0 ? data.arrowsUsed : data.attempts,
       attempts: data.attempts,
-      hits: data.hits,
+      hits,
       accuracy: acc,
     };
   });

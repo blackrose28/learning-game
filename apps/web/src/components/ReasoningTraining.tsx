@@ -105,6 +105,8 @@ export function ReasoningTraining({
     correct?: boolean;
   } | null>(null);
   const [syncText, setSyncText] = useState('');
+  // A string key keeps the effect stable when the parent rebuilds an equal families array.
+  const familiesKey = families.join(',');
   const root = useRef<HTMLElement>(null);
   const startedStep = useRef(Date.now());
   const busy = useRef(false);
@@ -122,7 +124,12 @@ export function ReasoningTraining({
         setAttempt((current) => {
           const saved = current
             ? workspace.items.find((item) => item.local.id === current.id)?.local
-            : getResumableMission(playerId, storage, mode);
+            : getResumableMission(
+                playerId,
+                storage,
+                mode,
+                familiesKey.split(',') as MissionFamily[]
+              );
           return saved ?? current;
         });
       } catch (cause) {
@@ -137,7 +144,7 @@ export function ReasoningTraining({
       window.removeEventListener('math-archer-reasoning-change', refresh);
       window.removeEventListener('storage', refresh);
     };
-  }, [playerId, storage, mode]);
+  }, [playerId, storage, mode, familiesKey]);
 
   const sync = () => {
     if (!api) {

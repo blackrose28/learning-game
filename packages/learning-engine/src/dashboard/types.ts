@@ -10,6 +10,8 @@ export interface TodayDashboardMetrics {
   arrowsUsed: number;
   arrowsAllowed: number;
   arrowsRemaining: number;
+  /** Arrows spent on Adventure reasoning missions; counted in arrowsUsed, never in accuracy. */
+  missionArrows: number;
   sessionStatus: 'not_started' | 'in_progress' | 'completed';
   attemptsCount: number;
   hitsCount: number;

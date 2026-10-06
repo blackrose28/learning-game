@@ -285,6 +285,29 @@ describe('Adventure reasoning missions', () => {
     expect(screen.getByTestId('question-expression')).toBeInTheDocument();
   });
 
+  it('falls back to plain arithmetic when every family is disabled, even with a paused mission', async () => {
+    enable(5);
+    render(<App />);
+    fireEvent.click(await screen.findByRole('button', { name: 'Bắt đầu nhiệm vụ' }));
+    solveStep(0);
+    fireEvent.click(screen.getByRole('button', { name: /Tạm dừng/ }));
+    expect(await screen.findByTestId('question-expression')).toBeInTheDocument();
+    cleanup();
+    saveReasoningSettings('player-local', {
+      schemaVersion: 1,
+      enabledFamilies: [],
+      adventureEnabled: true,
+    });
+    saveDailySession({ ...today(), arrowsUsed: 10 });
+    render(<App />);
+    expect(screen.getByTestId('question-expression')).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Bắt đầu nhiệm vụ' })).not.toBeInTheDocument();
+    fireEvent.click(screen.getByTestId('mode-tab-training'));
+    expect(screen.queryByRole('button', { name: /Đọc đề, chọn bước/ })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /Thử thách suy luận/ })).not.toBeInTheDocument();
+    expect(attempts()).toHaveLength(1);
+  });
+
   it('resumes a paused mission after a reload without charging an arrow', async () => {
     enable(5);
     render(<App />);

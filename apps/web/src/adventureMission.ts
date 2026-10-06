@@ -69,7 +69,7 @@ export function isAdventureMissionDue(
   try {
     // A conflicting history is for the parent to resolve first; never offer into it.
     if (loadMissionWorkspace(playerId, storage).items.some((item) => item.conflict)) return false;
-    if (getResumableMission(playerId, storage, 'adventure')) return true;
+    if (getResumableMission(playerId, storage, 'adventure', settings.enabledFamilies)) return true;
   } catch {
     return false;
   }

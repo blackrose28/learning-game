@@ -4,6 +4,7 @@ import {
   getDefaultStorage,
   restoreMissionAttempt,
   type MissionAttempt,
+  type MissionFamily,
   type MissionMode,
   type StoredMissionAttempt,
   type SessionStorageAdapter,
@@ -174,11 +175,19 @@ export function loadReasoningProgress(
 export function getResumableMission(
   playerId: string,
   storage: SessionStorageAdapter = getDefaultStorage(),
-  mode: MissionMode = 'training'
+  mode: MissionMode = 'training',
+  enabledFamilies?: readonly MissionFamily[]
 ): MissionAttempt | null {
   return (
     loadMissionWorkspace(playerId, storage)
-      .items.filter((item) => !item.conflict && !item.local.completedAt && item.local.mode === mode)
+      .items.filter(
+        (item) =>
+          !item.conflict &&
+          !item.local.completedAt &&
+          item.local.mode === mode &&
+          // A family the parent has since disabled is never resumed; its evidence stays saved.
+          (!enabledFamilies || enabledFamilies.includes(item.local.mission.family))
+      )
       .sort(
         (a, b) =>
           b.local.startedAt.localeCompare(a.local.startedAt) || b.local.id.localeCompare(a.local.id)

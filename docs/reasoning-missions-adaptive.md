@@ -1,8 +1,8 @@
 # M5 adaptive practice
 
-Status: support fading and weakest-relationship focus are implemented in Training.
-The parent Adventure setting and cadence policy exist; offering missions in Adventure,
-one-arrow rewards, Challenge and dashboard comparisons remain M5 work.
+Status: support fading, weakest-relationship focus, Adventure missions with one-arrow
+completion, Challenge missions, the disabled-family fallback and the separated dashboard
+counts are implemented. Only threshold calibration (which needs the pilot) remains.
 The thresholds below are the plan's initial defaults and are **uncalibrated**; tune
 them (and record the change in the plan) after the parent/child pilot.
 
@@ -112,3 +112,23 @@ button; arithmetic is unchanged).
 
 **Compatibility.** `mode` is widened on schema version 1. An older client or API rejects a
 `challenge` attempt, so deploy the API first.
+
+## Disabled families and the arithmetic fallback
+
+Every selector takes the parent's enabled families: the Training chooser, `recommendFocus`,
+`chooseAdventureMission` and `shouldOfferAdventureMission`. `getResumableMission(playerId,
+storage, mode, enabledFamilies)` applies the same rule to resuming: a paused mission whose
+family was disabled afterwards is not reopened in Training or offered again in Adventure, and
+its evidence stays saved and counted in progress. With no family enabled there is no Training
+entry, no Challenge entry and no Adventure offer, so the child sees only the arithmetic game.
+
+## Arithmetic and reasoning in the parent dashboard
+
+Reasoning evidence lives in its own store and panel; arithmetic accuracy, the add/subtract
+comparison and the recommendations are computed from arithmetic attempts only. An Adventure
+mission does spend one of the day's arrows, so `today.missionArrows` reports how many of
+`arrowsUsed` were missions and the dashboard prints that count beside the total. On a day
+that included missions, the session's `hits` (which also count mission hits) are not used as
+a stand-in for arithmetic accuracy, in either today's figure or the daily history. The count
+comes from `DailySession.missionAttemptIds`, which server-hydrated sessions do not carry, so
+treat it as a floor on those devices.

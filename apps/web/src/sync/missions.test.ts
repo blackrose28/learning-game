@@ -60,6 +60,15 @@ describe('durable reasoning mission sync', () => {
     vi.unstubAllGlobals();
   });
 
+  it('never resumes a mission whose family is disabled, and keeps its evidence', () => {
+    const storage = createMemoryStorage();
+    queueMissionAttempt(respond(start()), storage);
+    expect(getResumableMission('child', storage, 'training', ['instruction_chain'])).not.toBeNull();
+    expect(getResumableMission('child', storage, 'training', ['daily_collection'])).toBeNull();
+    expect(getResumableMission('child', storage, 'training', [])).toBeNull();
+    expect(loadMissionWorkspace('child', storage).items).toHaveLength(1);
+  });
+
   it('keeps a durable offline queue and resumes after reconnection without touching arithmetic keys', async () => {
     const storage = createMemoryStorage();
     const api = client();

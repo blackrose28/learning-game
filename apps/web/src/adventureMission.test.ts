@@ -125,6 +125,15 @@ describe('isAdventureMissionDue', () => {
     );
   });
 
+  it('does not offer a paused mission whose family the parent has since disabled', () => {
+    const { session: early } = session(1);
+    const storage = createMemoryStorage();
+    queueMissionAttempt(startMissionAttempt('paused', 'adventure'), storage);
+    const other = { ...settings, enabledFamilies: ['daily_collection' as const] };
+    expect(isAdventureMissionDue('child', other, early, storage)).toBe(false);
+    expect(isAdventureMissionDue('child', settings, early, storage)).toBe(true);
+  });
+
   it('offers an interrupted Adventure mission again, but not a Training one', () => {
     const { session: early } = session(1);
     const storage = createMemoryStorage();

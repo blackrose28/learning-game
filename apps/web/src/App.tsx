@@ -532,7 +532,14 @@ export const AppContent: React.FC = () => {
               setMissionOpen(false);
               // A paused mission is not re-offered on this page; a finished one is simply done.
               try {
-                if (getResumableMission(activeChild.id, getDefaultStorage(), 'adventure')) {
+                if (
+                  getResumableMission(
+                    activeChild.id,
+                    getDefaultStorage(),
+                    'adventure',
+                    reasoningFamilies
+                  )
+                ) {
                   setMissionDeferred(true);
                 }
               } catch {

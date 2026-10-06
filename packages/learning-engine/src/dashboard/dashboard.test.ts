@@ -405,6 +405,73 @@ describe('Parent Dashboard Analytics (Task 5.2)', () => {
     expect(data.trend.history[1].accuracy).toBe(0.8333);
   });
 
+  it('keeps reasoning mission arrows out of arithmetic accuracy and history', () => {
+    const base: DailySession = {
+      id: 'session-mix',
+      playerId: 'player-test',
+      date: '2026-09-16',
+      arrowsAllowed: 50,
+      arrowsUsed: 7,
+      hits: 7,
+      status: 'in_progress',
+      startedAt: '2026-09-16T08:00:00.000Z',
+    };
+    const attempt = (i: number, correct: boolean): Attempt => ({
+      questionId: `mix_${i}`,
+      operation: 'add',
+      left: 4,
+      right: 3,
+      answer: 7,
+      selectedAnswer: correct ? 7 : 6,
+      correct,
+      responseTimeMs: 2000,
+      skill: 'basic_addition',
+      hintUsed: false,
+      timestamp: '2026-09-16T10:00:00.000Z',
+    });
+    // 5 arithmetic arrows (4 hits) and 2 clean reasoning missions share the 7 spent arrows.
+    const mixed = computeParentDashboardData({
+      profile: emptyProfile,
+      sessions: [{ ...base, missionAttemptIds: ['a', 'b'] }],
+      attempts: [
+        attempt(0, true),
+        attempt(1, true),
+        attempt(2, true),
+        attempt(3, true),
+        attempt(4, false),
+      ],
+      date: '2026-09-16',
+    });
+    expect(mixed.today.arrowsUsed).toBe(7);
+    expect(mixed.today.missionArrows).toBe(2);
+    expect(mixed.today.attemptsCount).toBe(5);
+    expect(mixed.today.hitsCount).toBe(4);
+    expect(mixed.today.accuracy).toBe(0.8);
+    expect(mixed.trend.history[0]).toMatchObject({ attempts: 5, hits: 4, accuracy: 0.8 });
+
+    // Only missions today: there is no arithmetic evidence, not a 100% arithmetic hit rate.
+    const missionsOnly = computeParentDashboardData({
+      profile: emptyProfile,
+      sessions: [{ ...base, arrowsUsed: 2, hits: 2, missionAttemptIds: ['a', 'b'] }],
+      date: '2026-09-16',
+    });
+    expect(missionsOnly.today.arrowsUsed).toBe(2);
+    expect(missionsOnly.today.missionArrows).toBe(2);
+    expect(missionsOnly.today.hitsCount).toBe(0);
+    expect(missionsOnly.today.accuracy).toBe(0);
+    expect(missionsOnly.trend.history[0]).toMatchObject({ arrowsUsed: 2, hits: 0, accuracy: 0 });
+
+    // Without missions the session still stands in when no attempts were recorded.
+    const arithmeticOnly = computeParentDashboardData({
+      profile: emptyProfile,
+      sessions: [{ ...base, arrowsUsed: 10, hits: 8 }],
+      date: '2026-09-16',
+    });
+    expect(arithmeticOnly.today.missionArrows).toBe(0);
+    expect(arithmeticOnly.today.accuracy).toBe(0.8);
+    expect(arithmeticOnly.trend.history[0].accuracy).toBe(0.8);
+  });
+
   it('includes response time and hint rate in metrics', () => {
     const attempts: Attempt[] = [
       {

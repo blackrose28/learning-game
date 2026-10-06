@@ -258,6 +258,28 @@ describe('ParentDashboard Component (Task 5.2)', () => {
     expect(screen.getByTestId('today-arrows-metric')).toHaveTextContent('25 / 50');
   });
 
+  it('labels reasoning mission arrows separately from arithmetic accuracy', () => {
+    const playerId = 'player-mission-arrows';
+    const today = new Date().toISOString().slice(0, 10);
+    saveDailySession({
+      id: 'sess-missions',
+      playerId,
+      date: today,
+      arrowsAllowed: 50,
+      arrowsUsed: 2,
+      hits: 2,
+      status: 'in_progress',
+      startedAt: `${today}T12:00:00.000Z`,
+      missionAttemptIds: ['one', 'two'],
+    });
+    render(<ParentDashboard playerId={playerId} />);
+    expect(screen.getByTestId('today-arrows-metric')).toHaveTextContent('2 / 50');
+    expect(screen.getByTestId('q1-mission-arrows')).toHaveTextContent(
+      'Includes 2 reasoning missions; accuracy below is arithmetic only'
+    );
+    expect(screen.getByTestId('overall-accuracy-metric')).toHaveTextContent('0%');
+  });
+
   describe('Task 5.3 — Recommendation Explanation & Traceability', () => {
     it("displays the exact Today's focus, Why, and Practice format for Crossing 10 in addition", () => {
       render(<ParentDashboard playerId="player-local" />);

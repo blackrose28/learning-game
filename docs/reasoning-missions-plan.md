@@ -1,7 +1,7 @@
 # Math Archer — Reasoning Missions Plan
 
 Created: 2026-10-05  
-Status: M0–M4 engineering implemented; M5 mostly built (support fading, focus, Adventure missions with one-arrow completion, independent Challenge missions); the rest of M5, M6 and the learning pilot remain.  
+Status: M0–M4 engineering implemented; M5 engineering built (support fading, focus, Adventure missions with one-arrow completion, independent Challenge missions, disabled-family fallback, separated dashboard counts); threshold calibration needs the pilot, and M6 and the learning pilot remain.  
 Purpose: The implementation checklist and decision record for this expansion.
 
 ## 1. Goal and evidence
@@ -333,10 +333,19 @@ See [M4 Puzzles](reasoning-missions-puzzles.md).
       `challenge` (independent support only, hints refused by the engine and the server),
       reached from Training's **Thử thách suy luận** button; no arrow, no reward, no timer,
       neutral retry feedback. See [M5 Adaptive Practice](reasoning-missions-adaptive.md).
-- [ ] Confirm disabled families never enter selection and all-disabled reasoning
-      falls back to the existing arithmetic experience.
-- [ ] Keep arithmetic and reasoning summaries separate in dashboard comparisons
-      and recommendations, with counts and transparent reasons.
+- [x] Confirm disabled families never enter selection and all-disabled reasoning
+      falls back to the existing arithmetic experience: family choice, focus, Training
+      and Adventure use only enabled families, and `getResumableMission` takes the enabled
+      families so a paused mission in a since-disabled family is neither resumed nor
+      re-offered (its evidence stays saved). With none enabled, Adventure and Training show
+      no reasoning entry, even with a paused mission. See
+      [M5 Adaptive Practice](reasoning-missions-adaptive.md).
+- [x] Keep arithmetic and reasoning summaries separate in dashboard comparisons
+      and recommendations, with counts and transparent reasons: arithmetic accuracy,
+      operation comparison and recommendations read arithmetic attempts only;
+      `today.missionArrows` counts mission arrows inside the daily total and the dashboard
+      says so. Session hits no longer stand in for arithmetic accuracy on a day that
+      included missions. See [M5 Adaptive Practice](reasoning-missions-adaptive.md).
 
 Exit: all modes use the same mission contracts, preferences, and durable evidence;
 daily limits and progression count completed missions exactly once.
@@ -428,3 +437,4 @@ Keep completed work checked; revise decisions when evidence changes the plan.
 | 2026-10-06 | M5 Adventure setting and cadence               | Optional `ReasoningSettings.adventureEnabled` (validated by API and browser, preserved when families change, absent = off) with a parent "Include in Adventure" switch confirmed by the server like the family switches, and `missions/adventureMix.ts` (`ADVENTURE_MISSION_INTERVAL` = 5, `shouldOfferAdventureMission`). Adventure does not offer missions yet. No migration or deployment. All tests pass (338 engine / 63 API / 335 web); type checks pass.                                                                                                                                                                                                                                                                                                                                | Wire the policy into Adventure with one-arrow/one-reward completion and interrupted-mission recovery; calibrate thresholds after the pilot.                                             |
 | 2026-10-06 | M5 Adventure missions and one-arrow completion | `MissionAttempt.mode` is now `training` or `adventure`. `chooseAdventureMission` picks the weakest-relationship family (else least recently practised) and suggested support; `isAdventureMissionDue` offers a mission every 5 arrows (at least 2 left) or resumes a paused one; `ReasoningTraining` runs with `mode="adventure"`; `spendMissionArrow` charges once per attempt ID (stored session is authoritative), `completeAdventureMission` also pays one `awardAttemptRewards`; the server charges `sessions.arrows_used` on the single transition to completed. Declining or pausing costs nothing. No migration. All tests pass (347 engine / 66 API / 345 web); type checks, lint, format and production build pass. No deployment; deploy API before clients.                        | Independent Challenge missions; confirm disabled-family fallbacks; separate arithmetic and reasoning dashboard summaries; calibrate thresholds after the pilot.                         |
 | 2026-10-06 | M5 Challenge missions                          | `MissionMode` widened to `challenge`: `startMissionAttempt` accepts only independent missions, `recordMissionHint` refuses hints (so replay, browser restore and the API reject a tampered attempt), and the server never charges an arrow for it. `ReasoningTraining mode="challenge"` hides the support chooser, advice and hint button, gives neutral retry feedback instead of explaining the relationship, shows no timer and pays no arrow or reward; entry is a Training button. Evidence feeds support fading and parent progress like any independent mission. No migration. All tests pass (350 engine / 68 API / 348 web); type checks, lint and format pass. No deployment; deploy API before clients.                                                                             | Confirm disabled-family fallbacks; separate arithmetic and reasoning dashboard summaries; calibrate thresholds after the pilot.                                                         |
+| 2026-10-06 | M5 disabled fallback and dashboard separation  | `getResumableMission(…, enabledFamilies)` filters paused missions to enabled families (Training resume, Adventure offer and the decline check); with every family disabled the app shows only the arithmetic experience. `TodayDashboardMetrics.missionArrows` (from `DailySession.missionAttemptIds`) is shown beside arrows used; arithmetic accuracy and daily history no longer use session hits on a day with missions, and history no longer adds session hits to attempt hits. Local sessions only: server-hydrated sessions carry no mission IDs, so the count is a floor. No migration. All tests pass (351 engine / 68 API / 352 web); type checks pass. No deployment; deploy API before clients.                                                                                   | Run the parent/child pilot and calibrate thresholds (M5), then M6 release validation.                                                                                                   |

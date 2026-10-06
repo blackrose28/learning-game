@@ -1720,6 +1720,12 @@ export const ParentDashboard: React.FC<ParentDashboardProps> = ({
                 ? '🎯 Daily goal reached!'
                 : `${today.arrowsRemaining} arrows remaining`}
             </span>
+            {today.missionArrows > 0 && (
+              <span className="q-sub" data-testid="q1-mission-arrows">
+                Includes {today.missionArrows} reasoning mission
+                {today.missionArrows === 1 ? '' : 's'}; accuracy below is arithmetic only
+              </span>
+            )}
           </div>
 
           {/* Q2 */}
@@ -1827,6 +1833,8 @@ export const ParentDashboard: React.FC<ParentDashboardProps> = ({
             {today.arrowsRemaining > 0
               ? `${today.arrowsRemaining} arrows left today`
               : '🎯 50 arrows complete!'}
+            {today.missionArrows > 0 &&
+              ` (${today.missionArrows} reasoning mission${today.missionArrows === 1 ? '' : 's'}, not in arithmetic accuracy)`}
           </span>
         </div>
 
