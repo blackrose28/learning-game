@@ -35,8 +35,9 @@ function normalizeParameters(
 }
 
 /**
- * The declared rule: gap k (term k to term k+1) is `firstGap + (k − 1) × gapStep`. A finite list
- * fits many rules, so the problem always states this one.
+ * The intended rule: gap k (term k to term k+1) is `firstGap + (k − 1) × gapStep`. A finite list
+ * fits many rules; this is the one the answer is checked against. No prompt states it, because
+ * the child is meant to infer it from the listed gaps.
  */
 export function solveGrowingGapSequence(parameters: GrowingGapSequenceParameters) {
   const { first, firstGap, gapStep, shown, target } =
