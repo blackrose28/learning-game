@@ -120,7 +120,18 @@ export async function hydratePlayerProgress(
     for (const srvSess of serverSessions) {
       const locSess = sessionByDate.get(srvSess.date);
       if (!locSess || srvSess.arrowsUsed >= locSess.arrowsUsed) {
-        sessionByDate.set(srvSess.date, srvSess);
+        // The server session has no mission bookkeeping. Keep this device's record of which missions
+        // were charged and when one was last offered, or the cadence resets on every hydration.
+        const sameSession = locSess?.id === srvSess.id;
+        sessionByDate.set(srvSess.date, {
+          ...srvSess,
+          ...(sameSession && locSess.missionAttemptIds
+            ? { missionAttemptIds: locSess.missionAttemptIds }
+            : {}),
+          ...(sameSession && locSess.missionOfferedAtArrow !== undefined
+            ? { missionOfferedAtArrow: locSess.missionOfferedAtArrow }
+            : {}),
+        });
       }
     }
 

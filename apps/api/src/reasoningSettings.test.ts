@@ -59,6 +59,38 @@ describe('per-child reasoning opt-in', () => {
     ).toBe(200);
   });
 
+  it('upgrades an existing child to reasoning off without touching other preferences', async () => {
+    const fs = await import('node:fs');
+    const path = await import('node:path');
+    const dir = path.resolve(__dirname, '../migrations');
+    const db = createTestD1Database(false);
+    const apply = async (version: number) => {
+      const file = fs
+        .readdirSync(dir)
+        .find((name) => name.startsWith(String(version).padStart(4, '0')))!;
+      await db.exec(fs.readFileSync(path.resolve(dir, file), 'utf8'));
+    };
+    for (let version = 1; version <= 6; version++) await apply(version);
+    await db
+      .prepare(
+        `INSERT INTO players (id, name, created_at, updated_at, disabled_skills, animation_speed)
+         VALUES ('legacy-child', 'Legacy', '2026-09-01T00:00:00Z', '2026-09-01T00:00:00Z', '["make_10"]', 'slow')`
+      )
+      .run();
+
+    await apply(7);
+
+    const row = await db
+      .prepare(
+        'SELECT reasoning_settings, disabled_skills, animation_speed FROM players WHERE id = ?'
+      )
+      .bind('legacy-child')
+      .first<{ reasoning_settings: string; disabled_skills: string; animation_speed: string }>();
+    expect(JSON.parse(row!.reasoning_settings)).toEqual({ schemaVersion: 1, enabledFamilies: [] });
+    expect(row!.disabled_skills).toBe('["make_10"]');
+    expect(row!.animation_speed).toBe('slow');
+  });
+
   it('stores several enabled families and keeps single-family settings readable', async () => {
     const env = { DB: createTestD1Database(), JWT_SECRET: TEST_JWT_SECRET };
     const token = await createTestParentToken();

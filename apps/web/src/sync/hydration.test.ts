@@ -34,6 +34,49 @@ describe('Cloud Hydration Engine (hydratePlayerProgress)', () => {
     };
   });
 
+  it('keeps local mission cadence and charged-mission IDs when the server session wins', async () => {
+    saveDailySession(
+      {
+        id: 'sess-adv',
+        playerId,
+        date: '2026-09-16',
+        arrowsAllowed: 50,
+        arrowsUsed: 6,
+        hits: 6,
+        status: 'in_progress',
+        startedAt: '2026-09-16T10:00:00.000Z',
+        missionAttemptIds: ['mission-1'],
+        missionOfferedAtArrow: 6,
+      },
+      storage
+    );
+    const mockApiClient = new MathArcherApiClient({
+      fetchFn: async () =>
+        new Response(
+          JSON.stringify({
+            currentSession: {
+              id: 'sess-adv',
+              playerId,
+              date: '2026-09-16',
+              arrowsAllowed: 50,
+              arrowsUsed: 6,
+              hits: 6,
+              status: 'in_progress',
+              startedAt: '2026-09-16T10:00:00.000Z',
+            },
+          }),
+          { status: 200, headers: { 'Content-Type': 'application/json' } }
+        ),
+    });
+
+    await hydratePlayerProgress(playerId, mockApiClient, storage);
+
+    const session = loadAllSessions(playerId, storage).find((s) => s.id === 'sess-adv');
+    expect(session?.arrowsUsed).toBe(6);
+    expect(session?.missionAttemptIds).toEqual(['mission-1']);
+    expect(session?.missionOfferedAtArrow).toBe(6);
+  });
+
   it('hydrates empty local storage from cloud progress (Device B / PWA startup flow)', async () => {
     const serverAttempt: Attempt = {
       questionId: 'q-srv-1',
