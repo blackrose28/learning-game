@@ -428,15 +428,13 @@
 .target-card {
   width: 100%;
   max-width: 440px;
-  background: linear-gradient(135deg, rgba(255, 255, 255, 0.96) 0%, rgba(248, 250, 252, 0.94) 100%);
-  backdrop-filter: blur(8px);
-  border: 2px solid #e2e8f0;
+  background: transparent;
+  backdrop-filter: none;
+  border: 2px solid transparent;
   border-radius: 18px;
-  padding: 6px 14px 10px 14px;
+  padding: 4px 14px 6px 14px;
   text-align: center;
-  box-shadow:
-    0 4px 16px rgba(0, 0, 0, 0.08),
-    0 2px 4px rgba(0, 0, 0, 0.04);
+  box-shadow: none;
   margin-bottom: 4px;
   position: relative;
   z-index: 2;
@@ -710,19 +708,29 @@
 
 /* Target Impact Visuals (Task 3.2 & Task 9.1) */
 .target-card.target-impact-hit {
-  border-color: var(--color-correct) !important;
-  box-shadow:
-    0 0 32px rgba(34, 197, 94, 0.45),
-    0 10px 25px -5px rgba(0, 0, 0, 0.1) !important;
+  border-color: transparent !important;
+  box-shadow: none !important;
   animation: target-hit-pop 0.35s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 }
 
+.target-card.target-impact-hit .question-expression-wrapper {
+  border-color: var(--color-correct) !important;
+  box-shadow:
+    0 0 24px rgba(34, 197, 94, 0.45),
+    0 4px 12px rgba(0, 0, 0, 0.08) !important;
+}
+
 .target-card.target-impact-miss {
+  border-color: transparent !important;
+  box-shadow: none !important;
+  animation: target-miss-shake 0.4s ease-in-out;
+}
+
+.target-card.target-impact-miss .question-expression-wrapper {
   border-color: var(--color-wrong) !important;
   box-shadow:
-    0 0 24px rgba(220, 38, 38, 0.35),
-    0 10px 25px -5px rgba(0, 0, 0, 0.1) !important;
-  animation: target-miss-shake 0.4s ease-in-out;
+    0 0 20px rgba(220, 38, 38, 0.35),
+    0 4px 12px rgba(0, 0, 0, 0.08) !important;
 }
 
 .target-hit-effect {
@@ -1146,21 +1154,6 @@
     transform: translateY(-16px) scale(0.9);
     opacity: 0;
   }
-}
-
-.target-bullseye-indicator {
-  position: absolute;
-  top: -14px;
-  left: 50%;
-  transform: translateX(-50%);
-  background: #f1f5f9;
-  border: 2px solid #cbd5e1;
-  border-radius: 9999px;
-  padding: 2px 14px;
-  font-size: 12px;
-  font-weight: 700;
-  color: #475569;
-  letter-spacing: 0.5px;
 }
 
 .question-expression {
