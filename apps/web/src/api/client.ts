@@ -42,6 +42,10 @@ export interface StartSessionResponse {
 export interface PostAttemptsResponse {
   success: boolean;
   accepted: number;
+  /** Batch attempts the server already had (idempotent retries). */
+  duplicates?: number;
+  /** Batch attempts the server refused for good, by index into the request. */
+  rejected?: { index: number; code: string }[];
   session?: DailySession;
   remainingArrows?: number;
   error?: string;

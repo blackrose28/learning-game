@@ -199,6 +199,85 @@ describe('Task 6.4 — Synchronize the client (SyncManager & Queue)', () => {
     syncManager.destroy();
   });
 
+  it('sends a large backlog in chunks and drops server-rejected items from the retry queue', async () => {
+    const sentSizes: number[] = [];
+    const mockApiClient = new MathArcherApiClient({
+      fetchFn: async (_url, init) => {
+        const body = JSON.parse((init?.body as string) || '{}');
+        sentSizes.push(body.attempts.length);
+        // Server refuses the first item of every chunk for good
+        return new Response(
+          JSON.stringify({
+            success: true,
+            accepted: body.attempts.length - 1,
+            rejected: [{ index: 0, code: 'DAILY_LIMIT_EXCEEDED' }],
+          }),
+          { status: 200, headers: { 'Content-Type': 'application/json' } }
+        );
+      },
+    });
+
+    const syncManager = new SyncManager({
+      playerId,
+      apiClient: mockApiClient,
+      storage,
+      initialOnline: false,
+    });
+    for (let i = 0; i < 110; i++) {
+      await syncManager.processAttempt(createSampleAttempt(`backlog-${i}`));
+    }
+    expect(getPendingQueue(playerId, storage)).toHaveLength(110);
+
+    syncManager.setOnline(true);
+    await new Promise((resolve) => setTimeout(resolve, 20));
+
+    expect(sentSizes).toEqual([25, 25, 25, 25, 10]);
+    expect(getPendingQueue(playerId, storage)).toHaveLength(0);
+    const queue = loadQueue(playerId, storage);
+    expect(queue.filter((q) => q.status === 'rejected')).toHaveLength(5);
+    expect(queue.filter((q) => q.status === 'synced')).toHaveLength(105);
+
+    syncManager.destroy();
+  });
+
+  it('isolates one poisoned item when an older server 403s the whole request', async () => {
+    const mockApiClient = new MathArcherApiClient({
+      fetchFn: async (_url, init) => {
+        const body = JSON.parse((init?.body as string) || '{}');
+        const poisoned = body.attempts.some((a: Attempt) => a.questionId === 'poison');
+        return poisoned
+          ? new Response(JSON.stringify({ error: 'DAILY_LIMIT_EXCEEDED', message: 'limit' }), {
+              status: 403,
+              headers: { 'Content-Type': 'application/json' },
+            })
+          : new Response(JSON.stringify({ success: true, accepted: body.attempts.length }), {
+              status: 200,
+              headers: { 'Content-Type': 'application/json' },
+            });
+      },
+    });
+
+    const syncManager = new SyncManager({
+      playerId,
+      apiClient: mockApiClient,
+      storage,
+      initialOnline: false,
+    });
+    for (const id of ['a', 'b', 'poison', 'c']) {
+      await syncManager.processAttempt(createSampleAttempt(id));
+    }
+
+    syncManager.setOnline(true);
+    await new Promise((resolve) => setTimeout(resolve, 20));
+
+    const byId = new Map(loadQueue(playerId, storage).map((q) => [q.attempt.questionId, q.status]));
+    expect(byId.get('poison')).toBe('rejected');
+    expect(['a', 'b', 'c'].map((id) => byId.get(id))).toEqual(['synced', 'synced', 'synced']);
+    expect(getPendingQueue(playerId, storage)).toHaveLength(0);
+
+    syncManager.destroy();
+  });
+
   it('handles server daily limit response gracefully', async () => {
     const mockApiClient = new MathArcherApiClient({
       fetchFn: async () =>

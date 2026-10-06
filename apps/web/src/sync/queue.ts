@@ -3,7 +3,8 @@ import type { Attempt, SessionStorageAdapter } from '@math-archer/learning-engin
 export interface QueuedAttempt {
   id: string;
   attempt: Attempt;
-  status: 'pending' | 'syncing' | 'synced' | 'failed';
+  /** `rejected`: the server refused it for good (e.g. daily limit); never retried. */
+  status: 'pending' | 'syncing' | 'synced' | 'failed' | 'rejected';
   queuedAt: string;
   retryCount: number;
   error?: string;
@@ -95,20 +96,39 @@ export function markAttemptStatus(
   }
 }
 
-export function markAttemptsSynced(
+function markAttemptsResolved(
   playerId: string,
   queueIds: string[],
+  status: 'synced' | 'rejected',
+  error: string | undefined,
   storage?: SessionStorageAdapter
 ): void {
   const queue = loadQueue(playerId, storage);
   const set = new Set(queueIds);
   for (const item of queue) {
     if (set.has(item.id)) {
-      item.status = 'synced';
-      item.error = undefined;
+      item.status = status;
+      item.error = error;
     }
   }
   saveQueue(playerId, queue, storage);
+}
+
+export function markAttemptsSynced(
+  playerId: string,
+  queueIds: string[],
+  storage?: SessionStorageAdapter
+): void {
+  markAttemptsResolved(playerId, queueIds, 'synced', undefined, storage);
+}
+
+export function markAttemptsRejected(
+  playerId: string,
+  queueIds: string[],
+  error: string,
+  storage?: SessionStorageAdapter
+): void {
+  markAttemptsResolved(playerId, queueIds, 'rejected', error, storage);
 }
 
 export function clearQueue(playerId: string, storage?: SessionStorageAdapter): void {

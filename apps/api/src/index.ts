@@ -841,18 +841,35 @@ export default {
           }
         }
 
-        let lastResult: { session?: DailySession; remainingArrows?: number } = {};
+        const isBatch = !body.attempt;
+        let lastResult: { session?: DailySession; remainingArrows?: number; duplicate?: boolean } =
+          {};
         let accepted = 0;
+        let duplicates = 0;
+        const rejected: { index: number; code: string }[] = [];
 
-        for (const att of attemptsToProcess) {
-          lastResult = await recordAttemptInDb(env.DB, targetPlayerId, att);
-          accepted++;
+        for (const [index, att] of attemptsToProcess.entries()) {
+          try {
+            lastResult = await recordAttemptInDb(env.DB, targetPlayerId, att);
+          } catch (err) {
+            // A batch is a backlog replay: one over-limit attempt must not fail the rest
+            // (or the client would resend, and re-fail, the whole queue forever).
+            if (isBatch && err instanceof DailyLimitError) {
+              rejected.push({ index, code: 'DAILY_LIMIT_EXCEEDED' });
+              continue;
+            }
+            throw err;
+          }
+          if (lastResult.duplicate) duplicates++;
+          else accepted++;
         }
 
         return jsonResponse(
           {
             success: true,
             accepted,
+            duplicates,
+            rejected,
             session: lastResult.session,
             remainingArrows: lastResult.remainingArrows,
           },

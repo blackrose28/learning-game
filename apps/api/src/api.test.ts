@@ -712,6 +712,62 @@ describe('Math Archer API Test Suite', () => {
         expect(Number(dbCount?.count)).toBe(50);
       });
 
+      it('replays an over-limit batch without failing it, and a retry of the same batch is idempotent', async () => {
+        const playerId = 'backlog-player';
+        const auth = await childAuth(playerId);
+        const attempts: Attempt[] = Array.from({ length: 60 }, (_, i) => ({
+          questionId: `backlog-${i}`,
+          operation: 'add',
+          left: 2,
+          right: 3,
+          answer: 5,
+          selectedAnswer: 5,
+          correct: true,
+          responseTimeMs: 1500,
+          skill: 'basic_addition',
+          hintUsed: false,
+          mode: 'adventure',
+          timestamp: `2026-09-17T08:${String(Math.floor(i / 60)).padStart(2, '0')}:${String(i % 60).padStart(2, '0')}.000Z`,
+        }));
+        const send = () =>
+          worker.fetch(
+            new Request('https://api.math-archer.local/api/attempts', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json', ...auth },
+              body: JSON.stringify({ attempts }),
+            }),
+            env
+          );
+
+        // 60 same-day adventure attempts: 50 fit, the last 10 are refused individually (not a 403)
+        const first = await send();
+        expect(first.status).toBe(200);
+        const firstData = (await first.json()) as ApiTestResponse & {
+          duplicates: number;
+          rejected: { index: number; code: string }[];
+        };
+        expect(firstData.accepted).toBe(50);
+        expect(firstData.duplicates).toBe(0);
+        expect(firstData.rejected.map((r) => r.index)).toEqual(
+          Array.from({ length: 10 }, (_, i) => 50 + i)
+        );
+        expect(firstData.rejected.every((r) => r.code === 'DAILY_LIMIT_EXCEEDED')).toBe(true);
+
+        // A client that never saw the response retries the same backlog: no duplicate rows
+        const retry = await send();
+        expect(retry.status).toBe(200);
+        const retryData = (await retry.json()) as ApiTestResponse & { duplicates: number };
+        expect(retryData.accepted).toBe(0);
+        expect(retryData.duplicates).toBe(50);
+
+        const dbCount = await env.DB.prepare(
+          `SELECT COUNT(*) as count FROM attempts WHERE player_id = ?`
+        )
+          .bind(playerId)
+          .first<{ count: number }>();
+        expect(Number(dbCount?.count)).toBe(50);
+      });
+
       it('allows training mode attempts without being blocked by adventure daily limit', async () => {
         const playerId = 'training-player';
         const auth = await childAuth(playerId);

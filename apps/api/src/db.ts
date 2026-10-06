@@ -325,11 +325,26 @@ export async function recordAttemptInDb(
   db: D1Database,
   playerId: string,
   attempt: Attempt
-): Promise<{ session: DailySession; remainingArrows: number }> {
+): Promise<{ session: DailySession; remainingArrows: number; duplicate?: boolean }> {
   await ensurePlayer(db, playerId);
 
   const date = attempt.timestamp.slice(0, 10);
   const session = await getOrCreateSession(db, playerId, date);
+
+  // Idempotency: a retried sync must not insert (or count against the daily limit) twice
+  const existing = await db
+    .prepare(
+      `SELECT 1 AS found FROM attempts WHERE player_id = ? AND question_id = ? AND timestamp = ?`
+    )
+    .bind(playerId, attempt.questionId, attempt.timestamp)
+    .first();
+  if (existing) {
+    return {
+      session,
+      remainingArrows: Math.max(0, session.arrowsAllowed - session.arrowsUsed),
+      duplicate: true,
+    };
+  }
 
   // Task 6.3: Server-side daily limit enforcement for adventure mode
   const mode = attempt.mode ?? 'adventure';
