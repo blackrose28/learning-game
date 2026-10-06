@@ -202,7 +202,9 @@ export const AppContent: React.FC = () => {
       <UpdatePrompt activeTab={activeTab} />
       <header className="app-header">
         <div className="app-header-brand">
-          <h1 className="app-title">🏹 Math Archer</h1>
+          <h1 className="app-title">
+            🏹<span className="app-title-text"> Math Archer</span>
+          </h1>
         </div>
 
         {/* Main Tab Navigation: Streamlined Primary Game Modes */}
@@ -219,7 +221,8 @@ export const AppContent: React.FC = () => {
             className={`nav-tab-btn ${activeTab === 'game' ? 'active' : ''}`}
             aria-label="Play Game"
           >
-            🏹 Play
+            🏹
+            <span className="nav-tab-label"> Play</span>
           </button>
           <button
             type="button"
@@ -228,7 +231,8 @@ export const AppContent: React.FC = () => {
             className={`nav-tab-btn ${activeTab === 'world' ? 'active' : ''}`}
             aria-label="World Map"
           >
-            🗺️ World Map
+            🗺️
+            <span className="nav-tab-label"> World Map</span>
           </button>
           <button
             type="button"
@@ -237,7 +241,8 @@ export const AppContent: React.FC = () => {
             className={`nav-tab-btn ${activeTab === 'rewards' ? 'active' : ''}`}
             aria-label="Royal Armory"
           >
-            🏆 Royal Armory
+            🏆
+            <span className="nav-tab-label"> Royal Armory</span>
           </button>
 
           {/* Active indicator pill when viewing a secondary menu view */}

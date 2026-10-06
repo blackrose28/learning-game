@@ -110,15 +110,41 @@
   border-radius: 16px;
 }
 
+/* Phones: one slim row so the banner does not push the game's bottom section off-screen. */
 @media (max-width: 500px) {
   .install-prompt-banner {
-    flex-direction: column;
-    align-items: stretch;
-    gap: 10px;
-    padding: 10px 12px;
+    flex-shrink: 0;
+    gap: 8px;
+    margin-bottom: 0;
+    padding: 4px 8px;
+    border-radius: 0;
+  }
+
+  .install-prompt-content {
+    gap: 8px;
+    min-width: 0;
+  }
+
+  .install-prompt-icon {
+    font-size: 18px;
+  }
+
+  .install-prompt-desc {
+    display: none;
   }
 
   .install-prompt-actions {
-    justify-content: flex-end;
+    flex-shrink: 0;
+    gap: 4px;
+  }
+
+  .install-btn {
+    min-height: 32px;
+    padding: 4px 10px;
+  }
+
+  .install-dismiss-btn {
+    min-width: 32px;
+    min-height: 32px;
   }
 }

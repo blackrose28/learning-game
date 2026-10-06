@@ -522,6 +522,20 @@ body {
     padding: 2px 6px;
     font-size: 11px;
   }
+
+  /* Keep the header on one row: icon-only brand and tabs leave room for the Menu button. */
+  .app-title-text,
+  .nav-tab-label {
+    display: none;
+  }
+
+  .app-header-controls {
+    gap: 4px;
+  }
+
+  .audio-toggle-label {
+    display: none;
+  }
 }
 
 @media (max-width: 380px) {

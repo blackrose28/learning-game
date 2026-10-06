@@ -70,79 +70,82 @@ export const WeaponHeroGraphic: React.FC<
         )}
         <path d="M48 75 H75" stroke="#78350f" strokeWidth="5" />
         <rect x="58" y="72" width="7" height="6" rx="1" fill={accent} />
-        {/* Same face as the archer: oval, glossy eyes, forelock and smile. */}
-        <ellipse cx="61" cy="36" rx="9" ry="10" fill="#fed7aa" />
-        <path d="M54 30 Q59 34 57 38" stroke="#92400e" strokeWidth="2.5" strokeLinecap="round" />
-        {state === 'drawing' ? (
-          <>
-            <circle cx="58" cy="35" r="1.5" fill="#1e293b" />
-            <path d="M62 36 L66 35" stroke="#1e293b" strokeWidth="1.5" strokeLinecap="round" />
-          </>
-        ) : (
-          <>
-            <circle cx="58" cy="35" r="1.5" fill="#1e293b" />
-            <circle cx="64" cy="35" r="1.5" fill="#1e293b" />
-            <circle cx="58.5" cy="34.5" r="0.5" fill="#ffffff" />
-            <circle cx="64.5" cy="34.5" r="0.5" fill="#ffffff" />
-          </>
-        )}
-        <path d="M59 41 Q62 43 65 41" stroke="#9a3412" strokeWidth="1.2" strokeLinecap="round" />
-        {gunner ? (
-          <g data-testid="gunner-goggles">
-            {/* Peaked cap with the goggles pushed up on the crown. */}
-            <path
-              d="M49 30 Q47 14 61 14 Q75 14 73 30 Q61 25 49 30Z"
-              fill={primary}
-              stroke={secondary}
-              strokeWidth="1.5"
-              strokeLinejoin="round"
-            />
-            <path
-              d="M64 28 Q75 25 83 30 Q74 32 64 30Z"
-              fill={secondary}
-              stroke="#0f172a"
-              strokeWidth="1.2"
-              strokeLinejoin="round"
-            />
-            <path d="M48 23 Q61 18 74 23" stroke="#334155" strokeWidth="4" />
-            <circle cx="55" cy="21" r="4.5" fill="#67e8f9" stroke={accent} strokeWidth="2" />
-            <circle cx="67" cy="21" r="4.5" fill="#67e8f9" stroke={accent} strokeWidth="2" />
-            <path d="M53 19.5 L55.5 18.5 M65 19.5 L67.5 18.5" stroke="#ecfeff" strokeWidth="1" />
-          </g>
-        ) : (
-          <g data-testid="warrior-helmet">
-            {/* Steel dome with a gold brow band and a pair of horns. */}
-            <path
-              d="M49 24 Q38 22 38 9 Q45 15 53 18Z"
-              fill="#fef3c7"
-              stroke="#a16207"
-              strokeWidth="1.5"
-              strokeLinejoin="round"
-            />
-            <path
-              d="M73 24 Q84 22 84 9 Q77 15 69 18Z"
-              fill="#fef3c7"
-              stroke="#a16207"
-              strokeWidth="1.5"
-              strokeLinejoin="round"
-            />
-            <path
-              d="M48 30 Q47 14 61 14 Q75 14 74 30 Q61 25 48 30Z"
-              fill="#cbd5e1"
-              stroke="#475569"
-              strokeWidth="1.5"
-              strokeLinejoin="round"
-            />
-            <path d="M48.5 29 Q61 24.5 73.5 29" stroke={accent} strokeWidth="3.5" />
-            <circle cx="61" cy="24.5" r="2.2" fill={primary} stroke={secondary} strokeWidth="1" />
-            <path
-              d="M54 19 Q58 16 63 16"
-              stroke="#f8fafc"
-              strokeWidth="1.5"
-              strokeLinecap="round"
-            />
-          </g>
-        )}
+        {/* Head and headgear are scaled up from the neck so the hero reads at phone sizes. */}
+        <g transform="translate(61 46) scale(1.2) translate(-61 -46)" data-testid="hero-head">
+          {/* Same face as the archer: oval, glossy eyes, forelock and smile. */}
+          <ellipse cx="61" cy="36" rx="9" ry="10" fill="#fed7aa" />
+          <path d="M54 30 Q59 34 57 38" stroke="#92400e" strokeWidth="2.5" strokeLinecap="round" />
+          {state === 'drawing' ? (
+            <>
+              <circle cx="58" cy="35" r="1.5" fill="#1e293b" />
+              <path d="M62 36 L66 35" stroke="#1e293b" strokeWidth="1.5" strokeLinecap="round" />
+            </>
+          ) : (
+            <>
+              <circle cx="58" cy="35" r="1.5" fill="#1e293b" />
+              <circle cx="64" cy="35" r="1.5" fill="#1e293b" />
+              <circle cx="58.5" cy="34.5" r="0.5" fill="#ffffff" />
+              <circle cx="64.5" cy="34.5" r="0.5" fill="#ffffff" />
+            </>
+          )}
+          <path d="M59 41 Q62 43 65 41" stroke="#9a3412" strokeWidth="1.2" strokeLinecap="round" />
+          {gunner ? (
+            <g data-testid="gunner-goggles">
+              {/* Peaked cap with the goggles pushed up on the crown. */}
+              <path
+                d="M49 30 Q47 14 61 14 Q75 14 73 30 Q61 25 49 30Z"
+                fill={primary}
+                stroke={secondary}
+                strokeWidth="1.5"
+                strokeLinejoin="round"
+              />
+              <path
+                d="M64 28 Q75 25 83 30 Q74 32 64 30Z"
+                fill={secondary}
+                stroke="#0f172a"
+                strokeWidth="1.2"
+                strokeLinejoin="round"
+              />
+              <path d="M48 23 Q61 18 74 23" stroke="#334155" strokeWidth="4" />
+              <circle cx="55" cy="21" r="4.5" fill="#67e8f9" stroke={accent} strokeWidth="2" />
+              <circle cx="67" cy="21" r="4.5" fill="#67e8f9" stroke={accent} strokeWidth="2" />
+              <path d="M53 19.5 L55.5 18.5 M65 19.5 L67.5 18.5" stroke="#ecfeff" strokeWidth="1" />
+            </g>
+          ) : (
+            <g data-testid="warrior-helmet">
+              {/* Steel dome with a gold brow band and a pair of horns. */}
+              <path
+                d="M49 24 Q38 22 38 9 Q45 15 53 18Z"
+                fill="#fef3c7"
+                stroke="#a16207"
+                strokeWidth="1.5"
+                strokeLinejoin="round"
+              />
+              <path
+                d="M73 24 Q84 22 84 9 Q77 15 69 18Z"
+                fill="#fef3c7"
+                stroke="#a16207"
+                strokeWidth="1.5"
+                strokeLinejoin="round"
+              />
+              <path
+                d="M48 30 Q47 14 61 14 Q75 14 74 30 Q61 25 48 30Z"
+                fill="#cbd5e1"
+                stroke="#475569"
+                strokeWidth="1.5"
+                strokeLinejoin="round"
+              />
+              <path d="M48.5 29 Q61 24.5 73.5 29" stroke={accent} strokeWidth="3.5" />
+              <circle cx="61" cy="24.5" r="2.2" fill={primary} stroke={secondary} strokeWidth="1" />
+              <path
+                d="M54 19 Q58 16 63 16"
+                stroke="#f8fafc"
+                strokeWidth="1.5"
+                strokeLinecap="round"
+              />
+            </g>
+          )}
+        </g>
         {!gunner && (
           <>
             <path d="M51 53 Q38 60 39 77" stroke={primary} strokeWidth="7" strokeLinecap="round" />
