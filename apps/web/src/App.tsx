@@ -111,7 +111,7 @@ export const AppContent: React.FC = () => {
     return () => {
       isMounted = false;
     };
-  }, [activeChild.id, apiClient, isAuthenticated]);
+  }, [activeChild.id, apiClient, isAuthenticated, authToken]);
 
   useEffect(() => {
     if (isReasoningSettings(activeChild.reasoningSettings)) {
@@ -334,6 +334,14 @@ export const AppContent: React.FC = () => {
           </button>
         </div>
       </header>
+      {!isAuthenticated && (
+        <div role="status" data-testid="sync-sign-in-prompt">
+          Progress is saved on this device. Sign in to sync it to the cloud.{' '}
+          <button type="button" onClick={() => setShowChildPicker(true)}>
+            Sign in to sync
+          </button>
+        </div>
+      )}
 
       {/* Menu Drawer Backdrop Overlay */}
       <div

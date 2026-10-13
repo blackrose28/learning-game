@@ -370,6 +370,7 @@ export const GameScreen: React.FC<GameScreenProps> = ({
         playerId,
         storage,
         apiClient: auth?.apiClient,
+        autoSync: auth ? false : undefined,
       })
     );
   });
@@ -381,6 +382,18 @@ export const GameScreen: React.FC<GameScreenProps> = ({
     });
     return unsubscribe;
   }, [activeSyncManager]);
+
+  useEffect(() => {
+    if (auth?.authToken) {
+      void activeSyncManager.flushQueue().catch((error: unknown) => {
+        setSyncState((state) => ({
+          ...state,
+          status: 'error',
+          lastError: error instanceof Error ? error.message : 'Sync failed',
+        }));
+      });
+    }
+  }, [activeSyncManager, auth?.authToken]);
 
   // Deliberate training skill focus and session stats (Task 4.3)
   const [selectedTrainingSkill, setSelectedTrainingSkill] = useState<Skill | 'all'>(() => {

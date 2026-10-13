@@ -1,5 +1,6 @@
 import type { Skill, AnimationSpeed, ReasoningSettings } from '@math-archer/learning-engine';
 import React, { createContext, useContext, useState, useEffect, useCallback, useMemo } from 'react';
+import { getTokenExpiry } from './tokenExpiry';
 import {
   MathArcherApiClient,
   ApiError,
@@ -126,7 +127,16 @@ export const AuthProvider: React.FC<{
     },
   ]);
   const [isLoading, setIsLoading] = useState<boolean>(false);
-  const [authToken, setAuthToken] = useState<string | null>(() => apiClient.getAuthToken());
+  const [authToken, setAuthToken] = useState<string | null>(() => {
+    const token = apiClient.getAuthToken();
+    const expiry = getTokenExpiry(token);
+    if (expiry !== null && expiry <= Date.now()) {
+      apiClient.setAuthToken(null);
+      return null;
+    }
+    return token;
+  });
+  const [authRetryTick, setAuthRetryTick] = useState(0);
   const isAuthenticated = Boolean(authToken);
   const [error, setError] = useState<string | null>(null);
   const [hasPendingPinSync, setHasPendingPinSync] = useState<boolean>(() =>
@@ -233,7 +243,41 @@ export const AuthProvider: React.FC<{
     }
   }, [activeChild]);
 
-  // Auto-authenticate default/active child profile on startup if no auth token is set
+  // Expiry must also be noticed in long-lived/offline tabs, not just on startup.
+  useEffect(() => {
+    const checkSession = () => {
+      const expiry = getTokenExpiry(apiClient.getAuthToken());
+      if (expiry !== null && expiry <= Date.now()) {
+        apiClient.setAuthToken(null);
+        setAuthToken(null);
+        setIsParentUnlocked(false);
+      }
+    };
+    const resumeSession = () => {
+      checkSession();
+      if (!apiClient.getAuthToken()) setAuthRetryTick((tick) => tick + 1);
+    };
+    const onVisible = () => {
+      if (document.visibilityState === 'visible') resumeSession();
+    };
+    const expiry = getTokenExpiry(authToken);
+    // Cap browser timeouts; focus/online checks cover suspended tabs.
+    const timer =
+      expiry === null
+        ? undefined
+        : window.setTimeout(checkSession, Math.max(0, Math.min(expiry - Date.now(), 2147483647)));
+    window.addEventListener('online', resumeSession);
+    window.addEventListener('focus', resumeSession);
+    document.addEventListener('visibilitychange', onVisible);
+    return () => {
+      window.clearTimeout(timer);
+      window.removeEventListener('online', resumeSession);
+      window.removeEventListener('focus', resumeSession);
+      document.removeEventListener('visibilitychange', onVisible);
+    };
+  }, [apiClient, authToken]);
+
+  // Recover only profiles that can authenticate without a private child PIN.
   useEffect(() => {
     const existingToken = apiClient.getAuthToken();
     if (!existingToken && activeChild) {
@@ -253,7 +297,7 @@ export const AuthProvider: React.FC<{
           });
       }
     }
-  }, [apiClient, activeChild]);
+  }, [apiClient, activeChild, authToken, authRetryTick]);
 
   const loginAsChild = useCallback(
     async (childId: string, pin?: string): Promise<boolean> => {
