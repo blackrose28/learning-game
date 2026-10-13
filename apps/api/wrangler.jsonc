@@ -4,6 +4,12 @@
   "main": "src/index.ts",
   "compatibility_date": "2025-02-14",
   "compatibility_flags": ["nodejs_compat"],
+  "observability": {
+    "logs": {
+      "enabled": true,
+      "invocation_logs": true,
+    },
+  },
   "assets": {
     "directory": "../web/dist",
     "binding": "ASSETS",
