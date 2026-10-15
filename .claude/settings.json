@@ -2,5 +2,18 @@
   "permissions": {
     "allow": ["Bash(ripwire *)"]
   },
-  "enabledMcpjsonServers": ["ripwire"]
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Bash|Read",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 \"$CLAUDE_PROJECT_DIR/.claude/hooks/route-code-reads.py\"",
+            "timeout": 5
+          }
+        ]
+      }
+    ]
+  }
 }

@@ -1,12 +1,5 @@
 {
   "$schema": "https://opencode.ai/config.json",
-  "mcp": {
-    "ripwire": {
-      "type": "local",
-      "command": ["ripwire", "--mcp"],
-      "enabled": true
-    }
-  },
   "permission": {
     "bash": {
       "ripwire *": "allow"

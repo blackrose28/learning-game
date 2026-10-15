@@ -20,13 +20,15 @@ fast, accurate brief — not a wall of source code.
 `<dir>` = repo root. `SUBSYSTEM` = the area in plain words (e.g. "ingest pipeline",
 "graph ranking", "MCP server loop").
 
-1. **Task-relevant symbols** — `ripwire <dir> --for="SUBSYSTEM" --top-k=20`
+1. **Task-relevant symbols** — `ripwire <dir> --for="SUBSYSTEM" --signatures-only`
    Output: `<sigs>` ranked by relevance. The top 10 are the symbols the recipient most needs
    to know. Note their file paths, complexity (`cx=`), and reuse count (`in=`).
+   (`--top-k` does not narrow `--for` — the binary says so on stderr and serves the whole list;
+   `--signatures-only` skips the inline bodies, since step 2 expands the ones you pick.)
 
 2. **Expand the key symbols** — `ripwire <dir> --expand=SYM1,SYM2,SYM3 --legend=compact`
    (Pick the top 3 by rank from step 1.)
-   Output: full bodies + callee signatures. This is the actual contract — paste it into the
+   Output: full bodies + callee signatures (no ranked map rides along; step 1 was your orient). This is the actual contract — paste it into the
    handoff verbatim rather than paraphrasing. **Bodies are redacted by default** — high-confidence
    credentials (API keys, tokens, connection strings) are masked before you see them, so pasting this
    straight into a handoff doc is safe as-is; pass `--no-redact` only if you deliberately need the

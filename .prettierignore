@@ -1,4 +1,3 @@
 # vendored ripwire skills — keep byte-identical to upstream
 .claude/skills
 .agents/skills
-.opencode/skills

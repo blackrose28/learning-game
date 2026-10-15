@@ -1,155 +1,80 @@
-<!-- ripwire:start -->
+# AGENTS.md
 
-# ripwire — Code Intelligence
+Work style: telegraph; noun-phrases ok; drop grammar.
 
-This repo uses [ripwire](https://github.com/redhat-et/ripwire) for ranked call-graph navigation: who
-calls what, what a change breaks, which tests to run. It is a single binary — no server, no daemon, and
-nothing is written into the repo.
+## First moves — every task, before the first repo file read
 
-## Always Do
+**Use ripwire CLI first. These steps are required, not optional navigation tips.**
 
-- **Always pass `--legend=compact`.** Every XML verb ships a self-describing legend, and the full posture
-  costs ~2–3K tokens _per call_ — enough to erase the savings the tool exists to provide. The prose verbs
-  (`--situ`, `--doctor`, `--help-task`) take no `--legend` flag at all.
-- **Before editing a function or method, run `ripwire . --impact=SYM --legend=compact`** and report the
-  blast radius. Add `--uses=SYM` when you need individual call sites rather than counts.
-- **Before committing, run `ripwire . --situ`** for the changed files' blast radius and covering tests.
-- When exploring unfamiliar code, use `ripwire . --for="concept" --legend=compact` rather than grepping —
-  it returns a ranked, token-budgeted bundle instead of raw matches.
-- **Read every count as a floor, never a total.** ripwire says so in-band (`counts_floor="1"`): edges are
-  extracted from source text by name, so dynamic dispatch, callback tables and reassigned function
-  pointers are missed by construction.
+1. Task from a plan/spec doc (`math-archer-plan.md`, `SYNC_CHECKLIST.md`, `docs/*.md`):
+   `ripwire . --recall="<slice/topic>"`; never read the whole plan.
+2. Orient: `ripwire . --pack-task="<task>"` (or `--for="<question>"`);
+   open only what it ranks.
+3. Read a function: `ripwire . --expand=SYM --top-k=0`, not a whole-file dump.
+   Exact literals/regex: `ripwire . --grep='<pattern>'`.
+4. Before editing a symbol: `ripwire . --impact=SYM`; report blast radius as a floor.
+   Before writing a new one: `ripwire . --exemplar="<purpose>"`; reuse the house pattern.
+5. Before done: `ripwire . --situ` + `ripwire . --quality-delta`.
 
-## Commands
+Bounded direct reads allowed for exact edit bytes after locating the region.
+If ripwire is unavailable, say so and use focused, bounded reads/searches.
 
-| Task                                     | Command                                             |
-| ---------------------------------------- | --------------------------------------------------- |
-| Orient in a repo or directory            | `ripwire . --legend=compact --max-tokens=3000`      |
-| Where is X handled?                      | `ripwire . --for="…" --legend=compact`              |
-| Who calls this?                          | `ripwire . --callers=SYM --legend=compact`          |
-| What does it call?                       | `ripwire . --callees=SYM --legend=compact`          |
-| Every use site, with roles               | `ripwire . --uses=SYM --legend=compact`             |
-| Is it safe to change?                    | `ripwire . --impact=SYM --legend=compact`           |
-| I changed files — tests and blast radius | `ripwire . --situ`                                  |
-| Show one symbol's body                   | `ripwire . --expand=SYM --top-k=0 --legend=compact` |
-| Which command do I want?                 | `ripwire . --help-task="<task in words>"`           |
-| Is the setup healthy?                    | `ripwire . --doctor`                                |
+## Project map
 
-`--format=rows` or `--format=columnar` shrink the flat list verbs (`--callers`, `--callees`, `--uses`,
-`--impact`) further. Selectors accept `path/to/file.ts:symbolName` to disambiguate an overloaded name.
+Math Archer: adaptive math game & Vietnamese reasoning missions for children; offline-first PWA + Cloudflare Worker sync.
 
-## Reflexes (CLI-first; OpenCode, Codex and Pi read this file automatically)
+- `packages/learning-engine/`: pure TS math question generator, distractors, hints, curriculum, skill mastery, reasoning missions (`missions/`), rewards, world state, session & dashboard logic.
+- `apps/web/`: React 19 + Vite PWA; Adventure/Training/Challenge screens, parent dashboard, audio/input, offline sync queues (`src/sync/`), API client (`src/api/`), auth/session recovery (`src/context/`).
+- `apps/api/`: Cloudflare Worker + D1 SQLite (`migrations/`); parent/child PIN auth, attempt/mission sync, profile & skill/speed/reasoning settings.
+- `docs/`: architecture, MVP boundary, reasoning mission specs (`reasoning-missions-*.md`). Root `math-archer-plan.md` & `SYNC_CHECKLIST.md`: master roadmap & sync checklists.
 
-- One task, one call: `ripwire . --pack-task="<task>" --legend=compact` (ranking + bodies + callers + tests).
-- Before writing a new fn/class/helper: `ripwire . --exemplar="<what you're writing>" --legend=compact`.
-- Before calling work done: `ripwire . --quality-delta --legend=compact`, then `ripwire . --test-gate --legend=compact`.
-- Have a stack trace / build error: `ripwire . --from-trace=FILE --legend=compact` (`-` = stdin) — paste verbatim.
-- MCP alternative (warm in-memory index, project `.mcp.json` / `opencode.json` already register it): 31 verbs —
-  read (`for`, `find_symbol`, `grep`, `explore`, `fetch_body`, `batch`, …), flagship reflexes (`impact`,
-  `uses`, `exemplar`, `quality_delta`, `edit_check`, `from_trace`, …), edits (`replace_symbol_body`, …).
+Progressive loading: `docs/README.md`, then relevant spec in `docs/`.
+Typical homes: curriculum/skills `packages/learning-engine/src/curriculum.ts`; reasoning missions `packages/learning-engine/src/missions/`; Worker routes `apps/api/src/index.ts` + D1 queries `apps/api/src/db.ts`; web root `apps/web/src/App.tsx`; game UI `apps/web/src/components/GameScreen.tsx`; sync queues `apps/web/src/sync/`.
 
-<!-- ripwire:end -->
+## Rules
 
-<!-- context-mode:start -->
+- Pragmatism; avoid overengineering. Necessary tests only.
+- Strict TypeScript; no untyped code.
+- Prettier formatting (`.prettierrc`: single quotes, semicolons, 100-column lines, 2-space indent, ES5 trailing commas).
+  - Before ending a turn that touched files, run `pnpm format:check` and fix reported files with `pnpm exec prettier --write <file>`. Do not run `pnpm format` repo-wide inside an unrelated change.
+  - `.prettierignore` excludes vendored ripwire skills (`.claude/skills`, `.agents/skills`). Never hand-edit or reformat them; keep byte-identical to upstream.
+  - Run `pnpm lint` (ESLint) alongside `pnpm format:check` when finishing.
+- Fix root causes. Unsure: focused code reads, then ask with short options.
+- Unrecognized changes: assume another agent; preserve them, focus your diff. Stop/ask if conflicting.
 
-# context-mode — MANDATORY routing rules
+## Commands — repo root, pnpm workspaces
 
-context-mode MCP tools available. Rules protect context window from flooding. One unrouted command dumps 56 KB into context.
+```bash
+pnpm typecheck
+pnpm test                                       # All packages (Vitest)
+pnpm --filter @math-archer/learning-engine test # Scoped to learning-engine
+pnpm --filter api test                          # Scoped to Worker API
+pnpm --filter web test                          # Scoped to web PWA
+pnpm lint                                       # ESLint
+pnpm format:check                               # Prettier check
+pnpm dev                                        # Web app (http://localhost:3010)
+pnpm dev:api                                    # Worker API (http://localhost:8787)
+pnpm db:migrate                                 # Apply D1 migrations locally
+pnpm build                                      # Build all packages
+```
 
-## Think in Code — MANDATORY
+Tests live beside source (`*.test.ts[x]`).
+Hook tests: `python3 -m unittest discover -s .claude/hooks -p 'test_*.py'`.
 
-Analyze/count/filter/compare/search/parse/transform data: **write code** via `context-mode_ctx_execute(language, code)`, `console.log()` only the answer. Do NOT read raw data into context. PROGRAM the analysis, not COMPUTE it. Pure JavaScript — Node.js built-ins only (`fs`, `path`, `child_process`). `try/catch`, handle `null`/`undefined`. One script replaces ten tool calls.
+## Architecture gotchas
 
-## BLOCKED — do NOT attempt
+- HTTP routes in `apps/api/src/index.ts` and client calls in `apps/web/src/api/` use string URL paths; call graphs cannot trace across the client/Worker boundary. Search path literals on both sides.
+- Offline-first sync: arithmetic attempts and reasoning mission attempts use durable local queues (`apps/web/src/sync/`) with idempotent server ingestion and conflict/session recovery. Keep arithmetic mastery/rewards separate from reasoning mission evidence.
+- When changing `@math-archer/learning-engine` exports used by `apps/api` or `apps/web`, build `learning-engine` (`pnpm --filter @math-archer/learning-engine build`) so downstream `dist/` types/imports stay current.
+- D1 schema changes require a new numbered SQL file in `apps/api/migrations/` and `pnpm db:migrate` locally.
 
-### curl / wget — BLOCKED
+## Output discipline and ripwire limits
 
-Shell `curl`/`wget` intercepted and blocked. Do NOT retry.
-Use: `context-mode_ctx_fetch_and_index(url, source)` or `context-mode_ctx_execute(language: "javascript", code: "const r = await fetch(...)")`
+Long plans (`math-archer-plan.md`, `SYNC_CHECKLIST.md`, `docs/reasoning-missions-*.md`): recall relevant sections, not entire files.
+Ripwire counts are floors; dynamic/string-keyed dispatch is missed. Overloaded names:
+use `--uses=SYM` for call sites; qualify with `path/to/file.ts:SYM` to select a definition.
+Large logs/tests/data: filter or summarize output with shell/Python; avoid repeated raw dumps.
 
-### Inline HTTP — BLOCKED
-
-`fetch('http`, `requests.get(`, `requests.post(`, `http.get(`, `http.request(` — intercepted. Do NOT retry.
-Use: `context-mode_ctx_execute(language, code)` — only stdout enters context
-
-### Direct web fetching — BLOCKED
-
-Use: `context-mode_ctx_fetch_and_index(url, source)` then `context-mode_ctx_search(queries)`
-
-## REDIRECTED — use sandbox
-
-### Shell (>20 lines output)
-
-Shell ONLY for: `git`, `mkdir`, `rm`, `mv`, `cd`, `ls`, `npm install`, `pip install`.
-Otherwise: `context-mode_ctx_batch_execute(commands, queries)` or `context-mode_ctx_execute(language: "javascript", code: "...")`. Use `language: "shell"` only when code matches the host shell.
-
-### File reading (for analysis)
-
-Reading to **edit** → reading correct. Reading to **analyze/explore/summarize** → `context-mode_ctx_execute_file(path, language, code)`.
-
-### grep / search (large results)
-
-Use `context-mode_ctx_execute(language: "javascript", code: "...")` in sandbox for portable filtering/counting.
-
-## Tool selection
-
-0. **MEMORY**: `context-mode_ctx_search(sort: "timeline")` — after resume, check prior context before asking user.
-1. **GATHER**: `context-mode_ctx_batch_execute(commands, queries)` — runs all commands, auto-indexes, returns search. ONE call replaces 30+. Each command: `{label: "header", command: "..."}`.
-2. **FOLLOW-UP**: `context-mode_ctx_search(queries: ["q1", "q2", ...])` — all questions as array, ONE call (default relevance mode).
-3. **PROCESSING**: `context-mode_ctx_execute(language, code)` | `context-mode_ctx_execute_file(path, language, code)` — sandbox, only stdout enters context.
-4. **WEB**: `context-mode_ctx_fetch_and_index(url, source)` then `context-mode_ctx_search(queries)` — raw HTML never enters context.
-5. **INDEX**: `context-mode_ctx_index(content, source)` — store in FTS5 for later search.
-
-## Parallel I/O batches
-
-For multi-URL fetches or multi-API calls, **always** include `concurrency: N` (1-8):
-
-- `context-mode_ctx_batch_execute(commands: [3+ network commands], concurrency: 5)` — gh, curl, dig, docker inspect, multi-region cloud queries
-- `context-mode_ctx_fetch_and_index(requests: [{url, source}, ...], concurrency: 5)` — multi-URL batch fetch
-
-**Use concurrency 4-8** for I/O-bound work (network calls, API queries). **Keep concurrency 1** for CPU-bound (npm test, build, lint) or commands sharing state (ports, lock files, same-repo writes).
-
-GitHub API rate-limit: cap at 4 for `gh` calls.
-
-## Output
-
-Write artifacts to FILES — never inline. Return: file path + 1-line description.
-Descriptive source labels for `search(source: "label")`.
-
-## Session Continuity
-
-Skills, roles, and decisions persist for the entire session. Do not abandon them as the conversation grows.
-
-## Memory
-
-Session history is persistent and searchable. On resume, search BEFORE asking the user:
-
-| Need                    | Command                                                                                |
-| ----------------------- | -------------------------------------------------------------------------------------- |
-| What did we decide?     | `context-mode_ctx_search(queries: ["decision"], source: "decision", sort: "timeline")` |
-| What constraints exist? | `context-mode_ctx_search(queries: ["constraint"], source: "constraint")`               |
-
-DO NOT ask "what were we working on?" — SEARCH FIRST.
-If search returns 0 results, proceed as a fresh session.
-
-## ctx commands
-
-| Command       | Action                                                                        |
-| ------------- | ----------------------------------------------------------------------------- |
-| `ctx stats`   | Call `stats` MCP tool, display full output verbatim                           |
-| `ctx doctor`  | Call `doctor` MCP tool, run returned shell command, display as checklist      |
-| `ctx upgrade` | Call `upgrade` MCP tool, run returned shell command, display as checklist     |
-| `ctx purge`   | Call `purge` MCP tool with confirm: true. Warns before wiping knowledge base. |
-
-After /clear or /compact: knowledge base and session stats preserved. Use `ctx purge` to start fresh.
-<!-- context-mode:end -->
-
-# Code Formatting
-
-This repo is formatted with Prettier (`.prettierrc`: single quotes, semicolons, 100-column lines, 2-space indent, ES5 trailing commas). The whole repo is currently clean, so keep it that way.
-
-- **Before ending a turn that touched files, run `pnpm format:check`** and fix any reported files with `pnpm exec prettier --write <file>`. Do not stop with it failing.
-- Format only the files you changed. Do not run `pnpm format` repo-wide inside an unrelated change, because it buries the real diff.
-- Markdown counts: `AGENTS.md`, `CLAUDE.md` and `docs/` are checked too.
-- `.prettierignore` excludes the vendored ripwire skills (`.claude/skills`, `.agents/skills`, `.opencode/skills`). Never hand-edit or reformat them; they must stay identical to upstream.
-- Lint is separate: `pnpm lint` (ESLint). Run both when you finish.
+`.claude/hooks/route-code-reads.py`: PostToolUse advisory only, based on actual Bash/Read output
+over 300 lines or 16 KiB; never blocks or overrides permissions. Agent chooses next read scope.
+Disable with `ROUTE_HOOK=off`.

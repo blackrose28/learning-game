@@ -175,12 +175,13 @@ sections your question needs.
    and any row carries `gating="1"`, exit 0 clean or `dialect="0"`, exit 1 only when FILE could not be read.
 
 2. **Dead code** — `ripwire <dir> --dead-code[=DIR] --legend=compact`
-   `<dead-code count="N" confidence="high" evidence="internal-linkage+zero-callers"><d n="orphan" …/>` —
-   source-defined free functions with explicit internal linkage and **in-degree 0** in the indexed call
-   graph. `--dead-code=DIR` scopes to a sub-tree. Methods, declarations, headers, and external-linkage entry
-   points are excluded, so `count="0"` means "no high-confidence candidates," not "no dead code." Name-based
-   and tree-local — **verify before deleting**: confirm against the compiler's unused-symbol diagnostics or a
-   linker map; ripwire narrows the field, the toolchain proves it.
+   `<dead-code count="N" evidence="internal-linkage+zero-callers"><d n="orphan" …/>` — no `confidence=`
+   attribute (removed 2026-09-20: it was a fixed literal, not a derived signal) — source-defined free
+   functions with explicit internal linkage and **in-degree 0** in the indexed call graph.
+   `--dead-code=DIR` scopes to a sub-tree. Methods, declarations, headers, and external-linkage entry
+   points are excluded, so `count="0"` means "no candidates met the evidence rule," not "no dead code."
+   Name-based and tree-local — **verify before deleting**: confirm against the compiler's unused-symbol
+   diagnostics or a linker map; ripwire narrows the field, the toolchain proves it.
 
 3. **Duplicate bodies** — `ripwire <dir> --clones --legend=compact`
    `<clones groups="N" type3="M"><group type="2" tokens="161" n="2"><f n="line" p="…:31"/><f n="line"
@@ -224,6 +225,9 @@ sections your question needs.
    (comma-separated, `*` for "every rule"): `--lint-select=cache-` runs only the `cache-*` family, disclosing
    `selected="K of N"` on the root so a filtered zero is never confusable with an unfiltered one; an
    unresolvable PREFIX refuses with a near-miss rather than silently matching nothing.
+   **A rule row with `count_capped="1"`** spent its per-rule match budget (5000 by default), so its `count=` is a FLOOR;
+   the root then carries `findings_next=` — paste it: it re-runs only those rules under a 10x `--lint-max-per-rule=N`
+   (SARIF: `runs[0].properties.findingsNext`), and a re-run still floored names its own.
 
    **The one naming lens that proposes a FIX, not just evidence — `ripwire <dir> --naming-consistency --legend=compact`.**
    Every other pass on this page tells you WHAT is wrong; this one is the deliberate exception, and only for
@@ -269,16 +273,18 @@ sections your question needs.
    **Worst case:** a file that's BOTH a top hotspot (step 1) AND `bf="1"` — gnarly code only one person
    understands.
 
-   **Per-function readability** — `ripwire <dir> --readability --legend=compact`
+   **Per-function size ranking** — `ripwire <dir> --biggest-first --legend=compact`
    `<readability functions="N" shown="40" capped="1"><fn p="…:512" n="buildGraph" lines="1244" toks="6753"
    ops="4359" vocab="382" vol="57923.4" ent="6.26" posnett="0.000"/>` — the Posnett/Hindle/Devanbu (MSR 2011)
-   closed-form model, **least readable first**: `vol=` Halstead volume, `ent=` Shannon token entropy,
-   `lines=` the definition's line span, `posnett=` the fitted sigmoid. Complements step 1: `--hotspots` ranks
-   by complexity × *churn* (where pain has been paid), this ranks by how hard the text is to *read* right
-   now, with no git history needed. Two caveats it states in its own legend and you should carry: one
-   token-class table serves every language, so `vol=` is a cross-language approximation; and the formula was
-   fitted on snippets of 20 lines or fewer, so on a 1,000-line function `posnett=` saturates at `0.000` —
-   **read the ORDER of the rows, never the number as a grade.**
+   closed-form model, rows ordered by Halstead volume, token entropy and length, largest first: `vol=`
+   Halstead volume, `ent=` Shannon token entropy, `lines=` the definition's line span, `posnett=` the fitted
+   sigmoid. It needs no git history. Three caveats to carry: one token-class table serves every language, so
+   `vol=` is a cross-language approximation; the formula was fitted on snippets of 20 lines or fewer, so on a
+   1,000-line function `posnett=` saturates at `0.000` — never read the number as a grade; and the claim
+   that the ORDER predicts which functions need a later fix is **withdrawn** — held to narrow token-count
+   bands the association disappears in 8 of 10 deciles, so the order is a size proxy, not an independent
+   readability signal (ripwire's `docs/EVALS.md` §8). Use it to find the largest, densest
+   bodies; use `--hotspots` (step 1) for where pain has actually been paid.
 
    **Reachable non-local mutable state** — `ripwire <dir> --nonlocal-state --legend=compact`
    `<fn p="src/infra/profilePmc.h:288" n="ensure_global_init" writes="2" reads="3" direct_writes="1"
@@ -460,8 +466,8 @@ CI-enforcing the boundary you extract → **ripwire-layers**.
 
 A one-page health snapshot:
 - **Hotspots** — top 3 files by `score`, each with its worst function.
-- **Cleanup wins** — count of high-confidence dead-code candidates (all still marked *verify*) + the largest
-  clone group (biggest dedup payoff).
+- **Cleanup wins** — count of dead-code candidates meeting the evidence rule (all still marked *verify*) +
+  the largest clone group (biggest dedup payoff).
 - **Dominant smell** — the highest-count lint rule and where it clusters.
 - **Knowledge risk** — `bf="1"` files, flagging any that are also hotspots.
 - **Hidden coupling** — top surprising co-change pairs + any that overlap a clone group.

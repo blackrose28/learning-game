@@ -19,6 +19,12 @@ behind the pick (intent, score/margin, repository facts) — or honestly abstain
 too thin to name a winner. One hop cheaper than reading this whole map: paste the task, run what it
 recommends. Advice only — it never executes the recommendation.
 
+A short bare word abstains even when it names a real symbol — a lone letter, a SCREAMING name, or an
+ordinary word that happens to match an indexed name (`F` in `--help-task="understand F"`, django's ORM
+class, is a real example) does not resolve on its own; only genuine identifier SHAPE does
+(camelCase/snake_case/`::`/`.`). Mark it as code in the task text instead — backtick it (`` `F` ``) or
+write it in call form (`F()`) — to route on it by name.
+
 | The moment you're in | The ONE skill | Its opening move |
 |---|---|---|
 | **Cold-start** — landed in an unfamiliar repo, "what is this / what matters here" | **ripwire-orient** | `--recall` then `--report` |
@@ -51,6 +57,7 @@ recommends. Advice only — it never executes the recommendation.
 | **Refactoring** — planning a restructure, or a suspected god object | **ripwire-fresh-eyes** | `--communities`/`--metrics` (lcom4) + `--impact` + `--cochange`; read the nesting PROFILE (`humps=`/`deep=`), never `nest=` alone |
 | **I have the measurement — now WHICH refactor, and is it safe?** — a shape (many shallow humps / one deep tangle / small-and-dense / untested hub / a clone) needs a named fix and its precondition | **ripwire-quality-bar** | the shape → refactor playbook, then the closed fix loop: `--quality-delta` → `--edit-check=SYM` → `--affected` |
 | **Perf** — a benchmark/profile (including a flame graph) identifies a slow operation or symbol | **ripwire-perf-target** | measure → navigate measured surface → re-measure; if the counters say MEMORY not compute, `--field-affinity[=STRUCT]` (a hypothesis generator, never a measurement) |
+| **A clang optimization remark while editing ripwire's OWN C++** — `-Rpass`/`-Rpass-missed` says "loop not vectorized" / "will not inline" / etc, and you need to decide if it's worth a diff | **ripwire-opt-remarks** | `scripts/optremarks.sh` then `scripts/optremarks.py --hot` — contributor-facing, not a general perf-investigation entry: a generic "this is slow" / "where's the bottleneck" prompt with no remark in hand is **ripwire-perf-target**, not this |
 | **Security** — untrusted input, reviewing security-sensitive code, or auditing a skill/MCP config | **ripwire-security-scan** | `--lint` unsafe fns + `--scan-skills` |
 | **Handoff** — writing a summary of a repo/change for the next agent or teammate | **ripwire-handoff** | the handoff bundle |
 | **What's built but DARK here** — "why don't I see feature X" (code compiled/flagged OFF, not a bug) | **ripwire-fresh-eyes** | `--flags[=SUBSTR]` (dark-gate dashboard) + `--flip=NAME` (blast radius of turning one ON) — **ripwire-find-bug** points here too when a symptom turns out to be a dark flag |
@@ -67,7 +74,7 @@ Match the **default you were about to use**, not a moment:
 
 | About to… | Reach for instead |
 |---|---|
-| `Read` a whole file to understand one function | `--expand=SYM` — that symbol's body + its callees' signatures. The file is not the unit of an answer. |
+| `Read` a whole file to understand one function | `--expand=SYM` — that symbol's body + its callees' signatures, no ride-along map (orient ONCE per session with `ripwire <dir>`, then look up lean). The file is not the unit of an answer. |
 | `Read` several files to learn how something works | `--pack-task="<task>"` — ranking + bodies + callers + tests in ONE budgeted call |
 | `Grep`/`rg` a symbol name across the tree | `--for="theExactName"` (name-exact routing, recall@1 ~99%) · `--uses=SYM` for every read/write/import site |
 | `Grep` a concept ("where do we retry") | `--for="<the concept in words>"` — matches doc-comments and bodies, not just identifiers |
@@ -83,9 +90,9 @@ a rule an agent must remember to look up is a rule that loses to a habit.
 
 ## The legend: compact by default, full when a definition needs its reasoning
 
-Every command these skills spell asks for the compact legend (`--legend=compact`: terse definitions of only the attributes the answer carries). Add `--legend=full` when a definition's reasoning is needed — a term you do not recognise, a floor or cap you need explained, or a map a human will read. `--for` is the exception by CHOICE: its default legend is already the one to read first, and its compact legend is its own.
+Every command these skills spell asks for the compact legend (`--legend=compact`: terse definitions of only the attributes the answer carries). Compact is also the CLI's DEFAULT now, so on a current binary the flag is redundant — it stays so a command reads the same on an older one. Add `--legend=full` when a definition's reasoning is needed — a term you do not recognise, a floor or cap you need explained, or a map a human will read. `--for` spells no flag: its compact legend is its own dialect, and the default.
 
-The other exceptions are not a choice — **the binary refuses the flag on any command that does not answer with an XML legend**, and a command it refuses runs not at all. Two families: the **state-changing** commands, which write something rather than answer (`--quality-ack`, `--quality-baseline`, `--arch --baseline`, `--note-add`, `--replace-symbol-body` / `--insert-before-symbol` / `--insert-after-symbol`, `--edit-plan`, `--index-out=`, `--pin-census=`), and the **non-XML renderings** (`--mermaid`, `--html`, `--report`, `--sarif`, `--situ`, `--recall=`, `--export`). Those carry no `--legend=` at all. This matters when you compose rather than copy: a flag that turns an XML verb into one of these — `--zoom --mermaid`, `--quality-delta --quality-ack` — takes the whole command with it, so the verb is not what decides, the command is. Nothing here is a rule you have to apply by hand: `ripwire --help-task` applies it for you, and `test/skilltruthcheck.sh` runs every `--legend=compact` command these skills spell against the binary and fails on a refusal.
+The other exceptions are not a choice — **the binary refuses `--legend=compact` on any command that does not answer with an XML legend**, and a command it refuses runs not at all. Two families: the **state-changing** commands, which write something rather than answer (`--quality-ack`, `--quality-baseline`, `--arch --baseline`, `--note-add`, `--replace-symbol-body` / `--insert-before-symbol` / `--insert-after-symbol`, `--edit-plan`, `--index-out=`), which refuse either posture, and the **non-XML renderings** (`--mermaid`, `--html`, `--report`, `--sarif`, `--situ`, `--recall=`, `--export`), where `--legend=full` is accepted as a no-op because the full form is the only one they have. Those carry no `--legend=compact`. `--pin-census=` is not among them: it writes its census beside a map, and the map takes a posture like any other. This matters when you compose rather than copy: a flag that turns an XML verb into one of these — `--zoom --mermaid`, `--quality-delta --quality-ack` — takes the whole command with it, so the verb is not what decides, the command is. Nothing here is a rule you have to apply by hand: `ripwire --help-task` spells no posture at all (the binary's default decides), and `test/skilltruthcheck.sh` runs every `--legend=compact` command these skills spell against the binary and fails on a refusal.
 
 ## Cross-cutting disciplines (fire ALONGSIDE a moment skill, not instead)
 
