@@ -299,6 +299,8 @@ describe('Task 1.6 — Adaptive Question Selection', () => {
           basic_subtraction: 'mastered',
           cross_10_subtraction: 'mastered',
           mixed_operations: 'mastered',
+          addition_within_100: 'mastered',
+          subtraction_within_100: 'mastered',
         },
       });
 

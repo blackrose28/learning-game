@@ -7,7 +7,9 @@ export type SkillId =
   | 'cross_10_addition'
   | 'basic_subtraction'
   | 'cross_10_subtraction'
-  | 'mixed_operations';
+  | 'mixed_operations'
+  | 'addition_within_100'
+  | 'subtraction_within_100';
 
 export type Skill = SkillId;
 
@@ -27,6 +29,46 @@ export interface CurriculumLevel {
   skills: Skill[];
   examples: string[];
 }
+
+// The next stage builds on the original within-20 curriculum.
+const WITHIN_100_SKILL_DEFINITIONS: Pick<
+  Record<SkillId, SkillDefinition>,
+  'addition_within_100' | 'subtraction_within_100'
+> = {
+  addition_within_100: {
+    id: 'addition_within_100',
+    name: 'Addition within 100',
+    description: 'Add tens and ones with sums up to 100, including carrying to the next ten.',
+    operations: ['add'],
+    examples: ['12 + 5', '28 + 7', '34 + 25', '67 + 33'],
+  },
+  subtraction_within_100: {
+    id: 'subtraction_within_100',
+    name: 'Subtraction within 100',
+    description: 'Subtract from numbers over 10 up to 100, including borrowing a ten.',
+    operations: ['subtract'],
+    examples: ['18 - 5', '32 - 7', '76 - 24', '100 - 37'],
+  },
+};
+
+const WITHIN_100_CURRICULUM_LEVELS: readonly CurriculumLevel[] = [
+  {
+    id: 'level_8',
+    levelNumber: 8,
+    name: 'Addition within 100',
+    goal: 'Add tens and ones, carrying when needed, with sums up to 100.',
+    skills: ['addition_within_100'],
+    examples: ['12 + 5', '28 + 7', '34 + 25', '67 + 33'],
+  },
+  {
+    id: 'level_9',
+    levelNumber: 9,
+    name: 'Subtraction within 100',
+    goal: 'Subtract tens and ones, borrowing when needed, from numbers up to 100.',
+    skills: ['subtraction_within_100'],
+    examples: ['18 - 5', '32 - 7', '76 - 24', '100 - 37'],
+  },
+];
 
 export const SKILL_DEFINITIONS: Record<SkillId, SkillDefinition> = {
   basic_addition: {
@@ -78,6 +120,7 @@ export const SKILL_DEFINITIONS: Record<SkillId, SkillDefinition> = {
     operations: ['add', 'subtract'],
     examples: ['8 + 7', '16 - 8', '9 + 6', '14 - 7'],
   },
+  ...WITHIN_100_SKILL_DEFINITIONS,
 };
 
 export const CURRICULUM_LEVELS: readonly CurriculumLevel[] = [
@@ -137,6 +180,7 @@ export const CURRICULUM_LEVELS: readonly CurriculumLevel[] = [
     skills: ['mixed_operations'],
     examples: ['8 + 7', '16 - 8', '9 + 6', '14 - 7'],
   },
+  ...WITHIN_100_CURRICULUM_LEVELS,
 ];
 
 export function getSkillDefinition(skillId: Skill): SkillDefinition | undefined {

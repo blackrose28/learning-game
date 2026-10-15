@@ -12,11 +12,13 @@ const ALL_SKILLS: Skill[] = [
   'basic_subtraction',
   'cross_10_subtraction',
   'mixed_operations',
+  'addition_within_100',
+  'subtraction_within_100',
 ];
 
 describe('Task 1.3 — Distractor generation', () => {
   describe('At least 10,000 generated questions satisfy all acceptance criteria', () => {
-    it('verifies 10,500 generated questions across all skills (1,500 per skill)', () => {
+    it('verifies at least 10,000 generated questions across all skills (1,500 per skill)', () => {
       const prng = createMulberry32(54321);
       let totalQuestionsTested = 0;
 
@@ -62,7 +64,7 @@ describe('Task 1.3 — Distractor generation', () => {
           // 5. Choices are sensible and non-absurd
           for (const choice of choices) {
             expect(choice.value).toBeGreaterThanOrEqual(0);
-            expect(choice.value).toBeLessThanOrEqual(25);
+            expect(choice.value).toBeLessThanOrEqual(q.skill.endsWith('within_100') ? 110 : 25);
           }
 
           // 6. Exactly four elemental arrows assigned (fire, ice, wind, earth)
@@ -110,7 +112,7 @@ describe('Task 1.3 — Distractor generation', () => {
           // Sensible ranges
           for (const c of choices) {
             expect(c.value).toBeGreaterThanOrEqual(0);
-            expect(c.value).toBeLessThanOrEqual(25);
+            expect(c.value).toBeLessThanOrEqual(q.skill.endsWith('within_100') ? 110 : 25);
           }
         }
       });
@@ -175,7 +177,7 @@ describe('Task 1.3 — Distractor generation', () => {
       expect(choices.find((c) => c.category === 'too_low')?.value).toBeLessThan(18);
       expect(choices.find((c) => c.category === 'too_high')?.value).toBeGreaterThan(18);
       for (const c of choices) {
-        expect(c.value).toBeLessThanOrEqual(25);
+        expect(c.value).toBeLessThanOrEqual(q.skill.endsWith('within_100') ? 110 : 25);
       }
     });
 

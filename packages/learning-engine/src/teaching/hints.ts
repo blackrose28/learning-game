@@ -78,6 +78,59 @@ export function getPreviousHintLevel(current: HintLevel): HintLevel | null {
   return null;
 }
 
+/** Use place value rather than a two-ten-frame picture for larger numbers. */
+function generatePlaceValueHint(
+  question: Pick<BaseQuestion, 'left' | 'right' | 'operation'>,
+  level: Exclude<HintLevel, 'none'>
+): QuestionHint {
+  const { left, right, operation } = question;
+  const symbol = operation === 'add' ? '+' : '-';
+  const tens = Math.floor(right / 10) * 10;
+  const ones = right % 10;
+  const intermediate = operation === 'add' ? left + tens : left - tens;
+  const answer = operation === 'add' ? left + right : left - right;
+  const action = operation === 'add' ? 'add' : 'subtract';
+  const regroup =
+    operation === 'add'
+      ? 'When you have 10 ones, trade them for one ten.'
+      : 'If you need more ones, trade one ten for 10 ones.';
+
+  switch (level) {
+    case 'strategy_hint':
+      return {
+        level,
+        title: 'Strategy Hint',
+        headline: '💡 Think in tens and ones!',
+        prompt: `Split ${right} into tens and ones, then ${action} each part. ${regroup}`,
+        left,
+        right,
+        operation,
+      };
+    case 'partial_decomposition':
+      return {
+        level,
+        title: 'Partial Decomposition',
+        left,
+        right,
+        operation,
+        splitPrompt: `Split ${right} into ${tens} and ${ones}`,
+        equationScaffold: `${left} ${symbol} ${right} = ${intermediate} ${symbol} ${ones} = ?`,
+        detail: `First: ${left} ${symbol} ${tens} = ${intermediate}. Then ${action} ${ones}. ${regroup}`,
+      };
+    case 'full_explanation':
+      return {
+        level,
+        title: 'Full Explanation',
+        left,
+        right,
+        operation,
+        answer,
+        summaryText: `Split ${right} into ${tens} and ${ones}. First: ${left} ${symbol} ${tens} = ${intermediate}. Then: ${intermediate} ${symbol} ${ones} = ${answer}. ${regroup}`,
+        equation: `${left} ${symbol} ${right} = ${intermediate} ${symbol} ${ones} = ${answer}`,
+      };
+  }
+}
+
 /**
  * Generates a structured hint for a question at the requested hint level.
  *
@@ -108,6 +161,10 @@ export function generateQuestionHint(
 ): QuestionHint {
   if (level === 'none') {
     return { level: 'none' };
+  }
+
+  if (question.skill === 'addition_within_100' || question.skill === 'subtraction_within_100') {
+    return generatePlaceValueHint(question, level);
   }
 
   const { left, right, operation } = question;

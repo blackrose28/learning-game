@@ -42,7 +42,10 @@ export function loadProfile(
   try {
     const parsed = JSON.parse(raw) as SkillProfile;
     if (parsed && typeof parsed === 'object' && parsed.skills) {
-      return parsed;
+      // Old profiles predate newer curriculum skills. Preserve all recorded evidence while
+      // initializing missing skills so they can be selected for practice immediately.
+      const defaults = createEmptyProfile(playerId);
+      return { ...defaults, ...parsed, skills: { ...defaults.skills, ...parsed.skills } };
     }
   } catch {
     // Malformed JSON in storage

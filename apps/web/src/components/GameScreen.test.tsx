@@ -1422,6 +1422,27 @@ describe('Task 4.3 — Create Training mode', () => {
     expect(screen.getByTestId('arrow-counter')).toHaveTextContent('Practice #6');
   });
 
+  it.each([
+    ['addition_within_100', 'Addition within 100'],
+    ['subtraction_within_100', 'Subtraction within 100'],
+  ])('allows selecting and practicing %s in Training mode', (skill, name) => {
+    const storage = createMemoryStorage();
+    const playerId = `practice-${skill}`;
+    render(<GameScreen mode="training" playerId={playerId} storage={storage} />);
+
+    fireEvent.change(screen.getByTestId('training-skill-select'), { target: { value: skill } });
+    expect(screen.getByTestId('active-skill-badge')).toHaveTextContent(name);
+    expect(screen.getByTestId('active-deliberate-badge')).toHaveTextContent(name);
+    fireEvent.click(screen.getByTestId('choice-fire'));
+
+    const attempt = loadAttempts(playerId, storage).at(-1);
+    expect(attempt?.skill).toBe(skill);
+    expect(Math.max(attempt!.left, attempt!.right)).toBeGreaterThanOrEqual(10);
+    expect(attempt!.answer).toBeGreaterThan(0);
+    expect(attempt!.answer).toBeLessThanOrEqual(100);
+    expect(getActiveDailySession({ playerId, storage })?.arrowsUsed ?? 0).toBe(0);
+  });
+
   it('Done When: Parent can deliberately practice a weak skill', () => {
     const storage = createMemoryStorage();
     const playerId = 'player-deliberate-practice';

@@ -16,6 +16,20 @@ export function getCommonMistakeCandidates(question: BaseQuestion): number[] {
   const candidates: number[] = [];
 
   switch (skill) {
+    case 'addition_within_100': {
+      // Missing a carried ten, adding an extra ten, or confusing the operation.
+      candidates.push(answer - 10, answer + 10, Math.abs(left - right));
+      break;
+    }
+
+    case 'subtraction_within_100': {
+      // Subtracting the smaller ones digit from the larger without borrowing.
+      const tensDifference = Math.floor(left / 10) * 10 - Math.floor(right / 10) * 10;
+      candidates.push(tensDifference + Math.abs((left % 10) - (right % 10)));
+      candidates.push(answer + 10, answer - 10, left + right);
+      break;
+    }
+
     case 'basic_addition':
     case 'addition_within_10': {
       // 1. Operation confusion: subtraction instead of addition
@@ -154,16 +168,21 @@ export function getCommonMistakeCandidates(question: BaseQuestion): number[] {
  *
  * Ensures:
  * - Candidate is not equal to the correct answer.
- * - Candidate is sensible (between 1 and 25; or strictly > 1 if answer is 1 to preserve 0 for too_low).
+ * - Candidate fits the skill's range (up to 25 for early skills, 110 for within-100 skills).
+ * - When the answer is 1, preserve 0 for too_low.
  */
 export function selectCommonMistakeValue(question: BaseQuestion): number {
   const answer = question.answer ?? question.correctAnswer;
   const candidates = getCommonMistakeCandidates(question);
+  const maxValue =
+    question.skill === 'addition_within_100' || question.skill === 'subtraction_within_100'
+      ? 110
+      : 25;
 
   for (const val of candidates) {
     if (val === answer) continue;
     if (val <= 0) continue;
-    if (val > 25) continue;
+    if (val > maxValue) continue;
     // If answer is 1, keep val > 1 so that too_low can use 0 without collision
     if (answer === 1 && val <= 1) continue;
     return val;
@@ -192,7 +211,7 @@ export function selectTooLowValue(answer: number, excludeValue: number): number 
 
 /**
  * Selects a plausible answer above the correct answer.
- * Must be > answer, not equal to the excluded value (common mistake), and sensible (<= 25).
+ * Must be > answer, not equal to the excluded value (common mistake), and close to the answer.
  */
 export function selectTooHighValue(answer: number, excludeValue: number): number {
   for (let offset = 1; offset <= 10; offset++) {

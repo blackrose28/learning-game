@@ -39,6 +39,21 @@ interface NumberPair {
   operation: Operation;
 }
 
+/** Extends practice beyond single-digit arithmetic while keeping positive answers within 100. */
+function buildWithin100Pairs(operation: Operation): NumberPair[] {
+  const pairs: NumberPair[] = [];
+  for (let left = 1; left <= 100; left++) {
+    for (let right = 1; right <= 99; right++) {
+      const answer = operation === 'add' ? left + right : left - right;
+      const beyondBasics = operation === 'add' ? Math.max(left, right) >= 10 : left > 10;
+      if (beyondBasics && answer > 0 && answer <= 100) {
+        pairs.push({ left, right, operation });
+      }
+    }
+  }
+  return pairs;
+}
+
 /**
  * Builds the complete discrete set of valid number pairs for a given skill.
  */
@@ -46,6 +61,11 @@ function buildSkillPairs(skill: Skill): NumberPair[] {
   const pairs: NumberPair[] = [];
 
   switch (skill) {
+    case 'addition_within_100':
+      return buildWithin100Pairs('add');
+    case 'subtraction_within_100':
+      return buildWithin100Pairs('subtract');
+
     case 'basic_addition': {
       // Single-digit addends within 1..5, sum <= 10
       for (let left = 1; left <= 5; left++) {
@@ -172,6 +192,28 @@ export function isQuestionInSkillBounds(question: BaseQuestion, skill: Skill): b
   if (answer !== calculatedAnswer) return false;
 
   switch (skill) {
+    case 'addition_within_100':
+      return (
+        operation === 'add' &&
+        Number.isInteger(left) &&
+        Number.isInteger(right) &&
+        left >= 1 &&
+        right >= 1 &&
+        Math.max(left, right) >= 10 &&
+        answer <= 100
+      );
+
+    case 'subtraction_within_100':
+      return (
+        operation === 'subtract' &&
+        Number.isInteger(left) &&
+        Number.isInteger(right) &&
+        left > 10 &&
+        left <= 100 &&
+        right >= 1 &&
+        answer >= 1
+      );
+
     case 'basic_addition':
       return (
         operation === 'add' &&

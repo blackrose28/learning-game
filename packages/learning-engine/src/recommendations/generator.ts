@@ -11,6 +11,27 @@ import type {
   WeakPairSummary,
 } from './types';
 
+function getSystematicMistakeSkill(
+  mistake: SystematicMistake,
+  attempts: readonly Attempt[] = []
+): Skill {
+  // Skills can overlap at the boundary. Prefer the skill actually practiced over guessing by size.
+  const source = attempts.find(
+    (a) =>
+      a.left === mistake.left &&
+      a.right === mistake.right &&
+      a.operation === mistake.operation &&
+      a.selectedAnswer === mistake.wrongAnswer
+  );
+  if (source) return source.skill;
+  if (mistake.operation === 'subtract') {
+    if (mistake.left > 18 || mistake.right > 9) return 'subtraction_within_100';
+    return mistake.left > 10 ? 'cross_10_subtraction' : 'basic_subtraction';
+  }
+  if (Math.max(mistake.left, mistake.right) >= 10) return 'addition_within_100';
+  return mistake.left + mistake.right > 10 ? 'cross_10_addition' : 'basic_addition';
+}
+
 /**
  * Finds systematic mistakes where the player repeatedly gave the identical wrong answer
  * to the exact same question combination with low pair accuracy.
@@ -629,13 +650,7 @@ export function generatePracticeRecommendation(
   // 5. Check for isolated repeated systematic mistake (on an otherwise proficient profile)
   if (systematicMistakes.length > 0) {
     const topMistake = systematicMistakes[0];
-    let mistakeSkill: Skill = 'cross_10_addition';
-    if (topMistake.operation === 'subtract') {
-      mistakeSkill = topMistake.left > 10 ? 'cross_10_subtraction' : 'basic_subtraction';
-    } else {
-      mistakeSkill =
-        topMistake.left + topMistake.right > 10 ? 'cross_10_addition' : 'basic_addition';
-    }
+    const mistakeSkill = getSystematicMistakeSkill(topMistake, attempts);
 
     const skillName = formatSkillDisplayName(mistakeSkill);
     const history = computeSkillAccuracyHistory(mistakeSkill, profile, attempts);
