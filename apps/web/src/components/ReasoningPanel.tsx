@@ -29,7 +29,7 @@ interface ReasoningPanelProps {
   busy: boolean;
 }
 
-const labels: Record<MissionObjective, string> = {
+export const REASONING_OBJECTIVE_LABELS: Record<MissionObjective, string> = {
   successor_vocabulary: '“Số liền sau”',
   predecessor_vocabulary: '“Số liền trước”',
   greater_by_vocabulary: '“Lớn hơn … đơn vị”',
@@ -54,7 +54,7 @@ const labels: Record<MissionObjective, string> = {
   calculation_over_20: 'Guided calculation above 20',
 };
 
-const families: Record<MissionFamily, { name: string; description: string }> = {
+export const REASONING_FAMILY_META: Record<MissionFamily, { name: string; description: string }> = {
   instruction_chain: {
     name: 'Instruction chains',
     description: 'Understand “số liền sau”, “hiệu”, and the order of steps.',
@@ -77,6 +77,9 @@ const families: Record<MissionFamily, { name: string; description: string }> = {
     description: 'Place digit cards in tens and units slots to make the largest total.',
   },
 };
+
+const labels = REASONING_OBJECTIVE_LABELS;
+const families = REASONING_FAMILY_META;
 
 export const ReasoningPanel: React.FC<ReasoningPanelProps> = ({
   playerId,

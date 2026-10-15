@@ -17,11 +17,14 @@ import {
   type SessionStorageAdapter,
 } from '@math-archer/learning-engine';
 import { useSafeAuth } from '../context/AuthContext';
-import { hydratePlayerProgress } from '../sync';
 import type { ChildPublicProfile, MathArcherApiClient } from '../api/client';
 import { loadDisabledSkills, saveDisabledSkills } from '../skillPreferences';
 import { loadAnimationSpeed, saveAnimationSpeed } from '../speedPreferences';
 import { ReasoningPanel } from './ReasoningPanel';
+import {
+  ReasoningPerformanceSection,
+  hydrateChildDashboardProgress,
+} from './ReasoningPerformanceSection';
 import './ParentDashboard.css';
 
 export interface ParentDashboardProps {
@@ -408,7 +411,7 @@ export const ParentDashboard: React.FC<ParentDashboardProps> = ({
 
       setIsHydrating(true);
       try {
-        const res = await hydratePlayerProgress(targetId, activeApiClient, storageAdapter);
+        const res = await hydrateChildDashboardProgress(targetId, activeApiClient, storageAdapter);
         if (res.success && currentChildRef.current === targetId && !useSample) {
           setData(loadParentDashboard(targetId, storageAdapter));
         }
@@ -2112,6 +2115,14 @@ export const ParentDashboard: React.FC<ParentDashboardProps> = ({
           })}
         </div>
       </section>
+
+      {/* Vietnamese Reasoning Performance Section */}
+      <ReasoningPerformanceSection
+        playerId={effectivePlayerId}
+        child={selectedChildObj}
+        storage={storageAdapter}
+        preview={useSample}
+      />
 
       {/* Today's Focus & Recommendation (Task 5.3) */}
       {recommendation && (

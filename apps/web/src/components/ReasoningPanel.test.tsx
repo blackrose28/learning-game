@@ -1,14 +1,18 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { fireEvent, render, screen, waitFor, cleanup } from '@testing-library/react';
 import {
+  createEmptyProfile,
   createMemoryStorage,
   generateDailyCollection,
   generateInstructionChain,
+  MISSION_FAMILIES,
   recordMissionResponse,
   startMissionAttempt,
 } from '@math-archer/learning-engine';
 import { ReasoningPanel } from './ReasoningPanel';
-import { loadReasoningSettings } from '../reasoningPreferences';
+import { ReasoningPerformanceSection } from './ReasoningPerformanceSection';
+import { ParentDashboard } from './ParentDashboard';
+import { loadReasoningSettings, saveReasoningSettings } from '../reasoningPreferences';
 import { MathArcherApiClient } from '../api/client';
 import { loadMissionWorkspace, queueMissionAttempt, syncMissionAttempts } from '../sync/missions';
 
@@ -215,5 +219,133 @@ describe('parent reasoning controls and recovery', () => {
     await screen.findByText('Using cloud history. The local history is kept for recovery.');
     expect(loadMissionWorkspace('child', storage).recovery[0].local).toEqual(local);
     expect(screen.queryByRole('button', { name: 'Use cloud history' })).not.toBeInTheDocument();
+  });
+});
+
+describe('ReasoningPerformanceSection in ParentDashboard', () => {
+  it('renders empty state with all 5 mission families and zero observations', () => {
+    const storage = createMemoryStorage();
+    render(<ReasoningPerformanceSection playerId="child" storage={storage} preview={false} />);
+
+    expect(screen.getByTestId('reasoning-performance-section')).toBeVisible();
+    expect(screen.getByTestId('reasoning-completed-metric')).toHaveTextContent('0 / 0');
+    expect(screen.getByTestId('reasoning-independent-accuracy-metric')).toHaveTextContent('—');
+    expect(screen.getByTestId('reasoning-assistance-metric')).toHaveTextContent('0%');
+    expect(screen.getByTestId('no-reasoning-objectives-msg')).toBeVisible();
+
+    for (const family of MISSION_FAMILIES) {
+      expect(screen.getByTestId(`reasoning-family-row-${family}`)).toBeVisible();
+      expect(screen.getByTestId(`reasoning-family-badge-${family}`)).toHaveTextContent(
+        'not practiced'
+      );
+    }
+  });
+
+  it('displays family support badges, objective accuracy, and focus recommendation from recorded attempts', () => {
+    const storage = createMemoryStorage();
+    saveReasoningSettings(
+      'child',
+      { schemaVersion: 1, enabledFamilies: ['instruction_chain'], adventureEnabled: true },
+      storage
+    );
+
+    // Record 3 guided instruction_chain missions where difference step is missed on first try
+    [10, 20, 30].forEach((seed, idx) => {
+      const time = `2026-10-0${idx + 1}T10:00:00.000Z`;
+      const mission = generateInstructionChain({ seed, support: 'guided' });
+      let attempt = startMissionAttempt(mission, 'child', `ic-${seed}`, time);
+      let seq = 1;
+      for (const step of mission.steps) {
+        if (step.id === 'difference') {
+          const wrong = step.choices.find((c) => c.id !== step.correctChoiceId)!;
+          attempt = recordMissionResponse(attempt, {
+            eventId: `ev_${seq++}`,
+            stepId: step.id,
+            choiceId: wrong.id,
+            timestamp: time,
+            responseTimeMs: 1000,
+          });
+        }
+        attempt = recordMissionResponse(attempt, {
+          eventId: `ev_${seq++}`,
+          stepId: step.id,
+          choiceId: step.correctChoiceId,
+          timestamp: time,
+          responseTimeMs: 1000,
+        });
+      }
+      queueMissionAttempt(attempt, storage);
+    });
+
+    render(<ReasoningPerformanceSection playerId="child" storage={storage} preview={false} />);
+
+    expect(screen.getByTestId('reasoning-completed-metric')).toHaveTextContent('3 / 3');
+    expect(screen.getByTestId('reasoning-assistance-metric')).toHaveTextContent('100%');
+    expect(screen.getByTestId('reasoning-cadence-metric')).toHaveTextContent(
+      'Adventure + Training'
+    );
+    expect(screen.getByTestId('reasoning-family-badge-instruction_chain')).toHaveTextContent(
+      'guided'
+    );
+    expect(screen.getByTestId('reasoning-objective-card-difference_vocabulary')).toBeVisible();
+    expect(screen.getByTestId('reasoning-objective-weak-difference_vocabulary')).toBeVisible();
+    expect(screen.getByTestId('reasoning-focus-card')).toHaveTextContent('“Hiệu”');
+  });
+
+  it('populates sample reasoning performance in preview mode and syncs cloud missions on dashboard hydration', async () => {
+    const storage = createMemoryStorage();
+    const time = '2026-10-05T10:00:00.000Z';
+    const mission = generateInstructionChain({ seed: 7, support: 'independent' });
+    const finalStep = mission.steps.at(-1)!;
+    const completedCloudAttempt = recordMissionResponse(
+      startMissionAttempt(mission, 'child-cloud', 'cloud-m1', time),
+      {
+        eventId: 'ev-1',
+        stepId: finalStep.id,
+        choiceId: finalStep.correctChoiceId,
+        timestamp: time,
+        responseTimeMs: 1200,
+      }
+    );
+
+    const api = new MathArcherApiClient({
+      token: 'parent-token',
+      fetchFn: async (url) => {
+        const u = String(url);
+        if (u.includes('/api/missions/attempts')) {
+          return new Response(
+            JSON.stringify({
+              schemaVersion: 1,
+              attempts: [{ attempt: completedCloudAttempt, revision: 1 }],
+              nextCursor: null,
+            }),
+            { status: 200, headers: { 'Content-Type': 'application/json' } }
+          );
+        }
+        return new Response(
+          JSON.stringify({
+            profile: createEmptyProfile('child-cloud'),
+            stats: { totalAttempts: 0, accuracy: 0, averageSpeedMs: 0 },
+            currentSession: null,
+            sessions: [],
+            attempts: [],
+          }),
+          { status: 200, headers: { 'Content-Type': 'application/json' } }
+        );
+      },
+    });
+
+    render(<ParentDashboard playerId="child-cloud" apiClient={api} storage={storage} />);
+
+    // Cloud mission attempt is automatically synced and displayed
+    await waitFor(() => {
+      expect(screen.getByTestId('reasoning-completed-metric')).toHaveTextContent('1 / 1');
+      expect(screen.getByTestId('reasoning-independent-accuracy-metric')).toHaveTextContent('100%');
+    });
+
+    // Toggle sample data preview
+    fireEvent.click(screen.getByTestId('toggle-sample-data-btn'));
+    expect(screen.getByTestId('reasoning-completed-metric')).toHaveTextContent('7 / 7');
+    expect(screen.getByTestId('reasoning-focus-card')).toBeVisible();
   });
 });
