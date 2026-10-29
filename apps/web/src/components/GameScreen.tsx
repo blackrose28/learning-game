@@ -518,9 +518,7 @@ export const GameScreen: React.FC<GameScreenProps> = ({
 
   // Progressive Hint Levels (Task 4.2)
   const [isHelpOpen, setIsHelpOpen] = useState<boolean>(false);
-  const [activeHintLevel, setActiveHintLevel] = useState<HintLevel>(() =>
-    mode === 'training' ? 'full_explanation' : 'strategy_hint'
-  );
+  const [activeHintLevel, setActiveHintLevel] = useState<HintLevel>(() => 'strategy_hint');
   const [highestHintLevelUsed, setHighestHintLevelUsed] = useState<HintLevel>('none');
 
   const updateHighestHintLevel = useCallback((level: HintLevel) => {
@@ -558,7 +556,7 @@ export const GameScreen: React.FC<GameScreenProps> = ({
   const handleRequestHelp = useCallback(
     (level?: HintLevel) => {
       if (isTransitioning || (isCompleted && gameMode !== 'training')) return;
-      const targetLevel = level ?? (gameMode === 'training' ? 'full_explanation' : 'strategy_hint');
+      const targetLevel = level ?? 'strategy_hint';
       setActiveHintLevel(targetLevel);
       updateHighestHintLevel(targetLevel);
       setIsHelpOpen(true);
@@ -620,7 +618,7 @@ export const GameScreen: React.FC<GameScreenProps> = ({
       setIsCorrect(null);
       setIsHelpOpen(false);
       setHighestHintLevelUsed('none');
-      setActiveHintLevel(gameMode === 'training' ? 'full_explanation' : 'strategy_hint');
+      setActiveHintLevel('strategy_hint');
       setShotPhase('idle');
       setArcherState('idle');
       setTargetHitState('idle');
@@ -686,7 +684,7 @@ export const GameScreen: React.FC<GameScreenProps> = ({
       setIsCorrect(null);
       setIsHelpOpen(false);
       setHighestHintLevelUsed('none');
-      setActiveHintLevel(gameMode === 'training' ? 'full_explanation' : 'strategy_hint');
+      setActiveHintLevel('strategy_hint');
       setShotPhase('idle');
       setArcherState('idle');
       setTargetHitState('idle');
@@ -904,7 +902,7 @@ export const GameScreen: React.FC<GameScreenProps> = ({
           setIsTransitioning(false);
           setIsHelpOpen(false);
           setHighestHintLevelUsed('none');
-          setActiveHintLevel(gameMode === 'training' ? 'full_explanation' : 'strategy_hint');
+          setActiveHintLevel('strategy_hint');
           setShotPhase('idle');
           setArcherState('idle');
           setTargetHitState('idle');

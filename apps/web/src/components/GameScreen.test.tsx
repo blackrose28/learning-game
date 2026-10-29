@@ -979,13 +979,17 @@ describe('Task 4.1 — Implement guided make-10 feedback', () => {
     expect(helpBtn).toBeInTheDocument();
     expect(helpBtn).toHaveTextContent(/Make-10/i);
 
-    // Click request help button
+    // Click request help button — the panel opens on the strategy hint first
     fireEvent.click(helpBtn);
 
     // Modal and worked example card are displayed
     const workedExample = screen.getByTestId('worked-example-card');
     expect(workedExample).toBeInTheDocument();
     expect(screen.getByTestId('worked-example-title')).toHaveTextContent('8 + 7');
+    expect(screen.getByTestId('strategy-hint-card')).toBeInTheDocument();
+
+    // Child escalates to the full worked example
+    fireEvent.click(screen.getByTestId('tab-full-explanation'));
 
     // Step 1: Make 10 first (8 + 2 = 10)
     const step1 = screen.getByTestId('make10-step-1');
@@ -1017,6 +1021,7 @@ describe('Task 4.1 — Implement guided make-10 feedback', () => {
     );
 
     fireEvent.click(screen.getByTestId('request-help-button'));
+    fireEvent.click(screen.getByTestId('tab-full-explanation'));
     expect(screen.getByTestId('step-1-equation')).toHaveTextContent('9 + 1 = 10');
     expect(screen.getByTestId('step-2-equation')).toHaveTextContent('6 - 1 = 5');
     expect(screen.getByTestId('step-3-equation')).toHaveTextContent('10 + 5 = 15');
@@ -1029,6 +1034,7 @@ describe('Task 4.1 — Implement guided make-10 feedback', () => {
     render(<GameScreen initialQuestion={make10Question7Add8} mode="training" />);
 
     fireEvent.click(screen.getByTestId('request-help-button'));
+    fireEvent.click(screen.getByTestId('tab-full-explanation'));
     expect(screen.getByTestId('step-1-equation')).toHaveTextContent('7 + 3 = 10');
     expect(screen.getByTestId('step-2-equation')).toHaveTextContent('8 - 3 = 5');
     expect(screen.getByTestId('step-3-equation')).toHaveTextContent('10 + 5 = 15');
@@ -1076,24 +1082,29 @@ describe('Task 4.1 — Implement guided make-10 feedback', () => {
     expect(helpBtn).toHaveTextContent(/Show Hint/i);
     expect(helpBtn).not.toHaveTextContent(/make-10/i);
 
-    // Open the panel (training mode starts at full explanation)
+    // Open the panel — it starts on the strategy hint (progressive guidance),
+    // never the full explanation
     fireEvent.click(helpBtn);
     expect(screen.getByTestId('worked-example-card')).toBeInTheDocument();
     expect(screen.getByTestId('worked-example-title')).toHaveTextContent('6 × 7');
-    expect(screen.getByTestId('summary-equation')).toHaveTextContent('6 × 7 = 42');
+    expect(screen.getByTestId('strategy-hint-card')).toBeInTheDocument();
+    expect(screen.queryByTestId('full-explanation-content')).not.toBeInTheDocument();
 
     // No make-10-only content renders for times-table questions
     expect(screen.queryByTestId('ten-frames-visual')).not.toBeInTheDocument();
     expect(screen.queryByTestId('make10-step-1')).not.toBeInTheDocument();
 
     // Strategy tab shows the times-table strategy
-    fireEvent.click(screen.getByTestId('tab-strategy-hint'));
     expect(screen.getByTestId('strategy-hint-headline')).toHaveTextContent('Think of groups!');
     expect(screen.getByTestId('strategy-hint-prompt')).toHaveTextContent('Skip-count by 6');
 
     // Partial tab shows the skip-count scaffold
     fireEvent.click(screen.getByTestId('tab-partial-decomposition'));
     expect(screen.getByTestId('partial-scaffold-equation')).toHaveTextContent('6 × 7 = 6 + 6');
+
+    // Full explanation tab shows the worked answer
+    fireEvent.click(screen.getByTestId('tab-full-explanation'));
+    expect(screen.getByTestId('summary-equation')).toHaveTextContent('6 × 7 = 42');
   });
 
   it('records hintUsed: true on attempt and updates profile when help was requested', () => {
@@ -1196,10 +1207,13 @@ describe('Task 4.2 — Implement hint levels', () => {
   it('Done When: Training mode can show the complete explanation', () => {
     render(<GameScreen initialQuestion={make10Question8Add7} mode="training" />);
 
-    // Click request help in training mode
+    // Click request help in training mode — the strategy hint opens first
     fireEvent.click(screen.getByTestId('request-help-button'));
+    expect(screen.getByTestId('strategy-hint-card')).toBeInTheDocument();
+    expect(screen.queryByTestId('full-explanation-content')).not.toBeInTheDocument();
 
-    // Complete explanation is immediately shown
+    // The complete explanation is one click away
+    fireEvent.click(screen.getByTestId('tab-full-explanation'));
     expect(screen.getByTestId('full-explanation-content')).toBeInTheDocument();
     expect(screen.getByTestId('make10-step-1')).toBeInTheDocument();
     expect(screen.getByTestId('make10-step-2')).toBeInTheDocument();
@@ -1312,9 +1326,9 @@ describe('Task 4.2 — Implement hint levels', () => {
     expect(screen.getByTestId('training-mode-banner')).toBeInTheDocument();
     expect(capturedMode).toBe('training');
 
-    // In training mode, opening help shows full explanation directly
+    // In training mode, opening help shows the strategy hint first
     fireEvent.click(screen.getByTestId('request-help-button'));
-    expect(screen.getByTestId('full-explanation-content')).toBeInTheDocument();
+    expect(screen.getByTestId('strategy-hint-card')).toBeInTheDocument();
   });
 
   it('in Adventure mode, missing does not dump full explanation and shows encouraging strategy note', () => {
@@ -1635,13 +1649,19 @@ describe('Task 4.3 — Create Training mode', () => {
     expect(screen.getByTestId('arrow-counter')).toHaveTextContent('Practice #2');
   });
 
-  it('Done When: In Training mode, complete explanations are readily accessible for teachable questions', () => {
+  it('Done When: In Training mode, requesting help opens the strategy hint first (progressive guidance)', () => {
     render(
       <GameScreen initialQuestion={make10Question8Add7} mode="training" autoAdvanceDelayMs={0} />
     );
 
-    // In training mode, requesting help directly opens full explanation (Task 4.2 & 4.3)
+    // Requesting help opens the strategy hint first, not the full explanation —
+    // we guide the child through escalating hints instead of revealing the answer.
     fireEvent.click(screen.getByTestId('request-help-button'));
+    expect(screen.getByTestId('strategy-hint-card')).toBeInTheDocument();
+    expect(screen.queryByTestId('full-explanation-content')).not.toBeInTheDocument();
+
+    // The full explanation is one click away for a child who is still stuck
+    fireEvent.click(screen.getByTestId('tab-full-explanation'));
     expect(screen.getByTestId('full-explanation-content')).toBeInTheDocument();
     expect(screen.getByTestId('make10-step-1')).toBeInTheDocument();
     expect(screen.getByTestId('make10-step-2')).toBeInTheDocument();
