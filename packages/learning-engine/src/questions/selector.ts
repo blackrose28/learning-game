@@ -1,6 +1,6 @@
 import { CURRICULUM_LEVELS, type Skill } from '../curriculum';
 import { createQuestionWithDistractors } from '../distractors/generator';
-import { isDeveloping, isStrong, isWeak } from '../skills/profile';
+import { formatPairKey, isDeveloping, isStrong, isWeak } from '../skills/profile';
 import type { SkillProfile } from '../skills/types';
 import { createMulberry32, generateQuestionSpec } from './generator';
 import type {
@@ -337,7 +337,7 @@ export function selectNextQuestion(
   // Anti-repetition: avoid immediately repeating the exact same operand pair
   if (options?.previousPairKey || options?.previousQuestionId) {
     const isRepeat = (spec: QuestionSpec) => {
-      const pairKey = `${spec.left} ${spec.operation === 'add' ? '+' : '-'} ${spec.right}`;
+      const pairKey = formatPairKey(spec.left, spec.operation, spec.right);
       if (options.previousPairKey && pairKey === options.previousPairKey) return true;
       if (options.previousQuestionId && spec.id === options.previousQuestionId) return true;
       return false;

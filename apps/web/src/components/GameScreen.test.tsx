@@ -922,6 +922,22 @@ const make10Question9Add6: Question = {
   ],
 };
 
+const multQuestion6Times7: Question = {
+  id: 'q_test_6_times_7',
+  left: 6,
+  right: 7,
+  operation: 'multiply',
+  answer: 42,
+  correctAnswer: 42,
+  skill: 'multiplication_below_10',
+  choices: [
+    { element: 'fire', value: 42, category: 'correct' },
+    { element: 'ice', value: 48, category: 'too_high' },
+    { element: 'wind', value: 36, category: 'too_low' },
+    { element: 'earth', value: 13, category: 'common_mistake' },
+  ],
+};
+
 const make10Question7Add8: Question = {
   id: 'q_test_7_add_8',
   left: 7,
@@ -1049,6 +1065,35 @@ describe('Task 4.1 — Implement guided make-10 feedback', () => {
 
     fireEvent.click(screen.getByTestId('close-help-icon'));
     expect(screen.queryByTestId('worked-example-card')).not.toBeInTheDocument();
+  });
+
+  it('shows a guided hint panel for multiplication questions without make-10 content', () => {
+    render(<GameScreen initialQuestion={multQuestion6Times7} mode="training" />);
+
+    // Help button is visible and labeled generically (not make-10)
+    const helpBtn = screen.getByTestId('request-help-button');
+    expect(helpBtn).toBeInTheDocument();
+    expect(helpBtn).toHaveTextContent(/Show Hint/i);
+    expect(helpBtn).not.toHaveTextContent(/make-10/i);
+
+    // Open the panel (training mode starts at full explanation)
+    fireEvent.click(helpBtn);
+    expect(screen.getByTestId('worked-example-card')).toBeInTheDocument();
+    expect(screen.getByTestId('worked-example-title')).toHaveTextContent('6 × 7');
+    expect(screen.getByTestId('summary-equation')).toHaveTextContent('6 × 7 = 42');
+
+    // No make-10-only content renders for times-table questions
+    expect(screen.queryByTestId('ten-frames-visual')).not.toBeInTheDocument();
+    expect(screen.queryByTestId('make10-step-1')).not.toBeInTheDocument();
+
+    // Strategy tab shows the times-table strategy
+    fireEvent.click(screen.getByTestId('tab-strategy-hint'));
+    expect(screen.getByTestId('strategy-hint-headline')).toHaveTextContent('Think of groups!');
+    expect(screen.getByTestId('strategy-hint-prompt')).toHaveTextContent('Skip-count by 6');
+
+    // Partial tab shows the skip-count scaffold
+    fireEvent.click(screen.getByTestId('tab-partial-decomposition'));
+    expect(screen.getByTestId('partial-scaffold-equation')).toHaveTextContent('6 × 7 = 6 + 6');
   });
 
   it('records hintUsed: true on attempt and updates profile when help was requested', () => {
@@ -1440,6 +1485,29 @@ describe('Task 4.3 — Create Training mode', () => {
     expect(Math.max(attempt!.left, attempt!.right)).toBeGreaterThanOrEqual(10);
     expect(attempt!.answer).toBeGreaterThan(0);
     expect(attempt!.answer).toBeLessThanOrEqual(100);
+    expect(getActiveDailySession({ playerId, storage })?.arrowsUsed ?? 0).toBe(0);
+  });
+
+  it.each([
+    ['multiplication_below_10', 'Multiplication below 10', 'multiply'],
+    ['division_below_10', 'Division below 10', 'divide'],
+  ])('allows selecting and practicing %s in Training mode', (skill, name, operation) => {
+    const storage = createMemoryStorage();
+    const playerId = `practice-${skill}`;
+    render(<GameScreen mode="training" playerId={playerId} storage={storage} />);
+
+    fireEvent.change(screen.getByTestId('training-skill-select'), { target: { value: skill } });
+    expect(screen.getByTestId('active-skill-badge')).toHaveTextContent(name);
+    expect(screen.getByTestId('active-deliberate-badge')).toHaveTextContent(name);
+    fireEvent.click(screen.getByTestId('choice-fire'));
+
+    const attempt = loadAttempts(playerId, storage).at(-1);
+    expect(attempt?.skill).toBe(skill);
+    expect(attempt?.operation).toBe(operation);
+    expect(attempt!.left).toBeGreaterThanOrEqual(1);
+    expect(attempt!.right).toBeGreaterThanOrEqual(1);
+    expect(attempt!.right).toBeLessThanOrEqual(9);
+    expect(attempt!.answer).toBeGreaterThan(0);
     expect(getActiveDailySession({ playerId, storage })?.arrowsUsed ?? 0).toBe(0);
   });
 

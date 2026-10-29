@@ -53,10 +53,13 @@ export interface OperationComparison {
   isSubtractionWeaker: boolean;
 }
 
+export type SkillCategory =
+  'addition' | 'subtraction' | 'multiplication' | 'division' | 'foundations';
+
 export interface SkillSummaryItem {
   skillId: Skill;
   name: string;
-  category: 'addition' | 'subtraction' | 'foundations';
+  category: SkillCategory;
   attempts: number;
   correct: number;
   accuracy: number;

@@ -119,9 +119,16 @@ describe('Task 1.1 — Basic question representation', () => {
       expect(validateBaseQuestion(invalid)).toBe(false);
     });
 
+    it('solves all four supported operations', () => {
+      expect(solveExpression(5, 2, 'add')).toBe(7);
+      expect(solveExpression(5, 2, 'subtract')).toBe(3);
+      expect(solveExpression(5, 2, 'multiply')).toBe(10);
+      expect(solveExpression(6, 2, 'divide')).toBe(3);
+    });
+
     it('throws error for unsupported operation', () => {
-      expect(() => solveExpression(5, 2, 'multiply' as unknown as Operation)).toThrow(
-        'Unsupported operation: multiply'
+      expect(() => solveExpression(5, 2, 'modulo' as unknown as Operation)).toThrow(
+        'Unsupported operation: modulo'
       );
     });
   });

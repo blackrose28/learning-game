@@ -14,7 +14,13 @@ const ALL_SKILLS: Skill[] = [
   'mixed_operations',
   'addition_within_100',
   'subtraction_within_100',
+  'multiplication_below_10',
+  'division_below_10',
 ];
+
+/** Sensible choice cap per skill family: early skills ≤ 25, below-10 mult/div ≤ 90, within-100 ≤ 110. */
+const maxChoiceValue = (skill: Skill) =>
+  skill.endsWith('within_100') ? 110 : skill.endsWith('below_10') ? 90 : 25;
 
 describe('Task 1.3 — Distractor generation', () => {
   describe('At least 10,000 generated questions satisfy all acceptance criteria', () => {
@@ -64,7 +70,7 @@ describe('Task 1.3 — Distractor generation', () => {
           // 5. Choices are sensible and non-absurd
           for (const choice of choices) {
             expect(choice.value).toBeGreaterThanOrEqual(0);
-            expect(choice.value).toBeLessThanOrEqual(q.skill.endsWith('within_100') ? 110 : 25);
+            expect(choice.value).toBeLessThanOrEqual(maxChoiceValue(q.skill));
           }
 
           // 6. Exactly four elemental arrows assigned (fire, ice, wind, earth)
@@ -112,7 +118,7 @@ describe('Task 1.3 — Distractor generation', () => {
           // Sensible ranges
           for (const c of choices) {
             expect(c.value).toBeGreaterThanOrEqual(0);
-            expect(c.value).toBeLessThanOrEqual(q.skill.endsWith('within_100') ? 110 : 25);
+            expect(c.value).toBeLessThanOrEqual(maxChoiceValue(q.skill));
           }
         }
       });
@@ -177,7 +183,7 @@ describe('Task 1.3 — Distractor generation', () => {
       expect(choices.find((c) => c.category === 'too_low')?.value).toBeLessThan(18);
       expect(choices.find((c) => c.category === 'too_high')?.value).toBeGreaterThan(18);
       for (const c of choices) {
-        expect(c.value).toBeLessThanOrEqual(q.skill.endsWith('within_100') ? 110 : 25);
+        expect(c.value).toBeLessThanOrEqual(maxChoiceValue(q.skill));
       }
     });
 

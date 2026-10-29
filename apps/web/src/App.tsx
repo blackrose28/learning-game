@@ -8,6 +8,7 @@ import {
   type ReasoningSettings,
   type MissionFamily,
   solveExpression,
+  formatExpression,
   getAllCurriculumLevels,
   getSkillsForLevel,
   loadLocalProgress,
@@ -812,8 +813,7 @@ export const AppContent: React.FC = () => {
                       >
                         <div>
                           <span style={{ fontWeight: 600 }}>
-                            {att.left} {att.operation === 'add' ? '+' : '-'} {att.right} ={' '}
-                            {att.answer}
+                            {formatExpression(att)} = {att.answer}
                           </span>
                           <span style={{ color: '#6b7280', fontSize: 12, marginLeft: 8 }}>
                             (chosen: {att.selectedAnswer})

@@ -88,8 +88,13 @@ function validateAttempt(att: unknown): { valid: boolean; error?: string } {
   if (typeof a.questionId !== 'string' || !a.questionId) {
     return { valid: false, error: 'Missing or invalid questionId' };
   }
-  if (a.operation !== 'add' && a.operation !== 'subtract') {
-    return { valid: false, error: 'Invalid operation; must be add or subtract' };
+  if (
+    a.operation !== 'add' &&
+    a.operation !== 'subtract' &&
+    a.operation !== 'multiply' &&
+    a.operation !== 'divide'
+  ) {
+    return { valid: false, error: 'Invalid operation; must be add, subtract, multiply, or divide' };
   }
   if (typeof a.left !== 'number' || typeof a.right !== 'number') {
     return { valid: false, error: 'left and right operands must be numbers' };

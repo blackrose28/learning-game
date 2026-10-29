@@ -1,6 +1,6 @@
 import { getSkillDefinition, type Skill } from '../curriculum';
 import { getRecommendedFocus, getWeakSkills } from '../questions/selector';
-import { parsePairKey } from '../skills/profile';
+import { formatPairKey, parsePairKey } from '../skills/profile';
 import type { Attempt, SkillProfile, SkillProgress } from '../skills/types';
 import type {
   PracticeRecommendation,
@@ -24,6 +24,8 @@ function getSystematicMistakeSkill(
       a.selectedAnswer === mistake.wrongAnswer
   );
   if (source) return source.skill;
+  if (mistake.operation === 'multiply') return 'multiplication_below_10';
+  if (mistake.operation === 'divide') return 'division_below_10';
   if (mistake.operation === 'subtract') {
     if (mistake.left > 18 || mistake.right > 9) return 'subtraction_within_100';
     return mistake.left > 10 ? 'cross_10_subtraction' : 'basic_subtraction';
@@ -47,7 +49,7 @@ export function detectSystematicMistakes(
   const grouped = new Map<string, { attempt: Attempt; count: number }>();
 
   for (const att of wrongAttempts) {
-    const pairKey = `${att.left} ${att.operation === 'add' ? '+' : '-'} ${att.right}`;
+    const pairKey = formatPairKey(att.left, att.operation, att.right);
     const key = `${pairKey}|${att.selectedAnswer}`;
     const existing = grouped.get(key);
     if (existing) {
@@ -60,7 +62,7 @@ export function detectSystematicMistakes(
   const results: SystematicMistake[] = [];
   for (const [, { attempt, count }] of grouped.entries()) {
     if (count >= minOccurrences) {
-      const pairKey = `${attempt.left} ${attempt.operation === 'add' ? '+' : '-'} ${attempt.right}`;
+      const pairKey = formatPairKey(attempt.left, attempt.operation, attempt.right);
 
       // If profile is available, filter out normal random slips on well-known pairs
       if (profile && profile.pairs[pairKey]) {

@@ -1,4 +1,20 @@
-export type Operation = 'add' | 'subtract';
+export type Operation = 'add' | 'subtract' | 'multiply' | 'divide';
+
+/**
+ * Display symbol for an arithmetic operation.
+ */
+export function operationSymbol(operation: Operation): string {
+  switch (operation) {
+    case 'add':
+      return '+';
+    case 'subtract':
+      return '-';
+    case 'multiply':
+      return '×';
+    case 'divide':
+      return '÷';
+  }
+}
 
 export type SkillId =
   | 'basic_addition'
@@ -9,7 +25,9 @@ export type SkillId =
   | 'cross_10_subtraction'
   | 'mixed_operations'
   | 'addition_within_100'
-  | 'subtraction_within_100';
+  | 'subtraction_within_100'
+  | 'multiplication_below_10'
+  | 'division_below_10';
 
 export type Skill = SkillId;
 
@@ -70,6 +88,47 @@ const WITHIN_100_CURRICULUM_LEVELS: readonly CurriculumLevel[] = [
   },
 ];
 
+// Times-table fluency: factors, divisors, and quotients below 10.
+const BELOW_10_MULT_DIV_SKILL_DEFINITIONS: Pick<
+  Record<SkillId, SkillDefinition>,
+  'multiplication_below_10' | 'division_below_10'
+> = {
+  multiplication_below_10: {
+    id: 'multiplication_below_10',
+    name: 'Multiplication below 10',
+    description: 'Multiply numbers below 10, building times-table fluency with products up to 81.',
+    operations: ['multiply'],
+    examples: ['3 × 4', '7 × 8', '6 × 6', '9 × 5'],
+  },
+  division_below_10: {
+    id: 'division_below_10',
+    name: 'Division below 10',
+    description:
+      'Divide using known multiplication facts, with divisors and quotients below 10 and no remainders.',
+    operations: ['divide'],
+    examples: ['12 ÷ 3', '56 ÷ 7', '36 ÷ 6', '81 ÷ 9'],
+  },
+};
+
+const BELOW_10_MULT_DIV_CURRICULUM_LEVELS: readonly CurriculumLevel[] = [
+  {
+    id: 'level_10',
+    levelNumber: 10,
+    name: 'Multiplication below 10',
+    goal: 'Multiply numbers below 10 fluently, recalling times-table facts.',
+    skills: ['multiplication_below_10'],
+    examples: ['3 × 4', '7 × 8', '6 × 6', '9 × 5'],
+  },
+  {
+    id: 'level_11',
+    levelNumber: 11,
+    name: 'Division below 10',
+    goal: 'Divide using related multiplication facts, with no remainders.',
+    skills: ['division_below_10'],
+    examples: ['12 ÷ 3', '56 ÷ 7', '36 ÷ 6', '81 ÷ 9'],
+  },
+];
+
 export const SKILL_DEFINITIONS: Record<SkillId, SkillDefinition> = {
   basic_addition: {
     id: 'basic_addition',
@@ -121,6 +180,7 @@ export const SKILL_DEFINITIONS: Record<SkillId, SkillDefinition> = {
     examples: ['8 + 7', '16 - 8', '9 + 6', '14 - 7'],
   },
   ...WITHIN_100_SKILL_DEFINITIONS,
+  ...BELOW_10_MULT_DIV_SKILL_DEFINITIONS,
 };
 
 export const CURRICULUM_LEVELS: readonly CurriculumLevel[] = [
@@ -181,6 +241,7 @@ export const CURRICULUM_LEVELS: readonly CurriculumLevel[] = [
     examples: ['8 + 7', '16 - 8', '9 + 6', '14 - 7'],
   },
   ...WITHIN_100_CURRICULUM_LEVELS,
+  ...BELOW_10_MULT_DIV_CURRICULUM_LEVELS,
 ];
 
 export function getSkillDefinition(skillId: Skill): SkillDefinition | undefined {

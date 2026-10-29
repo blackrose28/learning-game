@@ -1,5 +1,6 @@
 import type { BaseQuestion } from '../questions/types';
-import type { Operation, Skill } from '../curriculum';
+import { operationSymbol, type Operation, type Skill } from '../curriculum';
+import { solveExpression } from '../questions/question';
 import {
   generateMake10Decomposition,
   isMake10Eligible,
@@ -84,7 +85,7 @@ function generatePlaceValueHint(
   level: Exclude<HintLevel, 'none'>
 ): QuestionHint {
   const { left, right, operation } = question;
-  const symbol = operation === 'add' ? '+' : '-';
+  const symbol = operationSymbol(operation);
   const tens = Math.floor(right / 10) * 10;
   const ones = right % 10;
   const intermediate = operation === 'add' ? left + tens : left - tens;
@@ -132,6 +133,109 @@ function generatePlaceValueHint(
 }
 
 /**
+ * Times-table hints: repeated addition and skip-counting for multiplication,
+ * related multiplication facts for division.
+ */
+function generateMultDivHint(
+  question: Pick<BaseQuestion, 'left' | 'right' | 'operation'> & { answer?: number },
+  level: Exclude<HintLevel, 'none'>
+): QuestionHint {
+  const { left, right, operation } = question;
+  const symbol = operationSymbol(operation);
+  const answer = question.answer ?? solveExpression(left, right, operation);
+
+  if (operation === 'divide') {
+    switch (level) {
+      case 'strategy_hint':
+        return {
+          level,
+          title: 'Strategy Hint',
+          headline: '💡 Think of the matching multiplication!',
+          prompt: `What number times ${right} equals ${left}?`,
+          left,
+          right,
+          operation,
+        };
+      case 'partial_decomposition':
+        return {
+          level,
+          title: 'Partial Decomposition',
+          left,
+          right,
+          operation,
+          splitPrompt: `Find the missing number: ${right} × ? = ${left}`,
+          equationScaffold: `${left} ${symbol} ${right} = ?`,
+          detail:
+            answer > 1
+              ? `Try: ${right} × ${answer - 1} = ${right * (answer - 1)}, so ${right} × ${answer} = ${left}.`
+              : `Think: ${right} × 1 = ${left}.`,
+        };
+      case 'full_explanation':
+        return {
+          level,
+          title: 'Full Explanation',
+          left,
+          right,
+          operation,
+          answer,
+          summaryText: `${left} ${symbol} ${right} equals ${answer} because ${right} × ${answer} = ${left}.`,
+          equation: `${left} ${symbol} ${right} = ${answer}`,
+        };
+    }
+  }
+
+  const skipCounts = Array.from({ length: Math.max(right - 1, 1) }, (_, i) => left * (i + 1));
+  switch (level) {
+    case 'strategy_hint':
+      return {
+        level,
+        title: 'Strategy Hint',
+        headline: '💡 Think of groups!',
+        prompt: `What is ${left} added to itself ${right} times? Skip-count by ${left}.`,
+        left,
+        right,
+        operation,
+      };
+    case 'partial_decomposition':
+      return {
+        level,
+        title: 'Partial Decomposition',
+        left,
+        right,
+        operation,
+        splitPrompt: `Add ${left} to itself ${right} times`,
+        equationScaffold: `${left} ${symbol} ${right} = ${left} + ${left} + … = ?`,
+        detail: `Skip-count by ${left}: ${skipCounts.join(', ')}, … ?`,
+      };
+    case 'full_explanation':
+      return {
+        level,
+        title: 'Full Explanation',
+        left,
+        right,
+        operation,
+        answer,
+        summaryText: `${left} ${symbol} ${right} equals ${answer}.`,
+        equation: `${left} ${symbol} ${right} = ${answer}`,
+      };
+  }
+}
+
+/**
+ * Whether the guided in-game hint panel can help with this question.
+ * Make-10-eligible additions get the ten-frame walkthrough, while the
+ * times-table skills get their own strategy/partial/full hint chain.
+ */
+export function isGuidedHintAvailable(
+  question: Pick<BaseQuestion, 'skill' | 'operation' | 'left' | 'right'>
+): boolean {
+  if (question.skill === 'multiplication_below_10' || question.skill === 'division_below_10') {
+    return true;
+  }
+  return isMake10Eligible(question);
+}
+
+/**
  * Generates a structured hint for a question at the requested hint level.
  *
  * Supported Hint Levels:
@@ -167,8 +271,17 @@ export function generateQuestionHint(
     return generatePlaceValueHint(question, level);
   }
 
+  if (
+    question.skill === 'multiplication_below_10' ||
+    question.skill === 'division_below_10' ||
+    question.operation === 'multiply' ||
+    question.operation === 'divide'
+  ) {
+    return generateMultDivHint(question, level);
+  }
+
   const { left, right, operation } = question;
-  const expectedAnswer = question.answer ?? (operation === 'add' ? left + right : left - right);
+  const expectedAnswer = question.answer ?? solveExpression(left, right, operation);
 
   // If question is eligible for make-10 decomposition
   if (isMake10Eligible(question)) {

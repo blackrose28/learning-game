@@ -12,9 +12,9 @@ import {
 } from './curriculum';
 
 describe('Curriculum Data and Models', () => {
-  it('defines exactly nine curriculum levels', () => {
-    expect(CURRICULUM_LEVELS).toHaveLength(9);
-    expect(getAllCurriculumLevels()).toHaveLength(9);
+  it('defines exactly eleven curriculum levels', () => {
+    expect(CURRICULUM_LEVELS).toHaveLength(11);
+    expect(getAllCurriculumLevels()).toHaveLength(11);
 
     CURRICULUM_LEVELS.forEach((level, index) => {
       expect(level.levelNumber).toBe(index + 1);
@@ -89,6 +89,8 @@ describe('Curriculum Data and Models', () => {
       'mixed_operations',
       'addition_within_100',
       'subtraction_within_100',
+      'multiplication_below_10',
+      'division_below_10',
     ];
 
     for (const skillId of skillIds) {

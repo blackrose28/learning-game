@@ -18,6 +18,8 @@ const ALL_SKILLS: Skill[] = [
   'mixed_operations',
   'addition_within_100',
   'subtraction_within_100',
+  'multiplication_below_10',
+  'division_below_10',
 ];
 
 describe('Task 1.2 — Question generation', () => {

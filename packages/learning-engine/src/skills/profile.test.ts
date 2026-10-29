@@ -32,7 +32,7 @@ describe('Task 1.4 — Skill Profile', () => {
       expect(profile.pairs).toEqual({});
 
       const allSkills = getAllSkills();
-      expect(allSkills.length).toBe(9);
+      expect(allSkills.length).toBe(11);
 
       for (const skillDef of allSkills) {
         const skill = skillDef.id;

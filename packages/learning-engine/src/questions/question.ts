@@ -1,4 +1,5 @@
 import type { Operation, Skill } from '../curriculum';
+import { operationSymbol } from '../curriculum';
 import type { BaseQuestion } from './types';
 
 /**
@@ -10,6 +11,10 @@ export function solveExpression(left: number, right: number, operation: Operatio
       return left + right;
     case 'subtract':
       return left - right;
+    case 'multiply':
+      return left * right;
+    case 'divide':
+      return left / right;
     default: {
       const _exhaustiveCheck: never = operation;
       throw new Error(`Unsupported operation: ${_exhaustiveCheck}`);
@@ -43,7 +48,7 @@ export function createBaseQuestion(
  * Formats a question as an equation string (e.g., "8 + 7 = 15").
  */
 export function formatQuestion(question: BaseQuestion): string {
-  const symbol = question.operation === 'add' ? '+' : '-';
+  const symbol = operationSymbol(question.operation);
   return `${question.left} ${symbol} ${question.right} = ${question.answer}`;
 }
 
@@ -53,7 +58,7 @@ export function formatQuestion(question: BaseQuestion): string {
 export function formatExpression(
   question: Pick<BaseQuestion, 'left' | 'right' | 'operation'>
 ): string {
-  const symbol = question.operation === 'add' ? '+' : '-';
+  const symbol = operationSymbol(question.operation);
   return `${question.left} ${symbol} ${question.right}`;
 }
 

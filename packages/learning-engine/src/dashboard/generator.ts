@@ -1,4 +1,5 @@
 import { getAllSkills, type Operation, type Skill } from '../curriculum';
+import { solveExpression } from '../questions/question';
 import {
   detectSystematicMistakes,
   generatePracticeRecommendation,
@@ -15,6 +16,7 @@ import type {
   ParentDashboardData,
   PerformanceTrend,
   PerformanceTrendStatus,
+  SkillCategory,
   SkillSummaryItem,
   TodayDashboardMetrics,
   WeakPairDetail,
@@ -42,11 +44,13 @@ function getDayOfWeek(dateStr: string): string {
 }
 
 /**
- * Categorizes a skill into addition, subtraction, or foundations.
+ * Categorizes a skill into addition, subtraction, multiplication, division, or foundations.
  */
-function getSkillCategory(skillId: Skill): 'addition' | 'subtraction' | 'foundations' {
+function getSkillCategory(skillId: Skill): SkillCategory {
   if (skillId.includes('subtraction')) return 'subtraction';
   if (skillId.includes('addition')) return 'addition';
+  if (skillId.includes('multiplication')) return 'multiplication';
+  if (skillId.includes('division')) return 'division';
   return 'foundations';
 }
 
@@ -295,7 +299,7 @@ export function computeParentDashboardData(options: {
       const left = parsed?.left ?? pair.left;
       const operation: Operation = parsed?.operation ?? pair.operation ?? 'add';
       const right = parsed?.right ?? pair.right;
-      const expectedAnswer = operation === 'add' ? left + right : left - right;
+      const expectedAnswer = solveExpression(left, right, operation);
 
       weakPairs.push({
         pairKey: pair.key,

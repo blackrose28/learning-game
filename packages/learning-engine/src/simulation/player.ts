@@ -1,4 +1,4 @@
-import { getAllSkills, type Skill } from '../curriculum';
+import { getAllSkills, operationSymbol, type Skill } from '../curriculum';
 import { createMulberry32 } from '../questions/generator';
 import { selectNextQuestionWithDistractors } from '../questions/selector';
 import { generatePracticeRecommendation } from '../recommendations/generator';
@@ -185,8 +185,7 @@ export function simulatePlayer(config: PlayerSimulationConfig): SimulationResult
     const systematicRule = behavior.systematicMistakes?.find((rule) => {
       if (
         rule.pairKey &&
-        rule.pairKey ===
-          `${question.left} ${question.operation === 'add' ? '+' : '-'} ${question.right}`
+        rule.pairKey === `${question.left} ${operationSymbol(question.operation)} ${question.right}`
       ) {
         return true;
       }
@@ -417,7 +416,7 @@ export function simulateSessions(
         if (
           rule.pairKey &&
           rule.pairKey ===
-            `${question.left} ${question.operation === 'add' ? '+' : '-'} ${question.right}`
+            `${question.left} ${operationSymbol(question.operation)} ${question.right}`
         ) {
           return true;
         }
@@ -532,7 +531,7 @@ export function simulateSessions(
       sessionAttempts.push(attempt);
       allAttempts.push(attempt);
       recentSkills.push(currentSkill);
-      lastPairKey = `${question.left} ${question.operation === 'add' ? '+' : '-'} ${question.right}`;
+      lastPairKey = `${question.left} ${operationSymbol(question.operation)} ${question.right}`;
       totalPracticedPerSkill[currentSkill] = (totalPracticedPerSkill[currentSkill] ?? 0) + 1;
 
       questionCounts[currentSkill] = (questionCounts[currentSkill] ?? 0) + 1;

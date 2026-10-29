@@ -9,6 +9,8 @@ import type { BaseQuestion } from '../questions/types';
  * - basic_subtraction: opposite operation (addition), repeating minuend, off-by-two
  * - cross_10_subtraction: smaller-from-larger digit reversal, stopping at 10, direct 10-subtraction
  * - mixed_operations: wrong operation confusion
+ * - multiplication_below_10: repeated-addition confusion, off-by-one factor, off-by-ten
+ * - division_below_10: nearby quotient, divisor confusion
  */
 export function getCommonMistakeCandidates(question: BaseQuestion): number[] {
   const { left, right, operation, skill } = question;
@@ -154,6 +156,44 @@ export function getCommonMistakeCandidates(question: BaseQuestion): number[] {
       break;
     }
 
+    case 'multiplication_below_10': {
+      // 1. Repeated-addition confusion: child adds instead of multiplying (e.g. 7 × 8 -> 15)
+      candidates.push(left + right);
+
+      // 2. Off-by-one factor: recalls the neighboring times-table fact
+      // (e.g. 7 × 8 -> 7 × 7 = 49 or 7 × 9 = 63)
+      candidates.push((left - 1) * right);
+      candidates.push((left + 1) * right);
+      candidates.push(left * (right - 1));
+      candidates.push(left * (right + 1));
+
+      // 3. Off-by-ten
+      candidates.push(answer + 10);
+      if (answer - 10 > 0) {
+        candidates.push(answer - 10);
+      }
+      break;
+    }
+
+    case 'division_below_10': {
+      // 1. Nearby quotient: child recalls the neighboring division fact
+      // (e.g. 56 ÷ 7 -> 7 or 9 instead of 8)
+      candidates.push(answer + 1);
+      candidates.push(answer + 2);
+      if (answer - 1 > 0) {
+        candidates.push(answer - 1);
+      }
+      if (answer - 2 > 0) {
+        candidates.push(answer - 2);
+      }
+
+      // 2. Divisor confusion: child answers with the divisor itself (e.g. 56 ÷ 7 -> 7)
+      if (right !== answer) {
+        candidates.push(right);
+      }
+      break;
+    }
+
     default: {
       const _exhaustive: never = skill;
       throw new Error(`Unsupported skill: ${_exhaustive}`);
@@ -168,7 +208,8 @@ export function getCommonMistakeCandidates(question: BaseQuestion): number[] {
  *
  * Ensures:
  * - Candidate is not equal to the correct answer.
- * - Candidate fits the skill's range (up to 25 for early skills, 110 for within-100 skills).
+ * - Candidate fits the skill's range (up to 25 for early skills, 90 for below-10
+ *   multiplication/division skills, 110 for within-100 skills).
  * - When the answer is 1, preserve 0 for too_low.
  */
 export function selectCommonMistakeValue(question: BaseQuestion): number {
@@ -177,7 +218,9 @@ export function selectCommonMistakeValue(question: BaseQuestion): number {
   const maxValue =
     question.skill === 'addition_within_100' || question.skill === 'subtraction_within_100'
       ? 110
-      : 25;
+      : question.skill === 'multiplication_below_10' || question.skill === 'division_below_10'
+        ? 90
+        : 25;
 
   for (const val of candidates) {
     if (val === answer) continue;

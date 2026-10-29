@@ -19,7 +19,7 @@ export type SelectionCategory = 'weak' | 'developing' | 'mastered' | 'challenge'
  * As defined in Task 1.1:
  * - left: left operand
  * - right: right operand
- * - operation: 'add' | 'subtract'
+ * - operation: 'add' | 'subtract' | 'multiply' | 'divide'
  * - answer: calculated result of left (operation) right
  * - skill: associated pedagogical skill
  */

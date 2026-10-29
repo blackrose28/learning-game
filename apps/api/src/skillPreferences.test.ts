@@ -9,25 +9,27 @@ import {
 } from './test-utils';
 
 describe('Parent skill preferences', () => {
-  it.each(['addition_within_100', 'subtraction_within_100'])(
-    'supports the new %s skill in parent controls',
-    async (skill) => {
-      const env = { DB: createTestD1Database(), JWT_SECRET: TEST_JWT_SECRET };
-      const token = await createTestParentToken();
-      const response = await worker.fetch(
-        new Request('https://test/api/parent/children/player-local', {
-          method: 'PUT',
-          headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
-          body: JSON.stringify({ disabledSkills: [skill] }),
-        }),
-        env
-      );
-      expect(response.status).toBe(200);
-      expect(
-        ((await response.json()) as { child: { disabledSkills: string[] } }).child.disabledSkills
-      ).toEqual([skill]);
-    }
-  );
+  it.each([
+    'addition_within_100',
+    'subtraction_within_100',
+    'multiplication_below_10',
+    'division_below_10',
+  ])('supports the new %s skill in parent controls', async (skill) => {
+    const env = { DB: createTestD1Database(), JWT_SECRET: TEST_JWT_SECRET };
+    const token = await createTestParentToken();
+    const response = await worker.fetch(
+      new Request('https://test/api/parent/children/player-local', {
+        method: 'PUT',
+        headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ disabledSkills: [skill] }),
+      }),
+      env
+    );
+    expect(response.status).toBe(200);
+    expect(
+      ((await response.json()) as { child: { disabledSkills: string[] } }).child.disabledSkills
+    ).toEqual([skill]);
+  });
 
   it('persists per child, returns them on login, and preserves them when editing other fields', async () => {
     const env = { DB: createTestD1Database(), JWT_SECRET: TEST_JWT_SECRET };

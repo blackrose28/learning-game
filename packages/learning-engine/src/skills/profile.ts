@@ -1,4 +1,4 @@
-import { getAllSkills, type Operation, type Skill } from '../curriculum';
+import { getAllSkills, operationSymbol, type Operation, type Skill } from '../curriculum';
 import type {
   MasteryLevel,
   PairProgress,
@@ -15,7 +15,7 @@ const DEFAULT_RECENT_WINDOW_SIZE = 10;
  * Format pair combination key, e.g. "8 + 7" or "17 - 9".
  */
 export function formatPairKey(left: number, operation: Operation, right: number): string {
-  const symbol = operation === 'add' ? '+' : '-';
+  const symbol = operationSymbol(operation);
   return `${left} ${symbol} ${right}`;
 }
 
@@ -25,13 +25,20 @@ export function formatPairKey(left: number, operation: Operation, right: number)
 export function parsePairKey(
   key: string
 ): { left: number; operation: Operation; right: number } | null {
-  const match = key.trim().match(/^(\d+)\s*([+-])\s*(\d+)$/);
+  const match = key.trim().match(/^(\d+)\s*([+\-×÷])\s*(\d+)$/);
   if (!match) return null;
 
   const left = Number.parseInt(match[1], 10);
   const opSymbol = match[2];
   const right = Number.parseInt(match[3], 10);
-  const operation: Operation = opSymbol === '+' ? 'add' : 'subtract';
+  const operation: Operation =
+    opSymbol === '+'
+      ? 'add'
+      : opSymbol === '-'
+        ? 'subtract'
+        : opSymbol === '×'
+          ? 'multiply'
+          : 'divide';
 
   return { left, operation, right };
 }

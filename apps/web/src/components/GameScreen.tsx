@@ -27,6 +27,7 @@ import {
   CONTROLLED_TEST_PROFILES,
   type ControlledTestProfileKey,
   isMake10Eligible,
+  isGuidedHintAvailable,
   generateMake10Decomposition,
   type Make10Decomposition,
   type HintLevel,
@@ -540,15 +541,15 @@ export const GameScreen: React.FC<GameScreenProps> = ({
     [profile, practiceSkills]
   );
 
-  const isHelpAvailable = isMake10Eligible(question);
+  const isHelpAvailable = isGuidedHintAvailable(question);
   const make10Decomposition: Make10Decomposition | null = React.useMemo(() => {
-    if (!isHelpAvailable) return null;
+    if (!isMake10Eligible(question)) return null;
     try {
       return generateMake10Decomposition(question);
     } catch {
       return null;
     }
-  }, [question, isHelpAvailable]);
+  }, [question]);
 
   const questionHint: QuestionHint = React.useMemo(() => {
     return generateQuestionHint(question, activeHintLevel);
@@ -894,7 +895,7 @@ export const GameScreen: React.FC<GameScreenProps> = ({
             allowedSkills,
             recentSkills: selectedTrainingSkill !== 'all' ? [] : updatedRecentSkills,
             previousQuestionId: question.id,
-            previousPairKey: `${question.left} ${question.operation === 'add' ? '+' : '-'} ${question.right}`,
+            previousPairKey: formatExpression(question),
           });
 
           setQuestion(nextQ);
@@ -2003,15 +2004,21 @@ export const GameScreen: React.FC<GameScreenProps> = ({
                   data-testid="request-help-button"
                   onClick={() => handleRequestHelp()}
                   disabled={isTransitioning}
-                  aria-label="Request help and view guided make-10 hints"
+                  aria-label={
+                    make10Decomposition
+                      ? 'Request help and view guided make-10 hints'
+                      : 'Request help and view hint'
+                  }
                 >
                   <span className="help-icon" aria-hidden="true">
                     💡
                   </span>
                   <span>
-                    {gameMode === 'training'
-                      ? 'Show Make-10 Explanation'
-                      : 'Need Help? Show Make-10 Guide'}
+                    {make10Decomposition
+                      ? gameMode === 'training'
+                        ? 'Show Make-10 Explanation'
+                        : 'Need Help? Show Make-10 Guide'
+                      : 'Need Help? Show Hint'}
                   </span>
                   <span className="help-shortcut-badge">[H]</span>
                 </button>
@@ -2229,8 +2236,8 @@ export const GameScreen: React.FC<GameScreenProps> = ({
         </div>
       </div>
 
-      {/* Guided Make-10 Worked Example / Progressive Hint Modal (Task 4.1 & Task 4.2) */}
-      {isHelpOpen && make10Decomposition && (
+      {/* Guided Worked Example / Progressive Hint Modal (Task 4.1 & Task 4.2) */}
+      {isHelpOpen && isHelpAvailable && (
         <div
           className="help-modal-backdrop"
           data-testid="help-modal-backdrop"
@@ -2266,12 +2273,19 @@ export const GameScreen: React.FC<GameScreenProps> = ({
                   className="worked-example-title"
                   data-testid="worked-example-title"
                 >
-                  {activeHintLevel === 'strategy_hint' &&
-                    `Strategy Hint: ${make10Decomposition.left} + ${make10Decomposition.right}`}
-                  {activeHintLevel === 'partial_decomposition' &&
-                    `Partial Steps: ${make10Decomposition.left} + ${make10Decomposition.right}`}
-                  {activeHintLevel === 'full_explanation' &&
-                    `Make 10 Strategy: ${make10Decomposition.left} + ${make10Decomposition.right}`}
+                  {make10Decomposition ? (
+                    <>
+                      {activeHintLevel === 'strategy_hint' &&
+                        `Strategy Hint: ${make10Decomposition.left} + ${make10Decomposition.right}`}
+                      {activeHintLevel === 'partial_decomposition' &&
+                        `Partial Steps: ${make10Decomposition.left} + ${make10Decomposition.right}`}
+                      {activeHintLevel === 'full_explanation' &&
+                        `Make 10 Strategy: ${make10Decomposition.left} + ${make10Decomposition.right}`}
+                    </>
+                  ) : (
+                    questionHint.level !== 'none' &&
+                    `${questionHint.title}: ${formatExpression(question)}`
+                  )}
                 </h3>
               </div>
               <button
@@ -2337,12 +2351,21 @@ export const GameScreen: React.FC<GameScreenProps> = ({
                 <p className="strategy-hint-prompt" data-testid="strategy-hint-prompt">
                   {questionHint.level === 'strategy_hint'
                     ? questionHint.prompt
-                    : `Break apart ${make10Decomposition.right} to help ${make10Decomposition.left} make 10.`}
+                    : `Think about ${formatExpression(question)} step by step.`}
                 </p>
                 <div className="strategy-hint-target" data-testid="strategy-hint-target">
-                  🎯 <strong>Clue:</strong> {make10Decomposition.left} needs{' '}
-                  <span className="highlight-needed">{make10Decomposition.needed}</span> to make 10.
-                  Can you split {make10Decomposition.right}?
+                  {make10Decomposition ? (
+                    <>
+                      🎯 <strong>Clue:</strong> {make10Decomposition.left} needs{' '}
+                      <span className="highlight-needed">{make10Decomposition.needed}</span> to make
+                      10. Can you split {make10Decomposition.right}?
+                    </>
+                  ) : (
+                    <>
+                      🎯 <strong>Clue:</strong>{' '}
+                      {questionHint.level === 'strategy_hint' ? questionHint.prompt : ''}
+                    </>
+                  )}
                 </div>
 
                 <div className="hint-action-row">
@@ -2373,161 +2396,218 @@ export const GameScreen: React.FC<GameScreenProps> = ({
             )}
 
             {/* Content Level 2: Partial Decomposition (Step 1 & split scaffold without final answer) */}
-            {activeHintLevel === 'partial_decomposition' && (
-              <div className="partial-decomposition-card" data-testid="partial-decomposition-card">
-                <div className="partial-steps-row">
-                  <div className="make10-step-card step-1" data-testid="make10-step-1">
-                    <div className="step-header">
-                      <span className="step-badge">Step 1</span>
-                      <span className="step-title">{make10Decomposition.steps[0].title}</span>
+            {activeHintLevel === 'partial_decomposition' &&
+              (make10Decomposition ? (
+                <div
+                  className="partial-decomposition-card"
+                  data-testid="partial-decomposition-card"
+                >
+                  <div className="partial-steps-row">
+                    <div className="make10-step-card step-1" data-testid="make10-step-1">
+                      <div className="step-header">
+                        <span className="step-badge">Step 1</span>
+                        <span className="step-title">{make10Decomposition.steps[0].title}</span>
+                      </div>
+                      <div className="step-equation" data-testid="step-1-equation">
+                        {make10Decomposition.steps[0].equation}
+                      </div>
+                      <p className="step-detail">{make10Decomposition.steps[0].detail}</p>
                     </div>
-                    <div className="step-equation" data-testid="step-1-equation">
-                      {make10Decomposition.steps[0].equation}
+
+                    <div
+                      className="make10-step-card step-2-scaffold"
+                      data-testid="partial-split-card"
+                    >
+                      <div className="step-header">
+                        <span className="step-badge">Step 2 Scaffold</span>
+                        <span className="step-title">Split {make10Decomposition.right}</span>
+                      </div>
+                      <div className="step-equation" data-testid="partial-split-equation">
+                        {make10Decomposition.right} = {make10Decomposition.needed} +{' '}
+                        {make10Decomposition.remaining}
+                      </div>
+                      <p className="step-detail">
+                        Give {make10Decomposition.needed} to {make10Decomposition.left} to make 10,
+                        leaving {make10Decomposition.remaining} left over!
+                      </p>
                     </div>
-                    <p className="step-detail">{make10Decomposition.steps[0].detail}</p>
                   </div>
 
-                  <div
-                    className="make10-step-card step-2-scaffold"
-                    data-testid="partial-split-card"
-                  >
-                    <div className="step-header">
-                      <span className="step-badge">Step 2 Scaffold</span>
-                      <span className="step-title">Split {make10Decomposition.right}</span>
+                  <div className="partial-scaffold-box" data-testid="partial-scaffold-box">
+                    <div className="scaffold-equation" data-testid="partial-scaffold-equation">
+                      {make10Decomposition.left} + {make10Decomposition.right} = 10 +{' '}
+                      {make10Decomposition.remaining} = ?
                     </div>
-                    <div className="step-equation" data-testid="partial-split-equation">
-                      {make10Decomposition.right} = {make10Decomposition.needed} +{' '}
-                      {make10Decomposition.remaining}
-                    </div>
-                    <p className="step-detail">
-                      Give {make10Decomposition.needed} to {make10Decomposition.left} to make 10,
-                      leaving {make10Decomposition.remaining} left over!
+                    <p className="scaffold-prompt">
+                      Now add the remaining {make10Decomposition.remaining} to 10 to find the
+                      answer!
                     </p>
                   </div>
-                </div>
 
-                <div className="partial-scaffold-box" data-testid="partial-scaffold-box">
-                  <div className="scaffold-equation" data-testid="partial-scaffold-equation">
-                    {make10Decomposition.left} + {make10Decomposition.right} = 10 +{' '}
-                    {make10Decomposition.remaining} = ?
+                  <div className="hint-action-row">
+                    <button
+                      type="button"
+                      className="show-full-explanation-button"
+                      data-testid="show-full-explanation-button"
+                      onClick={() => {
+                        setActiveHintLevel('full_explanation');
+                        updateHighestHintLevel('full_explanation');
+                      }}
+                    >
+                      📖 Still Stuck? Show Complete Explanation [F]
+                    </button>
                   </div>
-                  <p className="scaffold-prompt">
-                    Now add the remaining {make10Decomposition.remaining} to 10 to find the answer!
-                  </p>
                 </div>
+              ) : (
+                <div
+                  className="partial-decomposition-card"
+                  data-testid="partial-decomposition-card"
+                >
+                  <div className="partial-scaffold-box" data-testid="partial-scaffold-box">
+                    <div className="step-header">
+                      <span className="step-badge">Step-by-step</span>
+                      <span className="step-title">
+                        {questionHint.level === 'partial_decomposition'
+                          ? questionHint.splitPrompt
+                          : ''}
+                      </span>
+                    </div>
+                    <div className="scaffold-equation" data-testid="partial-scaffold-equation">
+                      {questionHint.level === 'partial_decomposition'
+                        ? questionHint.equationScaffold
+                        : ''}
+                    </div>
+                    <p className="scaffold-prompt">
+                      {questionHint.level === 'partial_decomposition' ? questionHint.detail : ''}
+                    </p>
+                  </div>
 
-                <div className="hint-action-row">
-                  <button
-                    type="button"
-                    className="show-full-explanation-button"
-                    data-testid="show-full-explanation-button"
-                    onClick={() => {
-                      setActiveHintLevel('full_explanation');
-                      updateHighestHintLevel('full_explanation');
-                    }}
-                  >
-                    📖 Still Stuck? Show Complete Explanation [F]
-                  </button>
+                  <div className="hint-action-row">
+                    <button
+                      type="button"
+                      className="show-full-explanation-button"
+                      data-testid="show-full-explanation-button"
+                      onClick={() => {
+                        setActiveHintLevel('full_explanation');
+                        updateHighestHintLevel('full_explanation');
+                      }}
+                    >
+                      📖 Still Stuck? Show Complete Explanation [F]
+                    </button>
+                  </div>
                 </div>
-              </div>
-            )}
+              ))}
 
             {/* Content Level 3: Complete Explanation (Full 3 steps, 10-frames model, summary equation) */}
-            {activeHintLevel === 'full_explanation' && (
-              <div className="full-explanation-container" data-testid="full-explanation-content">
-                <p className="worked-example-intro">
-                  Break the second number apart to make 10 with the first number!
-                </p>
+            {activeHintLevel === 'full_explanation' &&
+              (make10Decomposition ? (
+                <div className="full-explanation-container" data-testid="full-explanation-content">
+                  <p className="worked-example-intro">
+                    Break the second number apart to make 10 with the first number!
+                  </p>
 
-                {/* 3 Guided Steps */}
-                <div className="make10-steps-container">
-                  <div className="make10-step-card step-1" data-testid="make10-step-1">
-                    <div className="step-header">
-                      <span className="step-badge">Step 1</span>
-                      <span className="step-title">{make10Decomposition.steps[0].title}</span>
+                  {/* 3 Guided Steps */}
+                  <div className="make10-steps-container">
+                    <div className="make10-step-card step-1" data-testid="make10-step-1">
+                      <div className="step-header">
+                        <span className="step-badge">Step 1</span>
+                        <span className="step-title">{make10Decomposition.steps[0].title}</span>
+                      </div>
+                      <div className="step-equation" data-testid="step-1-equation">
+                        {make10Decomposition.steps[0].equation}
+                      </div>
+                      <p className="step-detail">{make10Decomposition.steps[0].detail}</p>
                     </div>
-                    <div className="step-equation" data-testid="step-1-equation">
-                      {make10Decomposition.steps[0].equation}
+
+                    <div className="make10-step-card step-2" data-testid="make10-step-2">
+                      <div className="step-header">
+                        <span className="step-badge">Step 2</span>
+                        <span className="step-title">{make10Decomposition.steps[1].title}</span>
+                      </div>
+                      <div className="step-equation" data-testid="step-2-equation">
+                        {make10Decomposition.steps[1].equation}
+                      </div>
+                      <p className="step-detail">{make10Decomposition.steps[1].detail}</p>
                     </div>
-                    <p className="step-detail">{make10Decomposition.steps[0].detail}</p>
+
+                    <div className="make10-step-card step-3" data-testid="make10-step-3">
+                      <div className="step-header">
+                        <span className="step-badge">Step 3</span>
+                        <span className="step-title">{make10Decomposition.steps[2].title}</span>
+                      </div>
+                      <div className="step-equation" data-testid="step-3-equation">
+                        {make10Decomposition.steps[2].equation}
+                      </div>
+                      <p className="step-detail">{make10Decomposition.steps[2].detail}</p>
+                    </div>
                   </div>
 
-                  <div className="make10-step-card step-2" data-testid="make10-step-2">
-                    <div className="step-header">
-                      <span className="step-badge">Step 2</span>
-                      <span className="step-title">{make10Decomposition.steps[1].title}</span>
+                  {/* Visual Ten-Frames Model */}
+                  <div className="ten-frames-visual" data-testid="ten-frames-visual">
+                    <div className="ten-frame-group">
+                      <div className="ten-frame-label">
+                        First Ten-Frame (10 full): {make10Decomposition.left} +{' '}
+                        {make10Decomposition.needed}
+                      </div>
+                      <div className="ten-frame-grid frame-1">
+                        {make10Decomposition.visual.frame1.map((slot) => (
+                          <div
+                            key={`f1-${slot.index}`}
+                            className={`ten-frame-slot slot-${slot.type}`}
+                            title={
+                              slot.type === 'first'
+                                ? `Start: ${slot.label}`
+                                : `Needed: ${slot.label}`
+                            }
+                          >
+                            <span className="dot" />
+                          </div>
+                        ))}
+                      </div>
                     </div>
-                    <div className="step-equation" data-testid="step-2-equation">
-                      {make10Decomposition.steps[1].equation}
+
+                    <div className="ten-frame-plus" aria-hidden="true">
+                      +
                     </div>
-                    <p className="step-detail">{make10Decomposition.steps[1].detail}</p>
+
+                    <div className="ten-frame-group">
+                      <div className="ten-frame-label">
+                        Remainder Frame: {make10Decomposition.remaining}
+                      </div>
+                      <div className="ten-frame-grid frame-2">
+                        {make10Decomposition.visual.frame2.map((slot) => (
+                          <div
+                            key={`f2-${slot.index}`}
+                            className={`ten-frame-slot slot-${slot.type}`}
+                            title={slot.type === 'remaining' ? `Remaining: ${slot.label}` : 'Empty'}
+                          >
+                            {slot.filled && <span className="dot" />}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
                   </div>
 
-                  <div className="make10-step-card step-3" data-testid="make10-step-3">
-                    <div className="step-header">
-                      <span className="step-badge">Step 3</span>
-                      <span className="step-title">{make10Decomposition.steps[2].title}</span>
+                  {/* Complete Worked Example Summary Equation */}
+                  <div className="make10-summary-box" data-testid="make10-summary">
+                    <div className="summary-equation-line" data-testid="summary-equation">
+                      {make10Decomposition.summary.equation}
                     </div>
-                    <div className="step-equation" data-testid="step-3-equation">
-                      {make10Decomposition.steps[2].equation}
-                    </div>
-                    <p className="step-detail">{make10Decomposition.steps[2].detail}</p>
+                    <p className="summary-text-line">{make10Decomposition.summary.text}</p>
                   </div>
                 </div>
-
-                {/* Visual Ten-Frames Model */}
-                <div className="ten-frames-visual" data-testid="ten-frames-visual">
-                  <div className="ten-frame-group">
-                    <div className="ten-frame-label">
-                      First Ten-Frame (10 full): {make10Decomposition.left} +{' '}
-                      {make10Decomposition.needed}
-                    </div>
-                    <div className="ten-frame-grid frame-1">
-                      {make10Decomposition.visual.frame1.map((slot) => (
-                        <div
-                          key={`f1-${slot.index}`}
-                          className={`ten-frame-slot slot-${slot.type}`}
-                          title={
-                            slot.type === 'first' ? `Start: ${slot.label}` : `Needed: ${slot.label}`
-                          }
-                        >
-                          <span className="dot" />
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-
-                  <div className="ten-frame-plus" aria-hidden="true">
-                    +
-                  </div>
-
-                  <div className="ten-frame-group">
-                    <div className="ten-frame-label">
-                      Remainder Frame: {make10Decomposition.remaining}
-                    </div>
-                    <div className="ten-frame-grid frame-2">
-                      {make10Decomposition.visual.frame2.map((slot) => (
-                        <div
-                          key={`f2-${slot.index}`}
-                          className={`ten-frame-slot slot-${slot.type}`}
-                          title={slot.type === 'remaining' ? `Remaining: ${slot.label}` : 'Empty'}
-                        >
-                          {slot.filled && <span className="dot" />}
-                        </div>
-                      ))}
+              ) : (
+                <div className="full-explanation-container" data-testid="full-explanation-content">
+                  <p className="worked-example-intro">
+                    {questionHint.level === 'full_explanation' ? questionHint.summaryText : ''}
+                  </p>
+                  <div className="make10-summary-box" data-testid="make10-summary">
+                    <div className="summary-equation-line" data-testid="summary-equation">
+                      {questionHint.level === 'full_explanation' ? questionHint.equation : ''}
                     </div>
                   </div>
                 </div>
-
-                {/* Complete Worked Example Summary Equation */}
-                <div className="make10-summary-box" data-testid="make10-summary">
-                  <div className="summary-equation-line" data-testid="summary-equation">
-                    {make10Decomposition.summary.equation}
-                  </div>
-                  <p className="summary-text-line">{make10Decomposition.summary.text}</p>
-                </div>
-              </div>
-            )}
+              ))}
 
             <div className="worked-example-footer">
               <button

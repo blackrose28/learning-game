@@ -1,5 +1,62 @@
 import { describe, it, expect } from 'vitest';
-import { generateQuestionHint, getNextHintLevel, getPreviousHintLevel, HINT_LEVELS } from './hints';
+import {
+  generateQuestionHint,
+  getNextHintLevel,
+  getPreviousHintLevel,
+  HINT_LEVELS,
+  isGuidedHintAvailable,
+} from './hints';
+
+describe('isGuidedHintAvailable', () => {
+  it('is true for the times-table skills', () => {
+    expect(
+      isGuidedHintAvailable({
+        skill: 'multiplication_below_10',
+        operation: 'multiply',
+        left: 6,
+        right: 7,
+      })
+    ).toBe(true);
+    expect(
+      isGuidedHintAvailable({
+        skill: 'division_below_10',
+        operation: 'divide',
+        left: 24,
+        right: 4,
+      })
+    ).toBe(true);
+  });
+
+  it('is true for make-10-eligible additions', () => {
+    expect(
+      isGuidedHintAvailable({
+        skill: 'cross_10_addition',
+        operation: 'add',
+        left: 8,
+        right: 7,
+      })
+    ).toBe(true);
+  });
+
+  it('is false for questions without a guided hint chain', () => {
+    expect(
+      isGuidedHintAvailable({
+        skill: 'basic_addition',
+        operation: 'add',
+        left: 3,
+        right: 4,
+      })
+    ).toBe(false);
+    expect(
+      isGuidedHintAvailable({
+        skill: 'basic_subtraction',
+        operation: 'subtract',
+        left: 13,
+        right: 8,
+      })
+    ).toBe(false);
+  });
+});
 
 describe('Task 4.2 — Implement Hint Levels in Learning Engine', () => {
   describe('Hint Level Progression & Navigation', () => {

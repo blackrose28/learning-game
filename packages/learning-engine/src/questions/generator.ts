@@ -1,6 +1,6 @@
 import type { Operation, Skill } from '../curriculum';
 import type { BaseQuestion } from './types';
-import { createBaseQuestion } from './question';
+import { createBaseQuestion, solveExpression } from './question';
 
 export interface GenerateQuestionOptions {
   /**
@@ -65,6 +65,26 @@ function buildSkillPairs(skill: Skill): NumberPair[] {
       return buildWithin100Pairs('add');
     case 'subtraction_within_100':
       return buildWithin100Pairs('subtract');
+
+    case 'multiplication_below_10': {
+      // Times tables: factors 1..9, products up to 81
+      for (let left = 1; left <= 9; left++) {
+        for (let right = 1; right <= 9; right++) {
+          pairs.push({ left, right, operation: 'multiply' });
+        }
+      }
+      break;
+    }
+
+    case 'division_below_10': {
+      // Division as the inverse of the times tables: divisor and quotient 1..9, no remainders
+      for (let divisor = 1; divisor <= 9; divisor++) {
+        for (let quotient = 1; quotient <= 9; quotient++) {
+          pairs.push({ left: divisor * quotient, right: divisor, operation: 'divide' });
+        }
+      }
+      break;
+    }
 
     case 'basic_addition': {
       // Single-digit addends within 1..5, sum <= 10
@@ -188,7 +208,7 @@ export function isQuestionInSkillBounds(question: BaseQuestion, skill: Skill): b
   const { left, right, operation, answer } = question;
 
   // Basic arithmetic sanity check
-  const calculatedAnswer = operation === 'add' ? left + right : left - right;
+  const calculatedAnswer = solveExpression(left, right, operation);
   if (answer !== calculatedAnswer) return false;
 
   switch (skill) {
@@ -212,6 +232,32 @@ export function isQuestionInSkillBounds(question: BaseQuestion, skill: Skill): b
         left <= 100 &&
         right >= 1 &&
         answer >= 1
+      );
+
+    case 'multiplication_below_10':
+      return (
+        operation === 'multiply' &&
+        Number.isInteger(left) &&
+        Number.isInteger(right) &&
+        left >= 1 &&
+        left <= 9 &&
+        right >= 1 &&
+        right <= 9 &&
+        answer >= 1 &&
+        answer <= 81
+      );
+
+    case 'division_below_10':
+      return (
+        operation === 'divide' &&
+        Number.isInteger(left) &&
+        Number.isInteger(right) &&
+        right >= 1 &&
+        right <= 9 &&
+        Number.isInteger(answer) &&
+        answer >= 1 &&
+        answer <= 9 &&
+        left === right * answer
       );
 
     case 'basic_addition':
@@ -306,6 +352,7 @@ export function isQuestionInSkillBounds(question: BaseQuestion, skill: Skill): b
  * - Always within intended pedagogical bounds.
  * - Answers are mathematically calculated and verified.
  * - Subtraction never produces invalid or negative results.
+ * - Division never produces remainders.
  *
  * @param skill The target pedagogical skill.
  * @param options Optional configuration including custom PRNG or seed.
@@ -327,13 +374,14 @@ export function generateQuestionSpec(
   const pair = pairs[index];
 
   const defaultId = `q_${skill}_${pair.left}_${pair.operation}_${pair.right}`;
+  const pairAnswer = solveExpression(pair.left, pair.right, pair.operation);
   const id = options?.idGenerator
     ? options.idGenerator({
         left: pair.left,
         right: pair.right,
         operation: pair.operation,
-        answer: pair.operation === 'add' ? pair.left + pair.right : pair.left - pair.right,
-        correctAnswer: pair.operation === 'add' ? pair.left + pair.right : pair.left - pair.right,
+        answer: pairAnswer,
+        correctAnswer: pairAnswer,
         skill,
       })
     : defaultId;
