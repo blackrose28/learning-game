@@ -29,12 +29,19 @@ describe('Task 9.3 — World Progression Engine', () => {
     mockStorage = createMockStorage();
   });
 
-  it('defines the small 5-area world: Castle, Fire, Ice, Wind, Earth', () => {
+  it('defines the 6-area world: Castle, Fire, Ice, Wind, Earth, Space', () => {
     const areas = getAllWorldAreas();
-    expect(areas).toHaveLength(5);
+    expect(areas).toHaveLength(6);
 
     const ids = areas.map((a) => a.id);
-    expect(ids).toEqual(['castle', 'fire_area', 'ice_area', 'wind_area', 'earth_area']);
+    expect(ids).toEqual([
+      'castle',
+      'fire_area',
+      'ice_area',
+      'wind_area',
+      'earth_area',
+      'space_area',
+    ]);
 
     // Check specific area properties
     const castle = getWorldArea('castle');
@@ -65,6 +72,11 @@ describe('Task 9.3 — World Progression Engine', () => {
     expect(earth.icon).toBe('🪨');
     expect(earth.element).toBe('earth');
     expect(earth.sessionsRequired).toBe(4);
+
+    const space = getWorldArea('space_area');
+    expect(space.name).toBe('Space Station');
+    expect(space.icon).toBe('🚀');
+    expect(space.sessionsRequired).toBe(5);
   });
 
   it('unlocks Castle at 0 completed sessions', () => {
@@ -96,10 +108,22 @@ describe('Task 9.3 — World Progression Engine', () => {
     expect(isAreaUnlocked('earth_area', 3)).toBe(false);
   });
 
-  it('unlocks Earth Mountain after 4 completed sessions', () => {
+  it('unlocks Earth Mountain after 4 completed sessions and Space Station after 5', () => {
     const unlocked = computeUnlockedAreas(4);
     expect(unlocked).toEqual(['castle', 'fire_area', 'ice_area', 'wind_area', 'earth_area']);
     expect(isAreaUnlocked('earth_area', 4)).toBe(true);
+    expect(isAreaUnlocked('space_area', 4)).toBe(false);
+
+    const unlocked5 = computeUnlockedAreas(5);
+    expect(unlocked5).toEqual([
+      'castle',
+      'fire_area',
+      'ice_area',
+      'wind_area',
+      'earth_area',
+      'space_area',
+    ]);
+    expect(isAreaUnlocked('space_area', 5)).toBe(true);
   });
 
   it('provides next lockable area and remaining session count', () => {
@@ -113,7 +137,11 @@ describe('Task 9.3 — World Progression Engine', () => {
     expect(next1?.sessionsRemaining).toBe(1);
 
     const next4 = getNextLockableArea(4);
-    expect(next4).toBeNull(); // All unlocked!
+    expect(next4?.area.id).toBe('space_area');
+    expect(next4?.sessionsRemaining).toBe(1);
+
+    const next5 = getNextLockableArea(5);
+    expect(next5).toBeNull(); // All unlocked!
   });
 
   it('detects newly unlocked area upon session completion', () => {
@@ -164,7 +192,7 @@ describe('Task 9.3 — World Progression Engine', () => {
     expect(reloaded.updatedAt).toBe(customTimestamp);
   });
 
-  it('unlockAllWorldAreas unlocks all 5 world areas in storage', () => {
+  it('unlockAllWorldAreas unlocks all 6 world areas in storage', () => {
     const state = unlockAllWorldAreas('dev-player', mockStorage);
     expect(state.unlockedAreaIds).toEqual([
       'castle',
@@ -172,10 +200,11 @@ describe('Task 9.3 — World Progression Engine', () => {
       'ice_area',
       'wind_area',
       'earth_area',
+      'space_area',
     ]);
     expect(state.completedSessionsCount).toBeGreaterThanOrEqual(10);
 
     const reloaded = loadWorldProgression('dev-player', mockStorage);
-    expect(reloaded.unlockedAreaIds).toHaveLength(5);
+    expect(reloaded.unlockedAreaIds).toHaveLength(6);
   });
 });

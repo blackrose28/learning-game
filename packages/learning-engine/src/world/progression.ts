@@ -108,6 +108,26 @@ export const WORLD_AREAS: readonly WorldArea[] = [
       particleType: 'dust_rubble',
     },
   },
+  {
+    id: 'space_area',
+    name: 'Space Station',
+    shortName: 'Space Area',
+    icon: '🚀',
+    sessionsRequired: 5,
+    title: 'Orbital Observatory & Starlight Deck',
+    description:
+      'Beyond the clouds among glowing nebulae and ringed planets, cosmic archers achieve stellar mastery.',
+    pedagogicalFocus: 'Cosmic Mastery & Speed Precision',
+    theme: {
+      primaryColor: '#6366f1',
+      secondaryColor: '#4338ca',
+      bgColor: '#0f172a',
+      accentColor: '#818cf8',
+      skyGradient: 'linear-gradient(180deg, #090d16 0%, #1e1b4b 50%, #312e81 100%)',
+      groundGradient: 'linear-gradient(180deg, #334155 0%, #0f172a 100%)',
+      particleType: 'starlight',
+    },
+  },
 ];
 
 const AREA_BY_ID = new Map<WorldAreaId, WorldArea>(WORLD_AREAS.map((a) => [a.id, a]));

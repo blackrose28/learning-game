@@ -43,12 +43,13 @@ describe('Single-Screen Redesign: World Map & Royal Armory', () => {
       expect(pathCol).toBeInTheDocument();
       expect(screen.getByTestId('world-map-schema-view')).toBeInTheDocument();
 
-      // 3. Right column contains all 5 realm cards
+      // 3. Right column contains all 6 realm cards
       expect(screen.getByTestId('realm-card-castle')).toBeInTheDocument();
       expect(screen.getByTestId('realm-card-fire_area')).toBeInTheDocument();
       expect(screen.getByTestId('realm-card-ice_area')).toBeInTheDocument();
       expect(screen.getByTestId('realm-card-wind_area')).toBeInTheDocument();
       expect(screen.getByTestId('realm-card-earth_area')).toBeInTheDocument();
+      expect(screen.getByTestId('realm-card-space_area')).toBeInTheDocument();
     });
 
     it('updates the left-column inspection stage when selecting different realm cards', () => {

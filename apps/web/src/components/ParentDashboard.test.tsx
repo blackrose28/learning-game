@@ -858,7 +858,7 @@ describe('ParentDashboard Component (Task 5.2)', () => {
       expect(rewards.totalXp).toBeGreaterThanOrEqual(45000);
 
       const world = loadWorldProgression(playerId);
-      expect(world.unlockedAreaIds).toHaveLength(5);
+      expect(world.unlockedAreaIds).toHaveLength(6);
     });
 
     it('syncs unlocked rewards to apiClient when apiClient is provided', async () => {

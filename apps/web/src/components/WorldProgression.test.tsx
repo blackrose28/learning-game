@@ -33,15 +33,15 @@ describe('Task 9.3 — World Progression', () => {
   });
 
   describe('WorldMap component', () => {
-    it('renders the 5 areas with Castle unlocked and elemental areas locked for a new player', () => {
+    it('renders the 6 areas with Castle unlocked and other areas locked for a new player', () => {
       render(<WorldMap playerId="player-test" />);
 
       expect(screen.getByTestId('world-map-container')).toBeInTheDocument();
       expect(screen.getByTestId('world-map-title')).toHaveTextContent(/Archery World Map/i);
 
-      // Total discovery count: 1 of 5
+      // Total discovery count: 1 of 6
       expect(screen.getByTestId('unlocked-areas-count')).toHaveTextContent(
-        '1 / 5 Realms Discovered'
+        '1 / 6 Realms Discovered'
       );
       expect(screen.getByTestId('next-unlock-info')).toHaveTextContent(/Fire Village/i);
 
@@ -51,7 +51,7 @@ describe('Task 9.3 — World Progression', () => {
       expect(castleCard).toHaveAttribute('data-active', 'true');
       expect(screen.getByTestId('badge-active-castle')).toBeInTheDocument();
 
-      // Fire, Ice, Wind, Earth: locked
+      // Fire, Ice, Wind, Earth, Space: locked
       expect(screen.getByTestId('realm-card-fire_area')).toHaveAttribute('data-unlocked', 'false');
       expect(screen.getByTestId('badge-locked-fire_area')).toBeInTheDocument();
       expect(screen.getByTestId('unlock-req-fire_area')).toHaveTextContent(
@@ -66,6 +66,9 @@ describe('Task 9.3 — World Progression', () => {
 
       expect(screen.getByTestId('realm-card-earth_area')).toHaveAttribute('data-unlocked', 'false');
       expect(screen.getByTestId('badge-locked-earth_area')).toBeInTheDocument();
+
+      expect(screen.getByTestId('realm-card-space_area')).toHaveAttribute('data-unlocked', 'false');
+      expect(screen.getByTestId('badge-locked-space_area')).toBeInTheDocument();
     });
 
     it('unlocks Fire Village when 1 session is completed, and allows travel', () => {
@@ -86,9 +89,9 @@ describe('Task 9.3 — World Progression', () => {
       const onSelectArea = vi.fn();
       render(<WorldMap playerId="player-test" onSelectArea={onSelectArea} />);
 
-      // Progress now 2 / 5
+      // Progress now 2 / 6
       expect(screen.getByTestId('unlocked-areas-count')).toHaveTextContent(
-        '2 / 5 Realms Discovered'
+        '2 / 6 Realms Discovered'
       );
       expect(screen.getByTestId('next-unlock-info')).toHaveTextContent(/Ice Kingdom/i);
 
@@ -106,8 +109,8 @@ describe('Task 9.3 — World Progression', () => {
       expect(screen.getByTestId('badge-active-fire_area')).toBeInTheDocument();
     });
 
-    it('shows all realms unlocked when 4 sessions are completed', () => {
-      const dates = ['2026-09-01', '2026-09-02', '2026-09-03', '2026-09-04'];
+    it('shows all realms unlocked when 5 sessions are completed', () => {
+      const dates = ['2026-09-01', '2026-09-02', '2026-09-03', '2026-09-04', '2026-09-05'];
       dates.forEach((date, i) => {
         saveDailySession({
           id: `session-${i}`,
@@ -124,7 +127,7 @@ describe('Task 9.3 — World Progression', () => {
       render(<WorldMap playerId="player-test" />);
 
       expect(screen.getByTestId('unlocked-areas-count')).toHaveTextContent(
-        '5 / 5 Realms Discovered'
+        '6 / 6 Realms Discovered'
       );
       expect(screen.getByTestId('next-unlock-info')).toHaveTextContent(/All Realms Discovered/i);
 
@@ -134,6 +137,7 @@ describe('Task 9.3 — World Progression', () => {
       expect(screen.getByTestId('realm-card-ice_area')).toHaveAttribute('data-unlocked', 'true');
       expect(screen.getByTestId('realm-card-wind_area')).toHaveAttribute('data-unlocked', 'true');
       expect(screen.getByTestId('realm-card-earth_area')).toHaveAttribute('data-unlocked', 'true');
+      expect(screen.getByTestId('realm-card-space_area')).toHaveAttribute('data-unlocked', 'true');
     });
 
     it('pushes world progression to apiClient when selecting an unlocked realm in standalone WorldMap', async () => {
@@ -205,6 +209,11 @@ describe('Task 9.3 — World Progression', () => {
       backdrop = screen.getByTestId('range-backdrop');
       expect(backdrop).toHaveAttribute('data-area', 'earth_area');
       expect(screen.getByTestId('realm-banner-overlay')).toHaveTextContent(/Earth Mountain/i);
+
+      rerender(<RangeBackdrop areaId="space_area" />);
+      backdrop = screen.getByTestId('range-backdrop');
+      expect(backdrop).toHaveAttribute('data-area', 'space_area');
+      expect(screen.getByTestId('realm-banner-overlay')).toHaveTextContent(/Space Station/i);
     });
 
     it('supports arena variant with full-height 500 viewBox and compact variant with 180 viewBox', () => {
@@ -362,7 +371,7 @@ describe('Task 9.3 — World Progression', () => {
 
       // World progress is visible on completion card
       expect(screen.getByTestId('session-world-progress')).toHaveTextContent(
-        /World Progression: 2 \/ 5 Realms Discovered/i
+        /World Progression: 2 \/ 6 Realms Discovered/i
       );
 
       // Clicking "Travel to Fire Village" switches realm

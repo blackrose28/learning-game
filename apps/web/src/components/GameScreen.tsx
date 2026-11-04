@@ -38,6 +38,7 @@ import {
   type WorldArea,
   loadWorldProgression,
   saveActiveArea,
+  getAllWorldAreas,
   getWorldArea,
   checkNewAreaUnlocked,
   getCompletedSessionsCount,
@@ -1532,8 +1533,8 @@ export const GameScreen: React.FC<GameScreenProps> = ({
           {/* World Progress Summary (Task 9.3) */}
           <div className="session-world-progress" data-testid="session-world-progress">
             <span className="world-progress-label">
-              🗺️ World Progression: <strong>{worldProgression.unlockedAreaIds.length}</strong> / 5
-              Realms Discovered
+              🗺️ World Progression: <strong>{worldProgression.unlockedAreaIds.length}</strong> /{' '}
+              {getAllWorldAreas().length} Realms Discovered
             </span>
             <button
               type="button"

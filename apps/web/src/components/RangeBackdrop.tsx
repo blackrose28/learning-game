@@ -1165,6 +1165,160 @@ export const RangeBackdrop: React.FC<RangeBackdropProps> = ({
         </svg>
       )}
 
+      {/* ========================================================================= */}
+      {/* 6. SPACE STATION / ORBITAL OBSERVATORY BACKDROP                           */}
+      {/* ========================================================================= */}
+      {areaId === 'space_area' && (
+        <svg
+          className="range-backdrop-svg space-backdrop"
+          viewBox={isCompact ? '0 0 600 180' : '0 0 600 500'}
+          preserveAspectRatio="none"
+        >
+          <defs>
+            <linearGradient id="space-sky" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stopColor="#090d16" />
+              <stop offset="45%" stopColor="#1e1b4b" />
+              <stop offset="80%" stopColor="#312e81" />
+              <stop offset="100%" stopColor="#4338ca" />
+            </linearGradient>
+            <linearGradient id="nebula-glow" x1="0" y1="0" x2="1" y2="1">
+              <stop offset="0%" stopColor="#c084fc" stopOpacity="0.35" />
+              <stop offset="50%" stopColor="#818cf8" stopOpacity="0.2" />
+              <stop offset="100%" stopColor="#38bdf8" stopOpacity="0" />
+            </linearGradient>
+            <linearGradient id="space-planet" x1="0" y1="0" x2="1" y2="1">
+              <stop offset="0%" stopColor="#818cf8" />
+              <stop offset="60%" stopColor="#4f46e5" />
+              <stop offset="100%" stopColor="#1e1b4b" />
+            </linearGradient>
+            <linearGradient id="orbital-pylon" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stopColor="#94a3b8" />
+              <stop offset="50%" stopColor="#475569" />
+              <stop offset="100%" stopColor="#1e293b" />
+            </linearGradient>
+          </defs>
+
+          {isCompact ? (
+            <>
+              <rect x="0" y="0" width="600" height="180" fill="url(#space-sky)" />
+              <ellipse cx="180" cy="55" rx="120" ry="40" fill="url(#nebula-glow)" />
+              <ellipse cx="440" cy="45" rx="100" ry="35" fill="url(#nebula-glow)" />
+              {/* Starfield */}
+              <circle cx="40" cy="25" r="1.5" fill="#f8fafc" opacity="0.9" />
+              <circle cx="110" cy="40" r="1" fill="#e0e7ff" opacity="0.7" />
+              <circle cx="240" cy="20" r="2" fill="#fde047" opacity="0.85" />
+              <circle cx="350" cy="35" r="1.5" fill="#f8fafc" opacity="0.8" />
+              <circle cx="520" cy="22" r="1.5" fill="#38bdf8" opacity="0.9" />
+              {/* Ringed Planet */}
+              <circle cx="470" cy="52" r="20" fill="url(#space-planet)" />
+              <ellipse
+                cx="470"
+                cy="52"
+                rx="36"
+                ry="8"
+                fill="none"
+                stroke="#a5b4fc"
+                strokeWidth="2.5"
+                opacity="0.75"
+                transform="rotate(-15 470 52)"
+              />
+              {/* Orbital Pylons */}
+              <rect x="55" y="75" width="18" height="55" fill="url(#orbital-pylon)" rx="3" />
+              <rect x="527" y="75" width="18" height="55" fill="url(#orbital-pylon)" rx="3" />
+
+              {/* Orbital Dais & Statues */}
+              {renderCenterPromontory(equippedStatue, true, '#1e293b', '#818cf8')}
+              {renderBackdropStatues(equippedStatue, true)}
+
+              {/* Flanking Standards */}
+              {renderBackdropBanners(bannerLeft, bannerRight, true, '#6366f1')}
+
+              {/* Starlight Observation Deck */}
+              <rect x="0" y="130" width="600" height="50" fill="#0f172a" />
+              <line x1="0" y1="130" x2="600" y2="130" stroke="#818cf8" strokeWidth="3" />
+
+              {/* Tournament Platform Customization */}
+              {renderBackdropGround(equippedGround, true)}
+            </>
+          ) : (
+            <>
+              {/* Deep Space & Nebula Sky */}
+              <rect x="0" y="0" width="600" height="500" fill="url(#space-sky)" />
+              <ellipse cx="160" cy="140" rx="160" ry="70" fill="url(#nebula-glow)" />
+              <ellipse cx="430" cy="110" rx="140" ry="60" fill="url(#nebula-glow)" />
+
+              {/* Starfield */}
+              <circle cx="45" cy="45" r="2" fill="#ffffff" opacity="0.9" />
+              <circle cx="95" cy="110" r="1.5" fill="#e0e7ff" opacity="0.75" />
+              <circle cx="155" cy="60" r="2.5" fill="#fde047" opacity="0.9" />
+              <circle cx="230" cy="95" r="1.5" fill="#ffffff" opacity="0.8" />
+              <circle cx="310" cy="40" r="2" fill="#38bdf8" opacity="0.85" />
+              <circle cx="390" cy="75" r="1.5" fill="#ffffff" opacity="0.7" />
+              <circle cx="545" cy="50" r="2" fill="#f8fafc" opacity="0.9" />
+              <circle cx="515" cy="135" r="1.5" fill="#c084fc" opacity="0.8" />
+
+              {/* Ringed Gas Giant Planet */}
+              <circle cx="465" cy="115" r="38" fill="url(#space-planet)" />
+              <ellipse
+                cx="465"
+                cy="115"
+                rx="68"
+                ry="15"
+                fill="none"
+                stroke="#a5b4fc"
+                strokeWidth="4"
+                opacity="0.8"
+                transform="rotate(-16 465 115)"
+              />
+
+              {/* Distant Crescent Moon / Horizon Arc */}
+              <path d="M 0 380 Q 300 320 600 380 Z" fill="#1e1b4b" opacity="0.7" />
+
+              {/* Orbital Observatory Pylons flanking the Arena */}
+              <rect x="42" y="135" width="24" height="245" fill="url(#orbital-pylon)" rx="4" />
+              <rect x="48" y="155" width="12" height="205" fill="#38bdf8" opacity="0.35" rx="2" />
+              <rect x="82" y="175" width="20" height="205" fill="url(#orbital-pylon)" rx="4" />
+
+              <rect x="498" y="175" width="20" height="205" fill="url(#orbital-pylon)" rx="4" />
+              <rect x="534" y="135" width="24" height="245" fill="url(#orbital-pylon)" rx="4" />
+              <rect x="540" y="155" width="12" height="205" fill="#38bdf8" opacity="0.35" rx="2" />
+
+              {/* Orbital Dais & Statues */}
+              {renderCenterPromontory(equippedStatue, false, '#1e293b', '#818cf8')}
+              {renderBackdropStatues(equippedStatue, false)}
+
+              {/* Flanking Standards */}
+              {renderBackdropBanners(bannerLeft, bannerRight, false, '#6366f1')}
+
+              {/* Starlight Observation Deck (y: 380 to 500) */}
+              <rect x="0" y="380" width="600" height="120" fill="#0f172a" />
+              <line x1="0" y1="380" x2="600" y2="380" stroke="#818cf8" strokeWidth="4" />
+              <line
+                x1="0"
+                y1="420"
+                x2="600"
+                y2="420"
+                stroke="#312e81"
+                strokeWidth="2"
+                strokeDasharray="24 12"
+              />
+              <line
+                x1="0"
+                y1="460"
+                x2="600"
+                y2="460"
+                stroke="#312e81"
+                strokeWidth="2"
+                strokeDasharray="24 12"
+              />
+
+              {/* Tournament Platform Customization */}
+              {renderBackdropGround(equippedGround, false)}
+            </>
+          )}
+        </svg>
+      )}
+
       {/* Atmospheric Realm Banner Bar */}
       <div className="realm-banner-overlay" data-testid="realm-banner-overlay">
         <span className="realm-icon">{area.icon}</span>

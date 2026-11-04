@@ -1,6 +1,7 @@
 import type { ElementType } from '../questions/types';
 
-export type WorldAreaId = 'castle' | 'fire_area' | 'ice_area' | 'wind_area' | 'earth_area';
+export type WorldAreaId =
+  'castle' | 'fire_area' | 'ice_area' | 'wind_area' | 'earth_area' | 'space_area';
 
 export interface WorldAreaTheme {
   primaryColor: string;
@@ -9,7 +10,7 @@ export interface WorldAreaTheme {
   accentColor: string;
   skyGradient: string;
   groundGradient: string;
-  particleType: 'none' | 'ember' | 'snowflake' | 'leaf_zephyr' | 'dust_rubble';
+  particleType: 'none' | 'ember' | 'snowflake' | 'leaf_zephyr' | 'dust_rubble' | 'starlight';
 }
 
 export interface WorldArea {
