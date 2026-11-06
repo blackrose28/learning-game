@@ -214,6 +214,22 @@ describe('Task 9.3 — World Progression', () => {
       backdrop = screen.getByTestId('range-backdrop');
       expect(backdrop).toHaveAttribute('data-area', 'space_area');
       expect(screen.getByTestId('realm-banner-overlay')).toHaveTextContent(/Space Station/i);
+      const panorama = screen.getByTestId('solar-system-panorama');
+      expect(panorama).toBeInTheDocument();
+      expect(screen.getByTestId('solar-sun')).toBeInTheDocument();
+      for (const planet of [
+        'mercury',
+        'venus',
+        'earth',
+        'mars',
+        'jupiter',
+        'saturn',
+        'uranus',
+        'neptune',
+        'pluto',
+      ]) {
+        expect(panorama.querySelector(`[data-planet="${planet}"]`)).toBeInTheDocument();
+      }
     });
 
     it('supports arena variant with full-height 500 viewBox and compact variant with 180 viewBox', () => {

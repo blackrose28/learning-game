@@ -114,9 +114,9 @@ export const WORLD_AREAS: readonly WorldArea[] = [
     shortName: 'Space Area',
     icon: '🚀',
     sessionsRequired: 5,
-    title: 'Orbital Observatory & Starlight Deck',
+    title: 'Solar System Observatory & Starlight Deck',
     description:
-      'Beyond the clouds among glowing nebulae and ringed planets, cosmic archers achieve stellar mastery.',
+      'Orbiting across the full 9-planet Solar System from Mercury to Pluto, cosmic archers achieve stellar mastery.',
     pedagogicalFocus: 'Cosmic Mastery & Speed Precision',
     theme: {
       primaryColor: '#6366f1',

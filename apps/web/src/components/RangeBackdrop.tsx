@@ -488,6 +488,422 @@ const renderBackdropGround = (equippedGround: string, isCompact: boolean) => {
   );
 };
 
+interface SolarPlanetSpec {
+  id: string;
+  name: string;
+  cx: number;
+  cy: number;
+  r: number;
+  labelColor: string;
+  bold?: boolean;
+  compactCx: number;
+  compactCy: number;
+  compactR: number;
+}
+
+const SOLAR_PLANETS: readonly SolarPlanetSpec[] = [
+  {
+    id: 'mercury',
+    name: 'Mercury',
+    cx: 92,
+    cy: 192,
+    r: 7,
+    labelColor: '#cbd5e1',
+    compactCx: 76,
+    compactCy: 68,
+    compactR: 4,
+  },
+  {
+    id: 'venus',
+    name: 'Venus',
+    cx: 136,
+    cy: 156,
+    r: 11,
+    labelColor: '#fde68a',
+    compactCx: 116,
+    compactCy: 56,
+    compactR: 6,
+  },
+  {
+    id: 'earth',
+    name: 'Earth',
+    cx: 188,
+    cy: 128,
+    r: 13,
+    labelColor: '#93c5fd',
+    compactCx: 164,
+    compactCy: 48,
+    compactR: 7,
+  },
+  {
+    id: 'mars',
+    name: 'Mars',
+    cx: 242,
+    cy: 108,
+    r: 9.5,
+    labelColor: '#fca5a5',
+    compactCx: 214,
+    compactCy: 44,
+    compactR: 5.5,
+  },
+  {
+    id: 'jupiter',
+    name: 'Jupiter',
+    cx: 312,
+    cy: 96,
+    r: 26,
+    labelColor: '#fde68a',
+    bold: true,
+    compactCx: 278,
+    compactCy: 42,
+    compactR: 14,
+  },
+  {
+    id: 'saturn',
+    name: 'Saturn',
+    cx: 392,
+    cy: 108,
+    r: 20,
+    labelColor: '#fef08a',
+    bold: true,
+    compactCx: 356,
+    compactCy: 46,
+    compactR: 11,
+  },
+  {
+    id: 'uranus',
+    name: 'Uranus',
+    cx: 456,
+    cy: 136,
+    r: 14,
+    labelColor: '#a5f3fc',
+    compactCx: 426,
+    compactCy: 52,
+    compactR: 8,
+  },
+  {
+    id: 'neptune',
+    name: 'Neptune',
+    cx: 504,
+    cy: 172,
+    r: 13,
+    labelColor: '#a5b4fc',
+    compactCx: 482,
+    compactCy: 62,
+    compactR: 7.5,
+  },
+  {
+    id: 'pluto',
+    name: 'Pluto',
+    cx: 546,
+    cy: 212,
+    r: 7.5,
+    labelColor: '#e7e5e4',
+    compactCx: 522,
+    compactCy: 70,
+    compactR: 3.8,
+  },
+];
+
+const renderSpaceDefs = () => (
+  <defs>
+    <linearGradient id="space-sky" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stopColor="#050811" />
+      <stop offset="45%" stopColor="#131136" />
+      <stop offset="80%" stopColor="#1e1b4b" />
+      <stop offset="100%" stopColor="#312e81" />
+    </linearGradient>
+    <linearGradient id="nebula-glow" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stopColor="#c084fc" stopOpacity="0.3" />
+      <stop offset="50%" stopColor="#818cf8" stopOpacity="0.18" />
+      <stop offset="100%" stopColor="#38bdf8" stopOpacity="0" />
+    </linearGradient>
+    <radialGradient id="solar-sun-glow" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stopColor="#fef08a" stopOpacity="1" />
+      <stop offset="45%" stopColor="#f97316" stopOpacity="0.9" />
+      <stop offset="75%" stopColor="#ea580c" stopOpacity="0.45" />
+      <stop offset="100%" stopColor="#ea580c" stopOpacity="0" />
+    </radialGradient>
+    <linearGradient id="planet-mercury" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stopColor="#e2e8f0" />
+      <stop offset="60%" stopColor="#94a3b8" />
+      <stop offset="100%" stopColor="#475569" />
+    </linearGradient>
+    <linearGradient id="planet-venus" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stopColor="#fef3c7" />
+      <stop offset="55%" stopColor="#f59e0b" />
+      <stop offset="100%" stopColor="#b45309" />
+    </linearGradient>
+    <linearGradient id="planet-earth" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stopColor="#60a5fa" />
+      <stop offset="55%" stopColor="#2563eb" />
+      <stop offset="100%" stopColor="#1e3a8a" />
+    </linearGradient>
+    <linearGradient id="planet-mars" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stopColor="#fca5a5" />
+      <stop offset="50%" stopColor="#ef4444" />
+      <stop offset="100%" stopColor="#991b1b" />
+    </linearGradient>
+    <linearGradient id="planet-jupiter" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stopColor="#d97706" />
+      <stop offset="22%" stopColor="#fde68a" />
+      <stop offset="42%" stopColor="#b45309" />
+      <stop offset="60%" stopColor="#fef3c7" />
+      <stop offset="78%" stopColor="#ea580c" />
+      <stop offset="100%" stopColor="#78350f" />
+    </linearGradient>
+    <linearGradient id="planet-saturn" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stopColor="#fef08a" />
+      <stop offset="55%" stopColor="#eab308" />
+      <stop offset="100%" stopColor="#a16207" />
+    </linearGradient>
+    <linearGradient id="planet-uranus" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stopColor="#a5f3fc" />
+      <stop offset="55%" stopColor="#06b6d4" />
+      <stop offset="100%" stopColor="#155e75" />
+    </linearGradient>
+    <linearGradient id="planet-neptune" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stopColor="#818cf8" />
+      <stop offset="55%" stopColor="#4f46e5" />
+      <stop offset="100%" stopColor="#1e1b4b" />
+    </linearGradient>
+    <linearGradient id="planet-pluto" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stopColor="#e7e5e4" />
+      <stop offset="55%" stopColor="#a8a29e" />
+      <stop offset="100%" stopColor="#57534e" />
+    </linearGradient>
+    <linearGradient id="orbital-pylon" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stopColor="#94a3b8" />
+      <stop offset="50%" stopColor="#475569" />
+      <stop offset="100%" stopColor="#1e293b" />
+    </linearGradient>
+  </defs>
+);
+
+const renderCompactSolarSystem = () => (
+  <g className="solar-system-compact" data-testid="solar-system-compact">
+    <path
+      d="M 10 95 Q 300 20 590 95"
+      fill="none"
+      stroke="#6366f1"
+      strokeWidth="0.75"
+      strokeDasharray="4 4"
+      opacity="0.4"
+    />
+    <path
+      d="M 25 110 Q 300 45 575 110"
+      fill="none"
+      stroke="#818cf8"
+      strokeWidth="0.75"
+      strokeDasharray="3 5"
+      opacity="0.3"
+    />
+    <circle cx="24" cy="48" r="28" fill="url(#solar-sun-glow)" />
+    <circle cx="24" cy="48" r="14" fill="#fde047" />
+    {SOLAR_PLANETS.map((p) => (
+      <g key={p.id} data-planet={p.id}>
+        <circle cx={p.compactCx} cy={p.compactCy} r={p.compactR} fill={`url(#planet-${p.id})`} />
+        {p.id === 'earth' && <circle cx="175" cy="41" r="2" fill="#e2e8f0" />}
+        {p.id === 'jupiter' && (
+          <ellipse cx="283" cy="46" rx="3.5" ry="2" fill="#dc2626" opacity="0.85" />
+        )}
+        {p.id === 'saturn' && (
+          <ellipse
+            cx="356"
+            cy="46"
+            rx="22"
+            ry="5"
+            fill="none"
+            stroke="#fde68a"
+            strokeWidth="2.2"
+            opacity="0.85"
+            transform="rotate(-15 356 46)"
+          />
+        )}
+        {p.id === 'uranus' && (
+          <ellipse
+            cx="426"
+            cy="52"
+            rx="3.5"
+            ry="13"
+            fill="none"
+            stroke="#a5f3fc"
+            strokeWidth="1.2"
+            opacity="0.7"
+            transform="rotate(20 426 52)"
+          />
+        )}
+      </g>
+    ))}
+  </g>
+);
+
+const renderArenaSolarSystem = () => (
+  <g className="solar-system-panorama" data-testid="solar-system-panorama">
+    <path
+      d="M 10 235 Q 290 60 590 225"
+      fill="none"
+      stroke="#818cf8"
+      strokeWidth="1"
+      strokeDasharray="6 6"
+      opacity="0.35"
+    />
+    <path
+      d="M 20 265 Q 300 95 585 255"
+      fill="none"
+      stroke="#38bdf8"
+      strokeWidth="1"
+      strokeDasharray="4 6"
+      opacity="0.28"
+    />
+    <path
+      d="M 35 295 Q 310 135 580 285"
+      fill="none"
+      stroke="#c084fc"
+      strokeWidth="1"
+      strokeDasharray="3 7"
+      opacity="0.22"
+    />
+
+    <g className="solar-sun" data-testid="solar-sun">
+      <circle cx="28" cy="108" r="62" fill="url(#solar-sun-glow)" />
+      <circle cx="28" cy="108" r="32" fill="#fb923c" opacity="0.85" />
+      <circle cx="28" cy="108" r="25" fill="#fde047" />
+      <text
+        x="28"
+        y="152"
+        textAnchor="middle"
+        fill="#fef08a"
+        fontSize="9"
+        fontWeight="700"
+        opacity="0.9"
+      >
+        SUN
+      </text>
+    </g>
+
+    {/* Asteroid Belt between Mars and Jupiter */}
+    <g className="asteroid-belt" opacity="0.65">
+      <circle cx="268" cy="96" r="1.5" fill="#94a3b8" />
+      <circle cx="272" cy="108" r="2" fill="#cbd5e1" />
+      <circle cx="266" cy="120" r="1.3" fill="#64748b" />
+      <circle cx="274" cy="132" r="1.7" fill="#94a3b8" />
+      <circle cx="269" cy="144" r="1.2" fill="#cbd5e1" />
+    </g>
+
+    {SOLAR_PLANETS.map((p) => (
+      <g key={p.id} className="solar-planet" data-planet={p.id}>
+        <circle cx={p.cx} cy={p.cy} r={p.r} fill={`url(#planet-${p.id})`} />
+        {p.id === 'mercury' && <circle cx="90" cy="190" r="1.5" fill="#64748b" opacity="0.7" />}
+        {p.id === 'venus' && (
+          <path
+            d="M 127 154 Q 136 150 145 155"
+            fill="none"
+            stroke="#fef3c7"
+            strokeWidth="1.5"
+            opacity="0.65"
+          />
+        )}
+        {p.id === 'earth' && (
+          <>
+            <path
+              d="M 181 121 Q 188 119 191 125 Q 189 132 183 130 Z"
+              fill="#4ade80"
+              opacity="0.9"
+            />
+            <path
+              d="M 191 128 Q 197 129 196 135 Q 192 137 190 132 Z"
+              fill="#22c55e"
+              opacity="0.85"
+            />
+            <circle cx="206" cy="113" r="3.5" fill="#e2e8f0" />
+          </>
+        )}
+        {p.id === 'mars' && (
+          <>
+            <path d="M 237 100 Q 242 98 247 100 Q 242 102 237 100 Z" fill="#fef2f2" />
+            <ellipse cx="244" cy="110" rx="4" ry="2" fill="#7f1d1d" opacity="0.55" />
+          </>
+        )}
+        {p.id === 'jupiter' && (
+          <ellipse
+            cx="320"
+            cy="104"
+            rx="7"
+            ry="4.2"
+            fill="#dc2626"
+            stroke="#fef08a"
+            strokeWidth="0.8"
+            opacity="0.9"
+          />
+        )}
+        {p.id === 'saturn' && (
+          <>
+            <ellipse
+              cx="392"
+              cy="108"
+              rx="40"
+              ry="10"
+              fill="none"
+              stroke="#fde68a"
+              strokeWidth="4"
+              opacity="0.85"
+              transform="rotate(-16 392 108)"
+            />
+            <ellipse
+              cx="392"
+              cy="108"
+              rx="32"
+              ry="7.5"
+              fill="none"
+              stroke="#ca8a04"
+              strokeWidth="1.5"
+              opacity="0.75"
+              transform="rotate(-16 392 108)"
+            />
+          </>
+        )}
+        {p.id === 'uranus' && (
+          <ellipse
+            cx="456"
+            cy="136"
+            rx="6"
+            ry="24"
+            fill="none"
+            stroke="#a5f3fc"
+            strokeWidth="2"
+            opacity="0.75"
+            transform="rotate(22 456 136)"
+          />
+        )}
+        {p.id === 'neptune' && (
+          <ellipse cx="500" cy="170" rx="4.5" ry="2.5" fill="#1e3a8a" opacity="0.8" />
+        )}
+        {p.id === 'pluto' && (
+          <>
+            <path
+              d="M 546 215 C 543 213 542 210 544 209 C 545 208.5 546 209.5 546 210.5 C 546 209.5 547 208.5 548 209 C 550 210 549 213 546 215 Z"
+              fill="#f5f5f4"
+              opacity="0.9"
+            />
+            <circle cx="557" cy="204" r="2.5" fill="#a8a29e" />
+          </>
+        )}
+        <text
+          x={p.cx}
+          y={p.cy + p.r + 12}
+          textAnchor="middle"
+          fill={p.labelColor}
+          fontSize={p.bold ? '9' : '8.5'}
+          fontWeight={p.bold ? '700' : '600'}
+        >
+          {p.name}
+        </text>
+      </g>
+    ))}
+  </g>
+);
+
 export const RangeBackdrop: React.FC<RangeBackdropProps> = ({
   areaId,
   equippedBanner = 'castle_banner_royal_lion',
@@ -1166,7 +1582,7 @@ export const RangeBackdrop: React.FC<RangeBackdropProps> = ({
       )}
 
       {/* ========================================================================= */}
-      {/* 6. SPACE STATION / ORBITAL OBSERVATORY BACKDROP                           */}
+      {/* 6. SPACE STATION / ORBITAL OBSERVATORY BACKDROP (SOLAR SYSTEM - 9 PLANETS) */}
       {/* ========================================================================= */}
       {areaId === 'space_area' && (
         <svg
@@ -1174,123 +1590,52 @@ export const RangeBackdrop: React.FC<RangeBackdropProps> = ({
           viewBox={isCompact ? '0 0 600 180' : '0 0 600 500'}
           preserveAspectRatio="none"
         >
-          <defs>
-            <linearGradient id="space-sky" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stopColor="#090d16" />
-              <stop offset="45%" stopColor="#1e1b4b" />
-              <stop offset="80%" stopColor="#312e81" />
-              <stop offset="100%" stopColor="#4338ca" />
-            </linearGradient>
-            <linearGradient id="nebula-glow" x1="0" y1="0" x2="1" y2="1">
-              <stop offset="0%" stopColor="#c084fc" stopOpacity="0.35" />
-              <stop offset="50%" stopColor="#818cf8" stopOpacity="0.2" />
-              <stop offset="100%" stopColor="#38bdf8" stopOpacity="0" />
-            </linearGradient>
-            <linearGradient id="space-planet" x1="0" y1="0" x2="1" y2="1">
-              <stop offset="0%" stopColor="#818cf8" />
-              <stop offset="60%" stopColor="#4f46e5" />
-              <stop offset="100%" stopColor="#1e1b4b" />
-            </linearGradient>
-            <linearGradient id="orbital-pylon" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stopColor="#94a3b8" />
-              <stop offset="50%" stopColor="#475569" />
-              <stop offset="100%" stopColor="#1e293b" />
-            </linearGradient>
-          </defs>
+          {renderSpaceDefs()}
 
           {isCompact ? (
             <>
               <rect x="0" y="0" width="600" height="180" fill="url(#space-sky)" />
               <ellipse cx="180" cy="55" rx="120" ry="40" fill="url(#nebula-glow)" />
               <ellipse cx="440" cy="45" rx="100" ry="35" fill="url(#nebula-glow)" />
-              {/* Starfield */}
               <circle cx="40" cy="25" r="1.5" fill="#f8fafc" opacity="0.9" />
-              <circle cx="110" cy="40" r="1" fill="#e0e7ff" opacity="0.7" />
-              <circle cx="240" cy="20" r="2" fill="#fde047" opacity="0.85" />
-              <circle cx="350" cy="35" r="1.5" fill="#f8fafc" opacity="0.8" />
-              <circle cx="520" cy="22" r="1.5" fill="#38bdf8" opacity="0.9" />
-              {/* Ringed Planet */}
-              <circle cx="470" cy="52" r="20" fill="url(#space-planet)" />
-              <ellipse
-                cx="470"
-                cy="52"
-                rx="36"
-                ry="8"
-                fill="none"
-                stroke="#a5b4fc"
-                strokeWidth="2.5"
-                opacity="0.75"
-                transform="rotate(-15 470 52)"
-              />
-              {/* Orbital Pylons */}
+              <circle cx="110" cy="18" r="1" fill="#e0e7ff" opacity="0.7" />
+              <circle cx="240" cy="16" r="2" fill="#fde047" opacity="0.85" />
+              <circle cx="350" cy="20" r="1.5" fill="#f8fafc" opacity="0.8" />
+              <circle cx="520" cy="18" r="1.5" fill="#38bdf8" opacity="0.9" />
+              {renderCompactSolarSystem()}
               <rect x="55" y="75" width="18" height="55" fill="url(#orbital-pylon)" rx="3" />
               <rect x="527" y="75" width="18" height="55" fill="url(#orbital-pylon)" rx="3" />
-
-              {/* Orbital Dais & Statues */}
               {renderCenterPromontory(equippedStatue, true, '#1e293b', '#818cf8')}
               {renderBackdropStatues(equippedStatue, true)}
-
-              {/* Flanking Standards */}
               {renderBackdropBanners(bannerLeft, bannerRight, true, '#6366f1')}
-
-              {/* Starlight Observation Deck */}
               <rect x="0" y="130" width="600" height="50" fill="#0f172a" />
               <line x1="0" y1="130" x2="600" y2="130" stroke="#818cf8" strokeWidth="3" />
-
-              {/* Tournament Platform Customization */}
               {renderBackdropGround(equippedGround, true)}
             </>
           ) : (
             <>
-              {/* Deep Space & Nebula Sky */}
               <rect x="0" y="0" width="600" height="500" fill="url(#space-sky)" />
-              <ellipse cx="160" cy="140" rx="160" ry="70" fill="url(#nebula-glow)" />
-              <ellipse cx="430" cy="110" rx="140" ry="60" fill="url(#nebula-glow)" />
-
-              {/* Starfield */}
-              <circle cx="45" cy="45" r="2" fill="#ffffff" opacity="0.9" />
-              <circle cx="95" cy="110" r="1.5" fill="#e0e7ff" opacity="0.75" />
-              <circle cx="155" cy="60" r="2.5" fill="#fde047" opacity="0.9" />
-              <circle cx="230" cy="95" r="1.5" fill="#ffffff" opacity="0.8" />
-              <circle cx="310" cy="40" r="2" fill="#38bdf8" opacity="0.85" />
-              <circle cx="390" cy="75" r="1.5" fill="#ffffff" opacity="0.7" />
-              <circle cx="545" cy="50" r="2" fill="#f8fafc" opacity="0.9" />
-              <circle cx="515" cy="135" r="1.5" fill="#c084fc" opacity="0.8" />
-
-              {/* Ringed Gas Giant Planet */}
-              <circle cx="465" cy="115" r="38" fill="url(#space-planet)" />
-              <ellipse
-                cx="465"
-                cy="115"
-                rx="68"
-                ry="15"
-                fill="none"
-                stroke="#a5b4fc"
-                strokeWidth="4"
-                opacity="0.8"
-                transform="rotate(-16 465 115)"
-              />
-
-              {/* Distant Crescent Moon / Horizon Arc */}
+              <ellipse cx="170" cy="145" rx="165" ry="75" fill="url(#nebula-glow)" />
+              <ellipse cx="430" cy="115" rx="150" ry="65" fill="url(#nebula-glow)" />
+              <circle cx="85" cy="32" r="2" fill="#ffffff" opacity="0.9" />
+              <circle cx="145" cy="48" r="1.5" fill="#e0e7ff" opacity="0.75" />
+              <circle cx="215" cy="28" r="2.2" fill="#fde047" opacity="0.9" />
+              <circle cx="290" cy="36" r="1.5" fill="#ffffff" opacity="0.8" />
+              <circle cx="365" cy="25" r="2" fill="#38bdf8" opacity="0.85" />
+              <circle cx="445" cy="38" r="1.5" fill="#ffffff" opacity="0.7" />
+              <circle cx="545" cy="42" r="2" fill="#f8fafc" opacity="0.9" />
+              <circle cx="515" cy="185" r="1.5" fill="#c084fc" opacity="0.8" />
+              {renderArenaSolarSystem()}
               <path d="M 0 380 Q 300 320 600 380 Z" fill="#1e1b4b" opacity="0.7" />
-
-              {/* Orbital Observatory Pylons flanking the Arena */}
               <rect x="42" y="135" width="24" height="245" fill="url(#orbital-pylon)" rx="4" />
               <rect x="48" y="155" width="12" height="205" fill="#38bdf8" opacity="0.35" rx="2" />
-              <rect x="82" y="175" width="20" height="205" fill="url(#orbital-pylon)" rx="4" />
-
-              <rect x="498" y="175" width="20" height="205" fill="url(#orbital-pylon)" rx="4" />
+              <rect x="82" y="215" width="20" height="165" fill="url(#orbital-pylon)" rx="4" />
+              <rect x="498" y="215" width="20" height="165" fill="url(#orbital-pylon)" rx="4" />
               <rect x="534" y="135" width="24" height="245" fill="url(#orbital-pylon)" rx="4" />
               <rect x="540" y="155" width="12" height="205" fill="#38bdf8" opacity="0.35" rx="2" />
-
-              {/* Orbital Dais & Statues */}
               {renderCenterPromontory(equippedStatue, false, '#1e293b', '#818cf8')}
               {renderBackdropStatues(equippedStatue, false)}
-
-              {/* Flanking Standards */}
               {renderBackdropBanners(bannerLeft, bannerRight, false, '#6366f1')}
-
-              {/* Starlight Observation Deck (y: 380 to 500) */}
               <rect x="0" y="380" width="600" height="120" fill="#0f172a" />
               <line x1="0" y1="380" x2="600" y2="380" stroke="#818cf8" strokeWidth="4" />
               <line
@@ -1311,8 +1656,6 @@ export const RangeBackdrop: React.FC<RangeBackdropProps> = ({
                 strokeWidth="2"
                 strokeDasharray="24 12"
               />
-
-              {/* Tournament Platform Customization */}
               {renderBackdropGround(equippedGround, false)}
             </>
           )}
