@@ -823,8 +823,8 @@ describe('ParentDashboard Component (Task 5.2)', () => {
   });
 
   describe('Dev Mode: Enable All Rewards', () => {
-    it('renders the Enable All Rewards button when showDevTools={true} (or dev env)', () => {
-      render(<ParentDashboard playerId="player-local" showDevTools={true} />);
+    it('renders the Enable All Rewards button by default (including production)', () => {
+      render(<ParentDashboard playerId="player-local" />);
       const btn = screen.getByTestId('enable-all-rewards-btn');
       expect(btn).toBeInTheDocument();
       expect(btn).toHaveTextContent('Enable All Rewards');

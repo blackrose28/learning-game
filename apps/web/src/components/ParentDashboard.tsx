@@ -231,7 +231,7 @@ export const ParentDashboard: React.FC<ParentDashboardProps> = ({
   storage,
   showDevTools,
 }) => {
-  const isDev = showDevTools ?? Boolean(import.meta.env?.DEV);
+  const isDev = showDevTools ?? true;
   const authContext = useSafeAuth();
   const activeApiClient = apiClient ?? authContext?.apiClient;
   const storageAdapter = storage ?? getDefaultStorage();
