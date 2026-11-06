@@ -46,13 +46,13 @@ function setup(token: string, hasPin = false) {
   localStorage.setItem('math_archer_active_child', JSON.stringify({ ...child, hasPin }));
   localStorage.setItem('math_archer_auth_token', token);
   const api = new MathArcherApiClient({ token });
+  const issuedToken = freshToken();
   vi.spyOn(api, 'getChildProfiles').mockResolvedValue({ children: [{ ...child, hasPin }] });
   const login = vi.spyOn(api, 'loginChild').mockImplementation(async () => {
-    const token = freshToken();
-    api.setAuthToken(token);
-    return { token, child: { ...child, hasPin } };
+    api.setAuthToken(issuedToken);
+    return { token: issuedToken, child: { ...child, hasPin } };
   });
-  return { api, login };
+  return { api, login, issuedToken };
 }
 
 describe('expired session recovery', () => {
@@ -64,7 +64,7 @@ describe('expired session recovery', () => {
   });
 
   it('replaces an expired startup token and resumes both durable queues', async () => {
-    const { api, login } = setup(jwt(1));
+    const { api, login, issuedToken } = setup(jwt(1));
     for (let i = 0; i < 50; i++) enqueueAttempt(child.id, { ...attempt, questionId: `q-${i}` });
     queueMissionAttempt(
       startMissionAttempt(
@@ -75,7 +75,7 @@ describe('expired session recovery', () => {
       )
     );
     const batch = vi.spyOn(api, 'submitAttemptsBatch').mockImplementation(async (_id, attempts) => {
-      expect(api.getAuthToken()).toBe(freshToken());
+      expect(api.getAuthToken()).toBe(issuedToken);
       return { success: true, accepted: attempts.length };
     });
     vi.spyOn(api, 'listMissionAttempts').mockResolvedValue({
@@ -84,7 +84,7 @@ describe('expired session recovery', () => {
       nextCursor: null,
     });
     const save = vi.spyOn(api, 'saveMissionAttempt').mockImplementation(async (attempt) => {
-      expect(api.getAuthToken()).toBe(freshToken());
+      expect(api.getAuthToken()).toBe(issuedToken);
       return { schemaVersion: 1, disposition: 'created', revision: 1, attempt };
     });
     vi.spyOn(api, 'getProgress').mockResolvedValue({
