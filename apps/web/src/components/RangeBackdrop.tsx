@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { type WorldAreaId, getWorldArea } from '@math-archer/learning-engine';
 
 export interface RangeBackdropProps {
@@ -488,16 +488,21 @@ const renderBackdropGround = (equippedGround: string, isCompact: boolean) => {
   );
 };
 
+const SUN_ARENA = { cx: 300, cy: 175 } as const;
+const SUN_COMPACT = { cx: 300, cy: 62 } as const;
+
 interface SolarPlanetSpec {
   id: string;
   name: string;
-  cx: number;
-  cy: number;
+  orbitRx: number;
+  orbitRy: number;
   r: number;
+  periodSec: number;
+  initialAngleDeg: number;
   labelColor: string;
   bold?: boolean;
-  compactCx: number;
-  compactCy: number;
+  compactOrbitRx: number;
+  compactOrbitRy: number;
   compactR: number;
 }
 
@@ -505,105 +510,159 @@ const SOLAR_PLANETS: readonly SolarPlanetSpec[] = [
   {
     id: 'mercury',
     name: 'Mercury',
-    cx: 92,
-    cy: 192,
-    r: 7,
+    orbitRx: 44,
+    orbitRy: 18,
+    r: 5.5,
+    periodSec: 8,
+    initialAngleDeg: 215,
     labelColor: '#cbd5e1',
-    compactCx: 76,
-    compactCy: 68,
-    compactR: 4,
+    compactOrbitRx: 34,
+    compactOrbitRy: 11,
+    compactR: 3.2,
   },
   {
     id: 'venus',
     name: 'Venus',
-    cx: 136,
-    cy: 156,
-    r: 11,
+    orbitRx: 72,
+    orbitRy: 30,
+    r: 8.5,
+    periodSec: 13,
+    initialAngleDeg: 145,
     labelColor: '#fde68a',
-    compactCx: 116,
-    compactCy: 56,
-    compactR: 6,
+    compactOrbitRx: 56,
+    compactOrbitRy: 17,
+    compactR: 4.8,
   },
   {
     id: 'earth',
     name: 'Earth',
-    cx: 188,
-    cy: 128,
-    r: 13,
+    orbitRx: 104,
+    orbitRy: 43,
+    r: 10,
+    periodSec: 18,
+    initialAngleDeg: 35,
     labelColor: '#93c5fd',
-    compactCx: 164,
-    compactCy: 48,
-    compactR: 7,
+    compactOrbitRx: 82,
+    compactOrbitRy: 24,
+    compactR: 5.5,
   },
   {
     id: 'mars',
     name: 'Mars',
-    cx: 242,
-    cy: 108,
-    r: 9.5,
+    orbitRx: 136,
+    orbitRy: 56,
+    r: 7.5,
+    periodSec: 25,
+    initialAngleDeg: 310,
     labelColor: '#fca5a5',
-    compactCx: 214,
-    compactCy: 44,
-    compactR: 5.5,
+    compactOrbitRx: 108,
+    compactOrbitRy: 31,
+    compactR: 4.5,
   },
   {
     id: 'jupiter',
     name: 'Jupiter',
-    cx: 312,
-    cy: 96,
-    r: 26,
+    orbitRx: 178,
+    orbitRy: 74,
+    r: 20,
+    periodSec: 36,
+    initialAngleDeg: 195,
     labelColor: '#fde68a',
     bold: true,
-    compactCx: 278,
-    compactCy: 42,
-    compactR: 14,
+    compactOrbitRx: 142,
+    compactOrbitRy: 40,
+    compactR: 11,
   },
   {
     id: 'saturn',
     name: 'Saturn',
-    cx: 392,
-    cy: 108,
-    r: 20,
+    orbitRx: 218,
+    orbitRy: 91,
+    r: 16,
+    periodSec: 48,
+    initialAngleDeg: 335,
     labelColor: '#fef08a',
     bold: true,
-    compactCx: 356,
-    compactCy: 46,
-    compactR: 11,
+    compactOrbitRx: 176,
+    compactOrbitRy: 48,
+    compactR: 8.5,
   },
   {
     id: 'uranus',
     name: 'Uranus',
-    cx: 456,
-    cy: 136,
-    r: 14,
+    orbitRx: 252,
+    orbitRy: 105,
+    r: 11.5,
+    periodSec: 64,
+    initialAngleDeg: 120,
     labelColor: '#a5f3fc',
-    compactCx: 426,
-    compactCy: 52,
-    compactR: 8,
+    compactOrbitRx: 206,
+    compactOrbitRy: 55,
+    compactR: 6.5,
   },
   {
     id: 'neptune',
     name: 'Neptune',
-    cx: 504,
-    cy: 172,
-    r: 13,
+    orbitRx: 278,
+    orbitRy: 116,
+    r: 11,
+    periodSec: 80,
+    initialAngleDeg: 255,
     labelColor: '#a5b4fc',
-    compactCx: 482,
-    compactCy: 62,
-    compactR: 7.5,
+    compactOrbitRx: 230,
+    compactOrbitRy: 60,
+    compactR: 6,
   },
   {
     id: 'pluto',
     name: 'Pluto',
-    cx: 546,
-    cy: 212,
-    r: 7.5,
+    orbitRx: 296,
+    orbitRy: 124,
+    r: 6,
+    periodSec: 96,
+    initialAngleDeg: 65,
     labelColor: '#e7e5e4',
-    compactCx: 522,
-    compactCy: 70,
-    compactR: 3.8,
+    compactOrbitRx: 248,
+    compactOrbitRy: 64,
+    compactR: 3.5,
   },
 ];
+
+const ASTEROID_COUNT = 28;
+const ASTEROID_NODES = Array.from({ length: ASTEROID_COUNT }, (_, idx) => {
+  const baseAngleDeg = (idx * 360) / ASTEROID_COUNT + (idx % 3) * 4;
+  const rxOffset = ((idx % 5) - 2) * 2.5;
+  const ryOffset = ((idx % 5) - 2) * 1.1;
+  const r = 1.1 + (idx % 3) * 0.45;
+  const fill = idx % 3 === 0 ? '#cbd5e1' : idx % 3 === 1 ? '#94a3b8' : '#64748b';
+  return { idx, baseAngleDeg, rxOffset, ryOffset, r, fill };
+});
+
+interface OrbitParams {
+  sunCx: number;
+  sunCy: number;
+  rx: number;
+  ry: number;
+  initialAngleDeg: number;
+  periodSec: number;
+  elapsedSec: number;
+}
+
+const computeOrbitPos = ({
+  sunCx,
+  sunCy,
+  rx,
+  ry,
+  initialAngleDeg,
+  periodSec,
+  elapsedSec,
+}: OrbitParams) => {
+  const angleRad = ((initialAngleDeg + (elapsedSec / periodSec) * 360) * Math.PI) / 180;
+  return {
+    x: Number((sunCx + rx * Math.cos(angleRad)).toFixed(2)),
+    y: Number((sunCy + ry * Math.sin(angleRad)).toFixed(2)),
+  };
+};
 
 const renderSpaceDefs = () => (
   <defs>
@@ -680,229 +739,362 @@ const renderSpaceDefs = () => (
   </defs>
 );
 
-const renderCompactSolarSystem = () => (
-  <g className="solar-system-compact" data-testid="solar-system-compact">
-    <path
-      d="M 10 95 Q 300 20 590 95"
-      fill="none"
-      stroke="#6366f1"
-      strokeWidth="0.75"
-      strokeDasharray="4 4"
-      opacity="0.4"
-    />
-    <path
-      d="M 25 110 Q 300 45 575 110"
-      fill="none"
-      stroke="#818cf8"
-      strokeWidth="0.75"
-      strokeDasharray="3 5"
-      opacity="0.3"
-    />
-    <circle cx="24" cy="48" r="28" fill="url(#solar-sun-glow)" />
-    <circle cx="24" cy="48" r="14" fill="#fde047" />
+const renderCompactPlanetDetail = (id: string, x: number, y: number, elapsedSec: number) => {
+  if (id === 'earth') {
+    const moonAngle = ((elapsedSec / 3) * 360 * Math.PI) / 180;
+    const mx = Number((x + 9 * Math.cos(moonAngle)).toFixed(2));
+    const my = Number((y + 5 * Math.sin(moonAngle)).toFixed(2));
+    return <circle cx={mx} cy={my} r="1.8" fill="#e2e8f0" data-testid="earth-moon-compact" />;
+  }
+  if (id === 'jupiter') {
+    return <ellipse cx={x + 3.5} cy={y + 2} rx="3" ry="1.8" fill="#dc2626" opacity="0.85" />;
+  }
+  if (id === 'saturn') {
+    return (
+      <ellipse
+        cx={x}
+        cy={y}
+        rx="18"
+        ry="4.5"
+        fill="none"
+        stroke="#fde68a"
+        strokeWidth="2"
+        opacity="0.85"
+        transform={`rotate(-15 ${x} ${y})`}
+      />
+    );
+  }
+  if (id === 'uranus') {
+    return (
+      <ellipse
+        cx={x}
+        cy={y}
+        rx="3"
+        ry="11"
+        fill="none"
+        stroke="#a5f3fc"
+        strokeWidth="1.2"
+        opacity="0.7"
+        transform={`rotate(20 ${x} ${y})`}
+      />
+    );
+  }
+  return null;
+};
+
+const renderArenaPlanetDetail = (id: string, x: number, y: number, elapsedSec: number) => {
+  if (id === 'mercury') {
+    return <circle cx={x - 1.5} cy={y - 1.5} r="1.4" fill="#64748b" opacity="0.75" />;
+  }
+  if (id === 'venus') {
+    return (
+      <path
+        d={`M ${x - 6} ${y - 1} Q ${x} ${y - 4} ${x + 6} ${y}`}
+        fill="none"
+        stroke="#fef3c7"
+        strokeWidth="1.4"
+        opacity="0.65"
+      />
+    );
+  }
+  if (id === 'earth') {
+    const moonAngle = ((elapsedSec / 4) * 360 * Math.PI) / 180;
+    const mx = Number((x + 16 * Math.cos(moonAngle)).toFixed(2));
+    const my = Number((y + 8 * Math.sin(moonAngle)).toFixed(2));
+    return (
+      <>
+        <path
+          d={`M ${x - 5} ${y - 5} Q ${x} ${y - 7} ${x + 2} ${y - 2} Q ${x + 1} ${y + 3} ${x - 4} ${y + 2} Z`}
+          fill="#4ade80"
+          opacity="0.9"
+        />
+        <path
+          d={`M ${x + 2} ${y} Q ${x + 7} ${y + 1} ${x + 6} ${y + 5} Q ${x + 3} ${y + 7} ${x + 1} ${y + 3} Z`}
+          fill="#22c55e"
+          opacity="0.85"
+        />
+        <ellipse
+          cx={x}
+          cy={y}
+          rx="16"
+          ry="8"
+          fill="none"
+          stroke="#94a3b8"
+          strokeWidth="0.6"
+          strokeDasharray="2 3"
+          opacity="0.4"
+        />
+        <circle cx={mx} cy={my} r="3" fill="#e2e8f0" data-testid="earth-moon" />
+      </>
+    );
+  }
+  if (id === 'mars') {
+    return (
+      <>
+        <ellipse cx={x} cy={y - 5.5} rx="3.5" ry="1.2" fill="#fef2f2" opacity="0.9" />
+        <ellipse cx={x + 1.5} cy={y + 1.5} rx="3" ry="1.5" fill="#7f1d1d" opacity="0.55" />
+      </>
+    );
+  }
+  if (id === 'jupiter') {
+    return (
+      <>
+        <ellipse
+          cx={x + 6}
+          cy={y + 5}
+          rx="5.5"
+          ry="3.2"
+          fill="#dc2626"
+          stroke="#fef08a"
+          strokeWidth="0.7"
+          opacity="0.9"
+        />
+        <circle cx={x - 24} cy={y - 5} r="2" fill="#fde047" opacity="0.85" />
+        <circle cx={x + 25} cy={y + 4} r="2.3" fill="#e2e8f0" opacity="0.85" />
+      </>
+    );
+  }
+  if (id === 'saturn') {
+    return (
+      <>
+        <ellipse
+          cx={x}
+          cy={y}
+          rx="32"
+          ry="8.5"
+          fill="none"
+          stroke="#fde68a"
+          strokeWidth="3.2"
+          opacity="0.85"
+          transform={`rotate(-16 ${x} ${y})`}
+        />
+        <ellipse
+          cx={x}
+          cy={y}
+          rx="25"
+          ry="6.2"
+          fill="none"
+          stroke="#ca8a04"
+          strokeWidth="1.3"
+          opacity="0.75"
+          transform={`rotate(-16 ${x} ${y})`}
+        />
+      </>
+    );
+  }
+  if (id === 'uranus') {
+    return (
+      <ellipse
+        cx={x}
+        cy={y}
+        rx="5"
+        ry="20"
+        fill="none"
+        stroke="#a5f3fc"
+        strokeWidth="1.8"
+        opacity="0.75"
+        transform={`rotate(22 ${x} ${y})`}
+      />
+    );
+  }
+  if (id === 'neptune') {
+    return <ellipse cx={x - 3} cy={y - 1.5} rx="3.8" ry="2.2" fill="#1e3a8a" opacity="0.85" />;
+  }
+  if (id === 'pluto') {
+    return (
+      <>
+        <circle cx={x + 1} cy={y + 1.5} r="2.2" fill="#f5f5f4" opacity="0.85" />
+        <circle cx={x + 9.5} cy={y - 5} r="2.2" fill="#a8a29e" />
+      </>
+    );
+  }
+  return null;
+};
+
+const renderCompactSolarSystem = (elapsedSec: number) => (
+  <g className="solar-system-compact" data-testid="solar-system-compact" data-animated="true">
     {SOLAR_PLANETS.map((p) => (
-      <g key={p.id} data-planet={p.id}>
-        <circle cx={p.compactCx} cy={p.compactCy} r={p.compactR} fill={`url(#planet-${p.id})`} />
-        {p.id === 'earth' && <circle cx="175" cy="41" r="2" fill="#e2e8f0" />}
-        {p.id === 'jupiter' && (
-          <ellipse cx="283" cy="46" rx="3.5" ry="2" fill="#dc2626" opacity="0.85" />
-        )}
-        {p.id === 'saturn' && (
-          <ellipse
-            cx="356"
-            cy="46"
-            rx="22"
-            ry="5"
-            fill="none"
-            stroke="#fde68a"
-            strokeWidth="2.2"
-            opacity="0.85"
-            transform="rotate(-15 356 46)"
-          />
-        )}
-        {p.id === 'uranus' && (
-          <ellipse
-            cx="426"
-            cy="52"
-            rx="3.5"
-            ry="13"
-            fill="none"
-            stroke="#a5f3fc"
-            strokeWidth="1.2"
-            opacity="0.7"
-            transform="rotate(20 426 52)"
-          />
-        )}
-      </g>
+      <ellipse
+        key={`orbit-compact-${p.id}`}
+        cx={SUN_COMPACT.cx}
+        cy={SUN_COMPACT.cy}
+        rx={p.compactOrbitRx}
+        ry={p.compactOrbitRy}
+        fill="none"
+        stroke={p.id === 'earth' ? '#38bdf8' : '#6366f1'}
+        strokeWidth={p.id === 'earth' ? '0.9' : '0.65'}
+        strokeDasharray={p.id === 'pluto' ? '2 4' : '3 4'}
+        opacity={p.id === 'earth' ? '0.45' : '0.28'}
+        data-orbit={p.id}
+      />
     ))}
+
+    <g className="solar-sun-compact" data-testid="solar-sun-compact">
+      <circle cx={SUN_COMPACT.cx} cy={SUN_COMPACT.cy} r="26" fill="url(#solar-sun-glow)" />
+      <circle cx={SUN_COMPACT.cx} cy={SUN_COMPACT.cy} r="15" fill="#fb923c" opacity="0.85" />
+      <circle cx={SUN_COMPACT.cx} cy={SUN_COMPACT.cy} r="11.5" fill="#fde047" />
+    </g>
+
+    {SOLAR_PLANETS.map((p) => {
+      const pos = computeOrbitPos({
+        sunCx: SUN_COMPACT.cx,
+        sunCy: SUN_COMPACT.cy,
+        rx: p.compactOrbitRx,
+        ry: p.compactOrbitRy,
+        initialAngleDeg: p.initialAngleDeg,
+        periodSec: p.periodSec,
+        elapsedSec,
+      });
+      return (
+        <g
+          key={p.id}
+          className="solar-planet-compact"
+          data-planet={p.id}
+          data-orbit-rx={p.compactOrbitRx}
+          data-orbit-ry={p.compactOrbitRy}
+          data-period-sec={p.periodSec}
+          data-x={pos.x}
+          data-y={pos.y}
+        >
+          <circle cx={pos.x} cy={pos.y} r={p.compactR} fill={`url(#planet-${p.id})`} />
+          {renderCompactPlanetDetail(p.id, pos.x, pos.y, elapsedSec)}
+        </g>
+      );
+    })}
   </g>
 );
 
-const renderArenaSolarSystem = () => (
-  <g className="solar-system-panorama" data-testid="solar-system-panorama">
-    <path
-      d="M 10 235 Q 290 60 590 225"
-      fill="none"
-      stroke="#818cf8"
-      strokeWidth="1"
-      strokeDasharray="6 6"
-      opacity="0.35"
-    />
-    <path
-      d="M 20 265 Q 300 95 585 255"
-      fill="none"
-      stroke="#38bdf8"
-      strokeWidth="1"
-      strokeDasharray="4 6"
-      opacity="0.28"
-    />
-    <path
-      d="M 35 295 Q 310 135 580 285"
-      fill="none"
-      stroke="#c084fc"
-      strokeWidth="1"
-      strokeDasharray="3 7"
-      opacity="0.22"
-    />
+const renderArenaSolarSystem = (elapsedSec: number) => {
+  const pulseR = 54 + 4 * Math.sin(elapsedSec * 2.2);
+  return (
+    <g className="solar-system-panorama" data-testid="solar-system-panorama" data-animated="true">
+      {/* Heliocentric Elliptical Orbits */}
+      <g className="solar-orbits" data-testid="solar-orbits">
+        {SOLAR_PLANETS.map((p) => (
+          <ellipse
+            key={`orbit-${p.id}`}
+            cx={SUN_ARENA.cx}
+            cy={SUN_ARENA.cy}
+            rx={p.orbitRx}
+            ry={p.orbitRy}
+            fill="none"
+            stroke={
+              p.id === 'earth'
+                ? '#38bdf8'
+                : p.id === 'jupiter' || p.id === 'saturn'
+                  ? '#818cf8'
+                  : '#6366f1'
+            }
+            strokeWidth={p.id === 'earth' ? '1.2' : '0.9'}
+            strokeDasharray={p.id === 'pluto' ? '3 6' : '5 5'}
+            opacity={p.id === 'earth' ? '0.45' : '0.28'}
+            data-orbit={p.id}
+          />
+        ))}
+      </g>
 
-    <g className="solar-sun" data-testid="solar-sun">
-      <circle cx="28" cy="108" r="62" fill="url(#solar-sun-glow)" />
-      <circle cx="28" cy="108" r="32" fill="#fb923c" opacity="0.85" />
-      <circle cx="28" cy="108" r="25" fill="#fde047" />
-      <text
-        x="28"
-        y="152"
-        textAnchor="middle"
-        fill="#fef08a"
-        fontSize="9"
-        fontWeight="700"
-        opacity="0.9"
+      {/* Revolving Asteroid Belt Ring between Mars (136x56) and Jupiter (178x74) */}
+      <g className="asteroid-belt" data-testid="asteroid-belt" opacity="0.7">
+        {ASTEROID_NODES.map((node) => {
+          const pos = computeOrbitPos({
+            sunCx: SUN_ARENA.cx,
+            sunCy: SUN_ARENA.cy,
+            rx: 157 + node.rxOffset,
+            ry: 65 + node.ryOffset,
+            initialAngleDeg: node.baseAngleDeg,
+            periodSec: 30,
+            elapsedSec,
+          });
+          return (
+            <circle
+              key={`asteroid-${node.idx}`}
+              cx={pos.x}
+              cy={pos.y}
+              r={node.r}
+              fill={node.fill}
+            />
+          );
+        })}
+      </g>
+
+      {/* Central Heliocentric Sun */}
+      <g
+        className="solar-sun"
+        data-testid="solar-sun"
+        data-cx={SUN_ARENA.cx}
+        data-cy={SUN_ARENA.cy}
       >
-        SUN
-      </text>
-    </g>
-
-    {/* Asteroid Belt between Mars and Jupiter */}
-    <g className="asteroid-belt" opacity="0.65">
-      <circle cx="268" cy="96" r="1.5" fill="#94a3b8" />
-      <circle cx="272" cy="108" r="2" fill="#cbd5e1" />
-      <circle cx="266" cy="120" r="1.3" fill="#64748b" />
-      <circle cx="274" cy="132" r="1.7" fill="#94a3b8" />
-      <circle cx="269" cy="144" r="1.2" fill="#cbd5e1" />
-    </g>
-
-    {SOLAR_PLANETS.map((p) => (
-      <g key={p.id} className="solar-planet" data-planet={p.id}>
-        <circle cx={p.cx} cy={p.cy} r={p.r} fill={`url(#planet-${p.id})`} />
-        {p.id === 'mercury' && <circle cx="90" cy="190" r="1.5" fill="#64748b" opacity="0.7" />}
-        {p.id === 'venus' && (
-          <path
-            d="M 127 154 Q 136 150 145 155"
-            fill="none"
-            stroke="#fef3c7"
-            strokeWidth="1.5"
-            opacity="0.65"
-          />
-        )}
-        {p.id === 'earth' && (
-          <>
-            <path
-              d="M 181 121 Q 188 119 191 125 Q 189 132 183 130 Z"
-              fill="#4ade80"
-              opacity="0.9"
-            />
-            <path
-              d="M 191 128 Q 197 129 196 135 Q 192 137 190 132 Z"
-              fill="#22c55e"
-              opacity="0.85"
-            />
-            <circle cx="206" cy="113" r="3.5" fill="#e2e8f0" />
-          </>
-        )}
-        {p.id === 'mars' && (
-          <>
-            <path d="M 237 100 Q 242 98 247 100 Q 242 102 237 100 Z" fill="#fef2f2" />
-            <ellipse cx="244" cy="110" rx="4" ry="2" fill="#7f1d1d" opacity="0.55" />
-          </>
-        )}
-        {p.id === 'jupiter' && (
-          <ellipse
-            cx="320"
-            cy="104"
-            rx="7"
-            ry="4.2"
-            fill="#dc2626"
-            stroke="#fef08a"
-            strokeWidth="0.8"
-            opacity="0.9"
-          />
-        )}
-        {p.id === 'saturn' && (
-          <>
-            <ellipse
-              cx="392"
-              cy="108"
-              rx="40"
-              ry="10"
-              fill="none"
-              stroke="#fde68a"
-              strokeWidth="4"
-              opacity="0.85"
-              transform="rotate(-16 392 108)"
-            />
-            <ellipse
-              cx="392"
-              cy="108"
-              rx="32"
-              ry="7.5"
-              fill="none"
-              stroke="#ca8a04"
-              strokeWidth="1.5"
-              opacity="0.75"
-              transform="rotate(-16 392 108)"
-            />
-          </>
-        )}
-        {p.id === 'uranus' && (
-          <ellipse
-            cx="456"
-            cy="136"
-            rx="6"
-            ry="24"
-            fill="none"
-            stroke="#a5f3fc"
-            strokeWidth="2"
-            opacity="0.75"
-            transform="rotate(22 456 136)"
-          />
-        )}
-        {p.id === 'neptune' && (
-          <ellipse cx="500" cy="170" rx="4.5" ry="2.5" fill="#1e3a8a" opacity="0.8" />
-        )}
-        {p.id === 'pluto' && (
-          <>
-            <path
-              d="M 546 215 C 543 213 542 210 544 209 C 545 208.5 546 209.5 546 210.5 C 546 209.5 547 208.5 548 209 C 550 210 549 213 546 215 Z"
-              fill="#f5f5f4"
-              opacity="0.9"
-            />
-            <circle cx="557" cy="204" r="2.5" fill="#a8a29e" />
-          </>
-        )}
+        <circle
+          cx={SUN_ARENA.cx}
+          cy={SUN_ARENA.cy}
+          r={Number(pulseR.toFixed(2))}
+          fill="url(#solar-sun-glow)"
+        />
+        <circle cx={SUN_ARENA.cx} cy={SUN_ARENA.cy} r="28" fill="#fb923c" opacity="0.88" />
+        <circle cx={SUN_ARENA.cx} cy={SUN_ARENA.cy} r="21" fill="#fde047" />
+        <circle cx={SUN_ARENA.cx - 6} cy={SUN_ARENA.cy - 6} r="7" fill="#fef9c3" opacity="0.65" />
         <text
-          x={p.cx}
-          y={p.cy + p.r + 12}
+          x={SUN_ARENA.cx}
+          y={SUN_ARENA.cy + 38}
           textAnchor="middle"
-          fill={p.labelColor}
-          fontSize={p.bold ? '9' : '8.5'}
-          fontWeight={p.bold ? '700' : '600'}
+          fill="#fef08a"
+          fontSize="9"
+          fontWeight="700"
+          opacity="0.95"
         >
-          {p.name}
+          SUN
         </text>
       </g>
-    ))}
-  </g>
-);
+
+      {/* Revolving Planets along Heliocentric Orbits */}
+      {SOLAR_PLANETS.map((p) => {
+        const pos = computeOrbitPos({
+          sunCx: SUN_ARENA.cx,
+          sunCy: SUN_ARENA.cy,
+          rx: p.orbitRx,
+          ry: p.orbitRy,
+          initialAngleDeg: p.initialAngleDeg,
+          periodSec: p.periodSec,
+          elapsedSec,
+        });
+        return (
+          <g
+            key={p.id}
+            className="solar-planet"
+            data-planet={p.id}
+            data-orbit-rx={p.orbitRx}
+            data-orbit-ry={p.orbitRy}
+            data-period-sec={p.periodSec}
+            data-x={pos.x}
+            data-y={pos.y}
+          >
+            <circle cx={pos.x} cy={pos.y} r={p.r} fill={`url(#planet-${p.id})`} />
+            {renderArenaPlanetDetail(p.id, pos.x, pos.y, elapsedSec)}
+            <text
+              x={pos.x}
+              y={pos.y + p.r + 11}
+              textAnchor="middle"
+              fill={p.labelColor}
+              fontSize={p.bold ? '9' : '8'}
+              fontWeight={p.bold ? '700' : '600'}
+            >
+              {p.name}
+            </text>
+          </g>
+        );
+      })}
+    </g>
+  );
+};
+
+const BANNER_PALETTES: Record<string, [string, string]> = {
+  castle_banner_dragon_fire: ['#ea580c', '#facc15'],
+  castle_banner_pegasus: ['#6366f1', '#c7d2fe'],
+  castle_banner_phoenix: ['#dc2626', '#f59e0b'],
+  castle_banner_griffin: ['#047857', '#e2e8f0'],
+  castle_banner_celestial_star: ['#312e81', '#38bdf8'],
+  castle_banner_infinite_crown: ['#ca8a04', '#fef08a'],
+};
 
 export const RangeBackdrop: React.FC<RangeBackdropProps> = ({
   areaId,
@@ -912,30 +1104,16 @@ export const RangeBackdrop: React.FC<RangeBackdropProps> = ({
   variant = 'arena',
 }) => {
   const area = getWorldArea(areaId);
+  const [elapsedSec, setElapsedSec] = useState(0);
 
-  // Banner colors
-  let bannerLeft = '#2563eb';
-  let bannerRight = '#dc2626';
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setElapsedSec((prev) => Number((prev + 0.05).toFixed(3)));
+    }, 50);
+    return () => clearInterval(interval);
+  }, []);
 
-  if (equippedBanner === 'castle_banner_dragon_fire') {
-    bannerLeft = '#ea580c';
-    bannerRight = '#facc15';
-  } else if (equippedBanner === 'castle_banner_pegasus') {
-    bannerLeft = '#6366f1';
-    bannerRight = '#c7d2fe';
-  } else if (equippedBanner === 'castle_banner_phoenix') {
-    bannerLeft = '#dc2626';
-    bannerRight = '#f59e0b';
-  } else if (equippedBanner === 'castle_banner_griffin') {
-    bannerLeft = '#047857';
-    bannerRight = '#e2e8f0';
-  } else if (equippedBanner === 'castle_banner_celestial_star') {
-    bannerLeft = '#312e81';
-    bannerRight = '#38bdf8';
-  } else if (equippedBanner === 'castle_banner_infinite_crown') {
-    bannerLeft = '#ca8a04';
-    bannerRight = '#fef08a';
-  }
+  const [bannerLeft, bannerRight] = BANNER_PALETTES[equippedBanner] ?? ['#2563eb', '#dc2626'];
 
   const isCompact = variant === 'compact';
 
@@ -1602,7 +1780,7 @@ export const RangeBackdrop: React.FC<RangeBackdropProps> = ({
               <circle cx="240" cy="16" r="2" fill="#fde047" opacity="0.85" />
               <circle cx="350" cy="20" r="1.5" fill="#f8fafc" opacity="0.8" />
               <circle cx="520" cy="18" r="1.5" fill="#38bdf8" opacity="0.9" />
-              {renderCompactSolarSystem()}
+              {renderCompactSolarSystem(elapsedSec)}
               <rect x="55" y="75" width="18" height="55" fill="url(#orbital-pylon)" rx="3" />
               <rect x="527" y="75" width="18" height="55" fill="url(#orbital-pylon)" rx="3" />
               {renderCenterPromontory(equippedStatue, true, '#1e293b', '#818cf8')}
@@ -1625,7 +1803,7 @@ export const RangeBackdrop: React.FC<RangeBackdropProps> = ({
               <circle cx="445" cy="38" r="1.5" fill="#ffffff" opacity="0.7" />
               <circle cx="545" cy="42" r="2" fill="#f8fafc" opacity="0.9" />
               <circle cx="515" cy="185" r="1.5" fill="#c084fc" opacity="0.8" />
-              {renderArenaSolarSystem()}
+              {renderArenaSolarSystem(elapsedSec)}
               <path d="M 0 380 Q 300 320 600 380 Z" fill="#1e1b4b" opacity="0.7" />
               <rect x="42" y="135" width="24" height="245" fill="url(#orbital-pylon)" rx="4" />
               <rect x="48" y="155" width="12" height="205" fill="#38bdf8" opacity="0.35" rx="2" />

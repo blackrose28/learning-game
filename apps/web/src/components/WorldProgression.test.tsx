@@ -216,8 +216,13 @@ describe('Task 9.3 — World Progression', () => {
       expect(screen.getByTestId('realm-banner-overlay')).toHaveTextContent(/Space Station/i);
       const panorama = screen.getByTestId('solar-system-panorama');
       expect(panorama).toBeInTheDocument();
-      expect(screen.getByTestId('solar-sun')).toBeInTheDocument();
-      for (const planet of [
+      expect(panorama).toHaveAttribute('data-animated', 'true');
+      const sun = screen.getByTestId('solar-sun');
+      expect(sun).toBeInTheDocument();
+      expect(sun).toHaveAttribute('data-cx', '300');
+      expect(sun).toHaveAttribute('data-cy', '175');
+
+      const planets = [
         'mercury',
         'venus',
         'earth',
@@ -227,8 +232,46 @@ describe('Task 9.3 — World Progression', () => {
         'uranus',
         'neptune',
         'pluto',
-      ]) {
-        expect(panorama.querySelector(`[data-planet="${planet}"]`)).toBeInTheDocument();
+      ];
+      let prevRx = 0;
+      let prevPeriod = 0;
+      for (const planet of planets) {
+        const planetEl = panorama.querySelector(`[data-planet="${planet}"]`);
+        expect(planetEl).toBeInTheDocument();
+        expect(panorama.querySelector(`[data-orbit="${planet}"]`)).toBeInTheDocument();
+
+        const rx = Number(planetEl?.getAttribute('data-orbit-rx'));
+        const period = Number(planetEl?.getAttribute('data-period-sec'));
+        expect(rx).toBeGreaterThan(prevRx);
+        expect(period).toBeGreaterThan(prevPeriod);
+        prevRx = rx;
+        prevPeriod = period;
+      }
+    });
+
+    it('dynamically animates planets revolving around the sun over time', () => {
+      vi.useFakeTimers();
+      try {
+        render(<RangeBackdrop areaId="space_area" variant="arena" />);
+        const panorama = screen.getByTestId('solar-system-panorama');
+        const mercury = panorama.querySelector('[data-planet="mercury"]')!;
+        const earth = panorama.querySelector('[data-planet="earth"]')!;
+
+        const initialMercuryX = mercury.getAttribute('data-x');
+        const initialMercuryY = mercury.getAttribute('data-y');
+        const initialEarthX = earth.getAttribute('data-x');
+        const initialEarthY = earth.getAttribute('data-y');
+
+        act(() => {
+          vi.advanceTimersByTime(1000);
+        });
+
+        expect(mercury.getAttribute('data-x')).not.toBe(initialMercuryX);
+        expect(mercury.getAttribute('data-y')).not.toBe(initialMercuryY);
+        expect(earth.getAttribute('data-x')).not.toBe(initialEarthX);
+        expect(earth.getAttribute('data-y')).not.toBe(initialEarthY);
+      } finally {
+        vi.useRealTimers();
       }
     });
 
