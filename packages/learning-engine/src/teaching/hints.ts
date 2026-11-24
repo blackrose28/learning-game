@@ -133,8 +133,28 @@ function generatePlaceValueHint(
 }
 
 /**
- * Times-table hints: repeated addition and skip-counting for multiplication,
- * related multiplication facts for division.
+ * Distributive (friendly-ten) decomposition for large multipliers:
+ * 9 × 8 = 9 × 10 − 9 × 2 = 90 − 9 − 9. Returns null when skip-counting
+ * is already easy (multiplier ≤ 5) or the multiplier is a whole ten.
+ */
+function generateFriendlyTenDecomposition(
+  right: number
+): { anchor: number; diff: number; sign: '+' | '−' } | null {
+  if (right <= 5 || right % 10 === 0) {
+    return null;
+  }
+  const anchor = Math.round(right / 10) * 10;
+  const diff = Math.abs(anchor - right);
+  if (diff === 0 || diff > 4) {
+    return null;
+  }
+  return { anchor, diff, sign: anchor > right ? '−' : '+' };
+}
+
+/**
+ * Times-table hints: friendly-ten distributive strategy for large multipliers
+ * (9 × 8 = 9 × 10 − 9 × 2) and skip-counting for small ones;
+ * doubling ladder for division.
  */
 function generateMultDivHint(
   question: Pick<BaseQuestion, 'left' | 'right' | 'operation'> & { answer?: number },
@@ -145,13 +165,18 @@ function generateMultDivHint(
   const answer = question.answer ?? solveExpression(left, right, operation);
 
   if (operation === 'divide') {
+    // Doubling ladder: 4 × 2 = 8, 4 × 4 = 16 … combine groups to reach the target.
+    const ladder = [2, 4, 8]
+      .filter((m) => right * m < left)
+      .map((m) => `${right} × ${m} = ${right * m}`);
+    const ladderText = ladder.length > 0 ? `Double up: ${ladder.join(', ')}. ` : '';
     switch (level) {
       case 'strategy_hint':
         return {
           level,
           title: 'Strategy Hint',
           headline: '💡 Think of the matching multiplication!',
-          prompt: `What number times ${right} equals ${left}?`,
+          prompt: `What number times ${right} equals ${left}? Try doubling ${right}.`,
           left,
           right,
           operation,
@@ -165,10 +190,7 @@ function generateMultDivHint(
           operation,
           splitPrompt: `Find the missing number: ${right} × ? = ${left}`,
           equationScaffold: `${left} ${symbol} ${right} = ?`,
-          detail:
-            answer > 1
-              ? `Try: ${right} × ${answer - 1} = ${right * (answer - 1)}, so ${right} × ${answer} = ${left}.`
-              : `Think: ${right} × 1 = ${left}.`,
+          detail: `${ladderText}Keep adding groups of ${right} until you reach ${left}.`,
         };
       case 'full_explanation':
         return {
@@ -180,6 +202,55 @@ function generateMultDivHint(
           answer,
           summaryText: `${left} ${symbol} ${right} equals ${answer} because ${right} × ${answer} = ${left}.`,
           equation: `${left} ${symbol} ${right} = ${answer}`,
+        };
+    }
+  }
+
+  const friendly = generateFriendlyTenDecomposition(right);
+  if (friendly) {
+    const { anchor, diff, sign } = friendly;
+    const anchorProduct = left * anchor;
+    const diffText = Array.from({ length: diff }, () => `${left}`).join(' − ');
+    const friendlyEquation = `${left} × ${right} = ${left} × ${anchor} ${sign} ${left} × ${diff}`;
+    const scaffoldEquation = `${friendlyEquation} = ${anchorProduct} ${sign} ${diffText} = ?`;
+    const friendlySummary =
+      sign === '−'
+        ? `${right} is ${diff} less than ${anchor}, so take away ${diff} groups of ${left}.`
+        : `${right} is ${diff} more than ${anchor}, so add ${diff} more groups of ${left}.`;
+    switch (level) {
+      case 'strategy_hint':
+        return {
+          level,
+          title: 'Strategy Hint',
+          headline: '💡 Use a friendly ten!',
+          prompt: `${right} is close to ${anchor}. First work out ${left} × ${anchor}, then ${
+            sign === '−' ? 'take away' : 'add'
+          } the extra groups of ${left}.`,
+          left,
+          right,
+          operation,
+        };
+      case 'partial_decomposition':
+        return {
+          level,
+          title: 'Partial Decomposition',
+          left,
+          right,
+          operation,
+          splitPrompt: `${right} is ${diff} away from ${anchor}`,
+          equationScaffold: scaffoldEquation,
+          detail: `${friendlyEquation}. ${friendlySummary}`,
+        };
+      case 'full_explanation':
+        return {
+          level,
+          title: 'Full Explanation',
+          left,
+          right,
+          operation,
+          answer,
+          summaryText: `${friendlyEquation} = ${anchorProduct} ${sign} ${left * diff} = ${answer}. ${friendlySummary}`,
+          equation: `${anchorProduct} ${sign} ${left * diff} = ${answer}, so ${left} × ${right} = ${answer}`,
         };
     }
   }

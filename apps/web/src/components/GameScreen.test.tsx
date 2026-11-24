@@ -1095,12 +1095,14 @@ describe('Task 4.1 — Implement guided make-10 feedback', () => {
     expect(screen.queryByTestId('make10-step-1')).not.toBeInTheDocument();
 
     // Strategy tab shows the times-table strategy
-    expect(screen.getByTestId('strategy-hint-headline')).toHaveTextContent('Think of groups!');
-    expect(screen.getByTestId('strategy-hint-prompt')).toHaveTextContent('Skip-count by 6');
+    expect(screen.getByTestId('strategy-hint-headline')).toHaveTextContent('Use a friendly ten!');
+    expect(screen.getByTestId('strategy-hint-prompt')).toHaveTextContent('6 × 10');
 
-    // Partial tab shows the skip-count scaffold
+    // Partial tab shows the friendly-ten scaffold
     fireEvent.click(screen.getByTestId('tab-partial-decomposition'));
-    expect(screen.getByTestId('partial-scaffold-equation')).toHaveTextContent('6 × 7 = 6 + 6');
+    expect(screen.getByTestId('partial-scaffold-equation')).toHaveTextContent(
+      '6 × 7 = 6 × 10 − 6 × 3'
+    );
 
     // Full explanation tab shows the worked answer
     fireEvent.click(screen.getByTestId('tab-full-explanation'));

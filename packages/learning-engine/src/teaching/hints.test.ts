@@ -139,6 +139,62 @@ describe('Task 4.2 — Implement Hint Levels in Learning Engine', () => {
     });
   });
 
+  describe('Friendly-ten multiplication hints', () => {
+    const question9x8 = {
+      left: 9,
+      right: 8,
+      operation: 'multiply' as const,
+      skill: 'multiplication_below_10' as const,
+    };
+
+    it('uses the friendly-ten strategy instead of long repeated addition', () => {
+      const hint = generateQuestionHint(question9x8, 'partial_decomposition');
+      expect(hint.level).toBe('partial_decomposition');
+      if (hint.level === 'partial_decomposition') {
+        expect(hint.equationScaffold).toContain('9 × 10 − 9 × 2');
+        expect(hint.equationScaffold).toContain('90 − 9 − 9');
+        expect(hint.equationScaffold).not.toContain('72');
+        expect(hint.splitPrompt).toContain('2 away from 10');
+      }
+    });
+
+    it('keeps the final answer for the full explanation only', () => {
+      const full = generateQuestionHint(question9x8, 'full_explanation');
+      expect(full.level).toBe('full_explanation');
+      if (full.level === 'full_explanation') {
+        expect(full.answer).toBe(72);
+        expect(full.equation).toContain('90 − 18 = 72');
+      }
+    });
+
+    it('keeps skip-counting for small multipliers', () => {
+      const hint = generateQuestionHint(
+        {
+          left: 9,
+          right: 4,
+          operation: 'multiply' as const,
+          skill: 'multiplication_below_10' as const,
+        },
+        'partial_decomposition'
+      );
+      if (hint.level === 'partial_decomposition') {
+        expect(hint.detail).toContain('Skip-count by 9');
+      }
+    });
+
+    it('hints division with a doubling ladder instead of giving the answer', () => {
+      const hint = generateQuestionHint(
+        { left: 24, right: 4, operation: 'divide' as const, skill: 'division_below_10' as const },
+        'partial_decomposition'
+      );
+      if (hint.level === 'partial_decomposition') {
+        expect(hint.detail).toContain('4 × 2 = 8');
+        expect(hint.detail).toContain('4 × 4 = 16');
+        expect(hint.detail).not.toContain('× 6 = 24');
+      }
+    });
+  });
+
   describe('Non-Make-10 Question Hints', () => {
     it('generates appropriate strategy and partial hints for subtraction', () => {
       const subQuestion = {
