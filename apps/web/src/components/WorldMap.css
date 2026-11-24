@@ -30,13 +30,13 @@
   align-items: center;
   justify-content: space-between;
   gap: 10px;
-  background: #ffffff;
-  border: 1px solid #e2e8f0;
-  border-radius: 12px;
+  background: #f5f0e6;
+  border: 1px solid #e2d9c8;
+  border-radius: 8px;
   padding: 4px 12px;
   min-height: 42px;
   box-sizing: border-box;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+  box-shadow: 0 1px 3px rgba(43, 38, 32, 0.08);
   z-index: 5;
 }
 
@@ -51,19 +51,21 @@
   margin: 0;
   font-size: 15px;
   font-weight: 800;
-  color: #0f172a;
+  font-family: Georgia, 'Times New Roman', serif;
+  letter-spacing: 0.02em;
+  color: #3a332a;
   white-space: nowrap;
 }
 
 .world-map-subtitle {
   margin: 0;
   font-size: 11px;
-  color: #64748b;
+  color: #6b6155;
   white-space: nowrap;
 }
 
 .back-to-game-btn {
-  background: #2563eb;
+  background: #b4532a;
   color: #ffffff;
   border: none;
   border-radius: 8px;
@@ -77,12 +79,12 @@
 }
 
 .back-to-game-btn:hover {
-  background: #1d4ed8;
+  background: #93431f;
   transform: translateY(-1px);
 }
 
 .back-to-game-btn:focus-visible {
-  outline: 2px solid #93c5fd;
+  outline: 2px solid #e0a383;
   outline-offset: 1px;
 }
 
@@ -94,8 +96,8 @@
   display: flex;
   flex-direction: column;
   gap: 2px;
-  background: #f8fafc;
-  border: 1px solid #e2e8f0;
+  background: #faf6ed;
+  border: 1px solid #e2d9c8;
   border-radius: 8px;
   padding: 3px 10px;
 }
@@ -105,20 +107,20 @@
   justify-content: space-between;
   align-items: center;
   font-size: 11px;
-  color: #334155;
+  color: #4a4136;
   font-weight: 600;
 }
 
 .world-progress-meter {
   height: 5px;
-  background: #e2e8f0;
+  background: #e2d9c8;
   border-radius: 9999px;
   overflow: hidden;
 }
 
 .world-progress-fill {
   height: 100%;
-  background: linear-gradient(90deg, #3b82f6 0%, #10b981 50%, #f59e0b 100%);
+  background: linear-gradient(90deg, #b4532a 0%, #c97b4a 55%, #d9a05e 100%);
   border-radius: 9999px;
   transition: width 0.4s ease-out;
 }
@@ -161,7 +163,7 @@
   position: relative;
   border-radius: 16px;
   border: 1px solid #e2e8f0;
-  background: #0f172a;
+  background: #2b2620;
   overflow: hidden;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
 }

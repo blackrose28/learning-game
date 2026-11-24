@@ -1,5 +1,27 @@
 import React, { useEffect, useState } from 'react';
 import { type WorldAreaId, getWorldArea } from '@math-archer/learning-engine';
+import { CartographicLayer } from './CartographicLayer';
+import { CastleTower, ShadeOverlay } from './CastleTower';
+import { GrassField } from './GrassField';
+import {
+  FireHut,
+  FireTorch,
+  AshGround,
+  FireChimney,
+  EmberField,
+  FireBanner,
+  PagodaHall,
+  LanternString,
+  Fireworks,
+} from './FireVillage';
+import {
+  IceTower,
+  FrostBrazier,
+  FrostGround,
+  IceCitadel,
+  FrostLightString,
+  IceSparkles,
+} from './IceKingdom';
 
 export interface RangeBackdropProps {
   areaId: WorldAreaId;
@@ -1160,16 +1182,16 @@ export const RangeBackdrop: React.FC<RangeBackdropProps> = ({
             <>
               {/* Sky */}
               <rect x="0" y="0" width="600" height="180" fill="url(#castle-sky)" />
+              <CartographicLayer areaId={areaId} variant="compact" />
               {/* Castle parapets */}
-              <path
-                d="M 40 120 L 40 70 L 60 70 L 60 80 L 80 80 L 80 70 L 100 70 L 100 80 L 120 80 L 120 70 L 140 70 L 140 120 Z"
-                fill="url(#castle-wall)"
-                opacity="0.8"
-              />
-              <path
-                d="M 460 120 L 460 70 L 480 70 L 480 80 L 500 80 L 500 70 L 520 70 L 520 80 L 540 80 L 540 70 L 560 70 L 560 120 Z"
-                fill="url(#castle-wall)"
-                opacity="0.8"
+              <CastleTower x={40} baseY={122} width={100} height={54} uid="castle-compact-l" />
+              <CastleTower
+                x={460}
+                baseY={122}
+                width={100}
+                height={54}
+                uid="castle-compact-r"
+                flipped
               />
 
               {/* Statues on Towers */}
@@ -1182,8 +1204,7 @@ export const RangeBackdrop: React.FC<RangeBackdropProps> = ({
               <rect x="0" y="115" width="600" height="25" fill="#64748b" opacity="0.4" />
 
               {/* Grass Field */}
-              <rect x="0" y="135" width="600" height="45" fill="url(#castle-grass)" />
-              <line x1="0" y1="135" x2="600" y2="135" stroke="#22c55e" strokeWidth="2" />
+              <GrassField y={135} height={45} uid="grass-compact" seed={11} />
 
               {/* Ground Decorations */}
               {renderBackdropGround(equippedGround, true)}
@@ -1193,6 +1214,7 @@ export const RangeBackdrop: React.FC<RangeBackdropProps> = ({
             <>
               {/* Sky spanning the view */}
               <rect x="0" y="0" width="600" height="500" fill="url(#castle-sky)" />
+              <CartographicLayer areaId={areaId} variant="arena" />
 
               {/* Distant Clouds */}
               <path
@@ -1215,6 +1237,14 @@ export const RangeBackdrop: React.FC<RangeBackdropProps> = ({
                 fill="url(#castle-wall)"
                 opacity="0.35"
               />
+              <ShadeOverlay
+                x={100}
+                y={240}
+                width={400}
+                height={140}
+                uid="castle-wall-shade"
+                strength={0.5}
+              />
               <path
                 d="M 120 240 L 120 225 L 140 225 L 140 240 L 170 240 L 170 225 L 190 225 L 190 240 L 220 240 L 220 225 L 240 225 L 240 240 L 360 240 L 360 225 L 380 225 L 380 240 L 410 240 L 410 225 L 430 225 L 430 240 L 460 240 L 460 225 L 480 225 L 480 240 Z"
                 fill="url(#castle-wall)"
@@ -1222,24 +1252,16 @@ export const RangeBackdrop: React.FC<RangeBackdropProps> = ({
               />
 
               {/* Left Grand Bastion Tower (x: 20 to 140, y: 70 to 380) */}
-              <rect x="25" y="85" width="115" height="295" fill="url(#castle-wall)" />
-              <path
-                d="M 20 85 L 20 50 L 45 50 L 45 64 L 70 64 L 70 50 L 95 50 L 95 64 L 120 64 L 120 50 L 145 50 L 145 85 Z"
-                fill="url(#castle-wall)"
-              />
-              <rect x="15" y="85" width="135" height="8" fill="#475569" />
-              <rect x="72" y="140" width="14" height="42" rx="4" fill="#334155" />
-              <rect x="72" y="220" width="14" height="42" rx="4" fill="#334155" />
-
+              <CastleTower x={25} baseY={380} width={115} height={310} uid="castle-arena-l" />
               {/* Right Grand Bastion Tower (x: 460 to 580, y: 70 to 380) */}
-              <rect x="460" y="85" width="115" height="295" fill="url(#castle-wall)" />
-              <path
-                d="M 455 85 L 455 50 L 480 50 L 480 64 L 505 64 L 505 50 L 530 50 L 530 64 L 555 64 L 555 50 L 580 50 L 580 85 Z"
-                fill="url(#castle-wall)"
+              <CastleTower
+                x={460}
+                baseY={380}
+                width={115}
+                height={310}
+                uid="castle-arena-r"
+                flipped
               />
-              <rect x="450" y="85" width="135" height="8" fill="#475569" />
-              <rect x="514" y="140" width="14" height="42" rx="4" fill="#334155" />
-              <rect x="514" y="220" width="14" height="42" rx="4" fill="#334155" />
 
               {/* Banners & Pennants flanking the Arena */}
               {renderBackdropBanners(bannerLeft, bannerRight, false, '#334155')}
@@ -1251,8 +1273,7 @@ export const RangeBackdrop: React.FC<RangeBackdropProps> = ({
               <rect x="0" y="355" width="600" height="25" fill="#64748b" opacity="0.4" />
 
               {/* Grass Field Courtyard (y: 380 to 500) */}
-              <rect x="0" y="380" width="600" height="120" fill="url(#castle-grass)" />
-              <line x1="0" y1="380" x2="600" y2="380" stroke="#22c55e" strokeWidth="3" />
+              <GrassField y={380} height={120} uid="grass-arena" seed={23} />
 
               {/* Ground Decorations spanning the ground */}
               {renderBackdropGround(equippedGround, false)}
@@ -1272,10 +1293,10 @@ export const RangeBackdrop: React.FC<RangeBackdropProps> = ({
         >
           <defs>
             <linearGradient id="fire-sky" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stopColor="#7c2d12" />
-              <stop offset="40%" stopColor="#c2410c" />
-              <stop offset="75%" stopColor="#ea580c" />
-              <stop offset="100%" stopColor="#fed7aa" />
+              <stop offset="0%" stopColor="#1e1b4a" />
+              <stop offset="45%" stopColor="#4c1d95" />
+              <stop offset="78%" stopColor="#7c2d12" />
+              <stop offset="100%" stopColor="#c2410c" />
             </linearGradient>
             <linearGradient id="volcano-rock" x1="0" y1="0" x2="0" y2="1">
               <stop offset="0%" stopColor="#431407" />
@@ -1291,6 +1312,7 @@ export const RangeBackdrop: React.FC<RangeBackdropProps> = ({
           {isCompact ? (
             <>
               <rect x="0" y="0" width="600" height="180" fill="url(#fire-sky)" />
+              <CartographicLayer areaId={areaId} variant="compact" />
               <polygon points="0,130 90,65 190,130" fill="url(#volcano-rock)" opacity="0.75" />
               <polygon points="140,130 260,50 380,130" fill="url(#volcano-rock)" opacity="0.9" />
               <polygon points="340,130 460,60 570,130" fill="url(#volcano-rock)" opacity="0.8" />
@@ -1301,21 +1323,25 @@ export const RangeBackdrop: React.FC<RangeBackdropProps> = ({
               <circle cx="390" cy="70" r="2" fill="#f97316" opacity="0.8" />
               <circle cx="480" cy="50" r="2.5" fill="#fef08a" opacity="0.75" />
 
+              {/* Festival village on the slopes, after the reference image */}
+              <PagodaHall x={210} baseY={166} width={160} tiers={3} uid="pagoda-c" seed={5} />
+              <FireHut x={70} baseY={158} width={36} uid="fire-hut-c1" seed={5} />
+              <FireHut x={482} baseY={162} width={32} uid="fire-hut-c2" seed={9} />
+              <FireChimney x={82} baseY={138} height={12} uid="fire-chim-c1" />
+              <LanternString x1={0} y1={150} x2={210} y2={150} uid="lantern-c1" />
+              <LanternString x1={380} y1={152} x2={600} y2={150} uid="lantern-c2" />
+              <FireTorch x={40} baseY={170} height={30} uid="fire-torch-c1" />
+              <FireTorch x={556} baseY={170} height={30} uid="fire-torch-c2" />
+              <Fireworks y={110} seed={29} />
+
               {/* Promontory & Statues */}
-              {renderCenterPromontory(equippedStatue, true, '#431407', '#ea580c')}
               {renderBackdropStatues(equippedStatue, true)}
 
               {/* Flanking Standards */}
               {renderBackdropBanners(bannerLeft, bannerRight, true, '#292524')}
 
               {/* Ground & Lava Veins */}
-              <rect x="0" y="130" width="600" height="50" fill="#290d05" />
-              <path
-                d="M 0 145 Q 150 140 300 146 T 600 144"
-                stroke="url(#lava-glow)"
-                strokeWidth="3"
-                fill="none"
-              />
+              <AshGround y={130} height={50} uid="ash-compact" seed={4} />
 
               {/* Tournament Platform Customization */}
               {renderBackdropGround(equippedGround, true)}
@@ -1324,19 +1350,34 @@ export const RangeBackdrop: React.FC<RangeBackdropProps> = ({
             <>
               {/* Sky spanning the view */}
               <rect x="0" y="0" width="600" height="500" fill="url(#fire-sky)" />
-
+              <CartographicLayer areaId={areaId} variant="arena" />
               {/* Distant Volcanic peaks */}
               <polygon points="0,380 90,140 210,380" fill="url(#volcano-rock)" opacity="0.7" />
               <polygon points="130,380 270,110 410,380" fill="url(#volcano-rock)" opacity="0.85" />
               <polygon points="340,380 480,130 600,380" fill="url(#volcano-rock)" opacity="0.75" />
-
               {/* Towering Volcanic Crags on left and right */}
               <polygon points="0,380 0,90 45,70 85,180 130,380" fill="url(#volcano-rock)" />
               <polygon points="470,380 515,180 555,70 600,90 600,380" fill="url(#volcano-rock)" />
-
+              <ShadeOverlay
+                x={0}
+                y={70}
+                width={130}
+                height={310}
+                uid="fire-cliff-l"
+                clipPoints="0,380 0,90 45,70 85,180 130,380"
+                strength={0.7}
+              />
+              <ShadeOverlay
+                x={470}
+                y={70}
+                width={130}
+                height={310}
+                uid="fire-cliff-r"
+                clipPoints="470,380 515,180 555,70 600,90 600,380"
+                strength={0.7}
+              />
               {/* Glowing caldera crater */}
               <polygon points="256,110 284,110 280,126 260,126" fill="#fdba74" />
-
               {/* Rising ember sparks across the sky */}
               <circle cx="120" cy="180" r="3" fill="#fef08a" opacity="0.8" />
               <circle cx="180" cy="120" r="2.5" fill="#fed7aa" opacity="0.7" />
@@ -1346,16 +1387,31 @@ export const RangeBackdrop: React.FC<RangeBackdropProps> = ({
               <circle cx="480" cy="110" r="3" fill="#fef08a" opacity="0.75" />
               <circle cx="90" cy="260" r="2.5" fill="#fef08a" opacity="0.75" />
               <circle cx="510" cy="240" r="3" fill="#f97316" opacity="0.85" />
-
+              {/* Festival village among the crags, after the reference image */}
+              <PagodaHall x={200} baseY={452} width={220} tiers={4} uid="pagoda-a" seed={17} />
+              <PagodaHall x={30} baseY={470} width={120} tiers={2} uid="pagoda-a-l" seed={12} />
+              <PagodaHall x={450} baseY={468} width={120} tiers={2} uid="pagoda-a-r" seed={21} />
+              <FireChimney x={60} baseY={430} height={18} uid="fire-chim-a1" />
+              <FireChimney x={540} baseY={428} height={16} uid="fire-chim-a3" />
+              <LanternString x1={0} y1={430} x2={200} y2={430} uid="lantern-a1" />
+              <LanternString x1={420} y1={430} x2={600} y2={430} uid="lantern-a2" />
+              <LanternString x1={160} y1={330} x2={440} y2={330} uid="lantern-a3" />
+              <FireTorch x={120} baseY={470} height={48} uid="fire-torch-a1" />
+              <FireTorch x={300} baseY={485} height={52} uid="fire-torch-a2" />
+              <FireTorch x={560} baseY={472} height={46} uid="fire-torch-a3" />
+              <FireBanner x={255} baseY={480} height={86} uid="fire-banner-a1" tone="ember" />
+              <FireBanner x={430} baseY={490} height={74} uid="fire-banner-a2" tone="gold" />
+              {/* Drifting embers above the lava veins */}
+              <EmberField y={380} height={120} seed={31} />
+              {/* Festival fireworks in the night sky */}
+              <Fireworks y={360} seed={37} />
               {/* Basalt Promontory & Monument Statues */}
               {renderCenterPromontory(equippedStatue, false, '#431407', '#ea580c')}
               {renderBackdropStatues(equippedStatue, false)}
-
               {/* Flanking Standards */}
               {renderBackdropBanners(bannerLeft, bannerRight, false, '#292524')}
-
               {/* Lava crack ground (y: 380 to 500) */}
-              <rect x="0" y="380" width="600" height="120" fill="#290d05" />
+              <AshGround y={380} height={120} uid="ash-arena" seed={8} />{' '}
               <path
                 d="M 0 410 Q 150 395 300 415 T 600 405"
                 stroke="url(#lava-glow)"
@@ -1369,7 +1425,6 @@ export const RangeBackdrop: React.FC<RangeBackdropProps> = ({
                 fill="none"
                 opacity="0.8"
               />
-
               {/* Tournament Platform Customization */}
               {renderBackdropGround(equippedGround, false)}
             </>
@@ -1388,34 +1443,38 @@ export const RangeBackdrop: React.FC<RangeBackdropProps> = ({
         >
           <defs>
             <linearGradient id="ice-sky" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stopColor="#0284c7" />
-              <stop offset="40%" stopColor="#38bdf8" />
-              <stop offset="75%" stopColor="#bae6fd" />
-              <stop offset="100%" stopColor="#f0f9ff" />
+              <stop offset="0%" stopColor="#0b1d2e" />
+              <stop offset="45%" stopColor="#164e63" />
+              <stop offset="78%" stopColor="#38bdf8" stopOpacity="0.65" />
+              <stop offset="100%" stopColor="#8fc6e8" />
             </linearGradient>
             <linearGradient id="ice-spire" x1="0" y1="0" x2="0" y2="1">
               <stop offset="0%" stopColor="#e0f2fe" />
               <stop offset="50%" stopColor="#7dd3fc" />
               <stop offset="100%" stopColor="#38bdf8" />
             </linearGradient>
-            <linearGradient id="snow-ground" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stopColor="#f8fafc" />
-              <stop offset="100%" stopColor="#cbd5e1" />
-            </linearGradient>
           </defs>
 
           {isCompact ? (
             <>
               <rect x="0" y="0" width="600" height="180" fill="url(#ice-sky)" />
+              <CartographicLayer areaId={areaId} variant="compact" />
               <polygon points="50,130 90,45 130,130" fill="url(#ice-spire)" opacity="0.8" />
               <polygon points="80,130 110,60 140,130" fill="#bae6fd" opacity="0.6" />
               <polygon points="450,130 500,40 540,130" fill="url(#ice-spire)" opacity="0.85" />
               <polygon points="490,130 525,55 560,130" fill="#bae6fd" opacity="0.6" />
-              <circle cx="80" cy="30" r="2.5" fill="#ffffff" opacity="0.9" />
-              <circle cx="210" cy="50" r="3" fill="#ffffff" opacity="0.8" />
-              <circle cx="340" cy="35" r="2" fill="#ffffff" opacity="0.95" />
-              <circle cx="430" cy="65" r="2.5" fill="#ffffff" opacity="0.85" />
-              <circle cx="560" cy="40" r="2" fill="#ffffff" opacity="0.8" />
+
+              {/* Ice-crystal bursts over the citadel, after the reference image */}
+              <IceSparkles y={110} seed={23} />
+
+              {/* Frozen citadel rising behind the range, after the reference image */}
+              <IceCitadel x={220} baseY={166} width={160} tiers={3} uid="citadel-c" seed={5} />
+              <IceTower x={70} baseY={158} width={34} uid="ice-tower-c1" seed={5} />
+              <IceTower x={488} baseY={162} width={30} uid="ice-tower-c2" seed={9} />
+              <FrostLightString x1={0} y1={148} x2={210} y2={148} uid="frost-lights-c1" />
+              <FrostLightString x1={390} y1={150} x2={600} y2={148} uid="frost-lights-c2" />
+              <FrostBrazier x={40} baseY={170} height={30} uid="frost-brazier-c1" />
+              <FrostBrazier x={556} baseY={170} height={30} uid="frost-brazier-c2" />
 
               {/* Glacial Promontory & Statues */}
               {renderCenterPromontory(equippedStatue, true, '#e0f2fe', '#38bdf8')}
@@ -1424,11 +1483,8 @@ export const RangeBackdrop: React.FC<RangeBackdropProps> = ({
               {/* Flanking Standards */}
               {renderBackdropBanners(bannerLeft, bannerRight, true, '#94a3b8')}
 
-              <path
-                d="M 0 130 Q 150 120 300 130 T 600 128 L 600 180 L 0 180 Z"
-                fill="url(#snow-ground)"
-              />
-              <line x1="0" y1="130" x2="600" y2="130" stroke="#e2e8f0" strokeWidth="2" />
+              {/* Ground & Snow Drifts */}
+              <FrostGround y={130} height={50} uid="frost-compact" seed={4} />
 
               {/* Tournament Platform Customization */}
               {renderBackdropGround(equippedGround, true)}
@@ -1437,6 +1493,7 @@ export const RangeBackdrop: React.FC<RangeBackdropProps> = ({
             <>
               {/* Sky spanning the view */}
               <rect x="0" y="0" width="600" height="500" fill="url(#ice-sky)" />
+              <CartographicLayer areaId={areaId} variant="arena" />
 
               {/* Distant Glacial Mountains */}
               <polygon points="60,380 180,160 300,380" fill="#bae6fd" opacity="0.5" />
@@ -1447,16 +1504,37 @@ export const RangeBackdrop: React.FC<RangeBackdropProps> = ({
               <polygon points="65,380 100,130 140,380" fill="#bae6fd" opacity="0.65" />
               <polygon points="460,380 500,130 535,380" fill="#bae6fd" opacity="0.65" />
               <polygon points="480,380 530,80 580,380" fill="url(#ice-spire)" opacity="0.85" />
+              <ShadeOverlay
+                x={20}
+                y={80}
+                width={120}
+                height={300}
+                uid="ice-spire-l"
+                clipPoints="20,380 70,80 120,380"
+                strength={0.6}
+              />
+              <ShadeOverlay
+                x={480}
+                y={80}
+                width={100}
+                height={300}
+                uid="ice-spire-r"
+                clipPoints="480,380 530,80 580,380"
+                strength={0.6}
+              />
 
-              {/* Sparkling Snowflakes across the sky */}
-              <circle cx="80" cy="60" r="3" fill="#ffffff" opacity="0.9" />
-              <circle cx="150" cy="110" r="2" fill="#ffffff" opacity="0.85" />
-              <circle cx="210" cy="80" r="3.5" fill="#ffffff" opacity="0.8" />
-              <circle cx="340" cy="55" r="2.5" fill="#ffffff" opacity="0.95" />
-              <circle cx="410" cy="115" r="3" fill="#ffffff" opacity="0.85" />
-              <circle cx="560" cy="65" r="2.5" fill="#ffffff" opacity="0.8" />
-              <circle cx="90" cy="240" r="2.5" fill="#ffffff" opacity="0.75" />
-              <circle cx="510" cy="220" r="3" fill="#ffffff" opacity="0.85" />
+              {/* Frozen citadel among the spires, after the reference image */}
+              <IceCitadel x={195} baseY={452} width={210} tiers={4} uid="citadel-a" seed={17} />
+              <IceTower x={35} baseY={468} width={56} uid="ice-tower-a1" seed={12} />
+              <IceTower x={505} baseY={466} width={54} uid="ice-tower-a2" seed={21} />
+              <FrostLightString x1={0} y1={428} x2={200} y2={428} uid="frost-lights-a1" />
+              <FrostLightString x1={410} y1={428} x2={600} y2={428} uid="frost-lights-a2" />
+              <FrostLightString x1={160} y1={330} x2={440} y2={330} uid="frost-lights-a3" />
+              <FrostBrazier x={120} baseY={470} height={48} uid="frost-brazier-a1" />
+              <FrostBrazier x={300} baseY={485} height={52} uid="frost-brazier-a2" />
+              <FrostBrazier x={560} baseY={472} height={46} uid="frost-brazier-a3" />
+              {/* Ice-crystal bursts in the night sky */}
+              <IceSparkles y={360} seed={41} />
 
               {/* Glacial Promontory & Statues */}
               {renderCenterPromontory(equippedStatue, false, '#e0f2fe', '#38bdf8')}
@@ -1466,11 +1544,7 @@ export const RangeBackdrop: React.FC<RangeBackdropProps> = ({
               {renderBackdropBanners(bannerLeft, bannerRight, false, '#94a3b8')}
 
               {/* Snow field Ground (y: 380 to 500) */}
-              <path
-                d="M 0 380 Q 150 365 300 380 T 600 375 L 600 500 L 0 500 Z"
-                fill="url(#snow-ground)"
-              />
-              <line x1="0" y1="380" x2="600" y2="380" stroke="#e2e8f0" strokeWidth="3" />
+              <FrostGround y={380} height={120} uid="frost-arena" seed={8} />
 
               {/* Tournament Platform Customization */}
               {renderBackdropGround(equippedGround, false)}
@@ -1504,6 +1578,7 @@ export const RangeBackdrop: React.FC<RangeBackdropProps> = ({
           {isCompact ? (
             <>
               <rect x="0" y="0" width="600" height="180" fill="url(#wind-sky)" />
+              <CartographicLayer areaId={areaId} variant="compact" />
               <path
                 d="M 30 50 Q 80 30 140 50 T 220 50"
                 stroke="#14b8a6"
@@ -1526,6 +1601,22 @@ export const RangeBackdrop: React.FC<RangeBackdropProps> = ({
               <rect x="480" y="70" width="16" height="60" fill="url(#temple-pillars)" rx="2" />
               <rect x="520" y="70" width="16" height="60" fill="url(#temple-pillars)" rx="2" />
               <rect x="472" y="66" width="72" height="8" fill="#115e59" rx="2" />
+              <ShadeOverlay
+                x={60}
+                y={70}
+                width={56}
+                height={60}
+                uid="wind-compact-l"
+                strength={0.5}
+              />
+              <ShadeOverlay
+                x={480}
+                y={70}
+                width={56}
+                height={60}
+                uid="wind-compact-r"
+                strength={0.5}
+              />
 
               {/* Sky Temple Dais & Statues */}
               {renderCenterPromontory(equippedStatue, true, '#115e59', '#2dd4bf')}
@@ -1544,6 +1635,7 @@ export const RangeBackdrop: React.FC<RangeBackdropProps> = ({
             <>
               {/* Sky spanning the view */}
               <rect x="0" y="0" width="600" height="500" fill="url(#wind-sky)" />
+              <CartographicLayer areaId={areaId} variant="arena" />
 
               {/* Wind vortex swirls across the sky */}
               <path
@@ -1586,6 +1678,22 @@ export const RangeBackdrop: React.FC<RangeBackdropProps> = ({
 
               <rect x="500" y="130" width="22" height="250" fill="url(#temple-pillars)" rx="3" />
               <rect x="540" y="130" width="22" height="250" fill="url(#temple-pillars)" rx="3" />
+              <ShadeOverlay
+                x={40}
+                y={130}
+                width={62}
+                height={250}
+                uid="wind-pillars-l"
+                strength={0.55}
+              />
+              <ShadeOverlay
+                x={500}
+                y={130}
+                width={62}
+                height={250}
+                uid="wind-pillars-r"
+                strength={0.55}
+              />
               <rect x="490" y="120" width="82" height="14" fill="#115e59" rx="3" />
 
               {/* Sky Temple Dais & Statues */}
@@ -1640,6 +1748,7 @@ export const RangeBackdrop: React.FC<RangeBackdropProps> = ({
           {isCompact ? (
             <>
               <rect x="0" y="0" width="600" height="180" fill="url(#earth-sky)" />
+              <CartographicLayer areaId={areaId} variant="compact" />
               <polygon points="0,130 80,40 170,130" fill="url(#granite-peak)" opacity="0.9" />
               <polygon points="120,130 220,55 310,130" fill="url(#granite-peak)" opacity="0.8" />
               <polygon points="420,130 510,35 600,130" fill="url(#granite-peak)" opacity="0.9" />
@@ -1679,11 +1788,30 @@ export const RangeBackdrop: React.FC<RangeBackdropProps> = ({
             <>
               {/* Sky spanning the view */}
               <rect x="0" y="0" width="600" height="500" fill="url(#earth-sky)" />
+              <CartographicLayer areaId={areaId} variant="arena" />
 
               {/* Jagged Canyon peaks */}
               <polygon points="0,380 90,130 200,380" fill="url(#granite-peak)" opacity="0.85" />
               <polygon points="130,380 260,150 380,380" fill="url(#granite-peak)" opacity="0.75" />
               <polygon points="380,380 500,120 600,380" fill="url(#granite-peak)" opacity="0.85" />
+              <ShadeOverlay
+                x={0}
+                y={130}
+                width={200}
+                height={250}
+                uid="earth-peak-l"
+                clipPoints="0,380 90,130 200,380"
+                strength={0.6}
+              />
+              <ShadeOverlay
+                x={380}
+                y={120}
+                width={220}
+                height={260}
+                uid="earth-peak-r"
+                clipPoints="380,380 500,120 600,380"
+                strength={0.6}
+              />
 
               {/* Ancient Standing Monoliths flanking the Arena */}
               <rect
@@ -1773,6 +1901,7 @@ export const RangeBackdrop: React.FC<RangeBackdropProps> = ({
           {isCompact ? (
             <>
               <rect x="0" y="0" width="600" height="180" fill="url(#space-sky)" />
+              <CartographicLayer areaId={areaId} variant="compact" />
               <ellipse cx="180" cy="55" rx="120" ry="40" fill="url(#nebula-glow)" />
               <ellipse cx="440" cy="45" rx="100" ry="35" fill="url(#nebula-glow)" />
               <circle cx="40" cy="25" r="1.5" fill="#f8fafc" opacity="0.9" />
@@ -1793,6 +1922,7 @@ export const RangeBackdrop: React.FC<RangeBackdropProps> = ({
           ) : (
             <>
               <rect x="0" y="0" width="600" height="500" fill="url(#space-sky)" />
+              <CartographicLayer areaId={areaId} variant="arena" />
               <ellipse cx="170" cy="145" rx="165" ry="75" fill="url(#nebula-glow)" />
               <ellipse cx="430" cy="115" rx="150" ry="65" fill="url(#nebula-glow)" />
               <circle cx="85" cy="32" r="2" fill="#ffffff" opacity="0.9" />
@@ -1810,6 +1940,22 @@ export const RangeBackdrop: React.FC<RangeBackdropProps> = ({
               <rect x="82" y="215" width="20" height="165" fill="url(#orbital-pylon)" rx="4" />
               <rect x="498" y="215" width="20" height="165" fill="url(#orbital-pylon)" rx="4" />
               <rect x="534" y="135" width="24" height="245" fill="url(#orbital-pylon)" rx="4" />
+              <ShadeOverlay
+                x={42}
+                y={135}
+                width={60}
+                height={245}
+                uid="space-pylons-l"
+                strength={0.5}
+              />
+              <ShadeOverlay
+                x={498}
+                y={135}
+                width={60}
+                height={245}
+                uid="space-pylons-r"
+                strength={0.5}
+              />
               <rect x="540" y="155" width="12" height="205" fill="#38bdf8" opacity="0.35" rx="2" />
               {renderCenterPromontory(equippedStatue, false, '#1e293b', '#818cf8')}
               {renderBackdropStatues(equippedStatue, false)}
