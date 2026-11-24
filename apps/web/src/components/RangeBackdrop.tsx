@@ -1,6 +1,24 @@
 import React, { useEffect, useState } from 'react';
 import { type WorldAreaId, getWorldArea } from '@math-archer/learning-engine';
 import { CartographicLayer } from './CartographicLayer';
+import {
+  CragSpur,
+  CliffRuin,
+  StormClouds,
+  HeatherDrift,
+  EarthGround,
+  GorgeMist,
+  EarthSky,
+} from './EarthMountain';
+import {
+  StationSky,
+  Starfield,
+  MilkyWay,
+  OrbitalRing,
+  StationSpire,
+  OrbitalDeck,
+  CometTrail,
+} from './SpaceStation';
 import { CastleTower, ShadeOverlay } from './CastleTower';
 import { GrassField } from './GrassField';
 import {
@@ -22,6 +40,16 @@ import {
   FrostLightString,
   IceSparkles,
 } from './IceKingdom';
+import {
+  TempleHall,
+  PrayerFlagString,
+  IncenseBrazier,
+  ZephyrGround,
+  CloudBank,
+  FloatingStone,
+  KiteGlider,
+  WindSparkles,
+} from './WindTemple';
 
 export interface RangeBackdropProps {
   areaId: WorldAreaId;
@@ -1564,10 +1592,10 @@ export const RangeBackdrop: React.FC<RangeBackdropProps> = ({
         >
           <defs>
             <linearGradient id="wind-sky" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stopColor="#0f766e" />
-              <stop offset="40%" stopColor="#14b8a6" />
-              <stop offset="70%" stopColor="#5eead4" />
-              <stop offset="100%" stopColor="#f0fdfa" />
+              <stop offset="0%" stopColor="#7fa39b" />
+              <stop offset="40%" stopColor="#a9c4bb" />
+              <stop offset="72%" stopColor="#dfe7da" />
+              <stop offset="100%" stopColor="#f2efe0" />
             </linearGradient>
             <linearGradient id="temple-pillars" x1="0" y1="0" x2="0" y2="1">
               <stop offset="0%" stopColor="#0d9488" />
@@ -1579,44 +1607,30 @@ export const RangeBackdrop: React.FC<RangeBackdropProps> = ({
             <>
               <rect x="0" y="0" width="600" height="180" fill="url(#wind-sky)" />
               <CartographicLayer areaId={areaId} variant="compact" />
-              <path
-                d="M 30 50 Q 80 30 140 50 T 220 50"
-                stroke="#14b8a6"
-                strokeWidth="2.5"
-                strokeDasharray="8 6"
-                fill="none"
-                opacity="0.6"
+              {/* Floating island foot with drifting stones and clouds */}
+              <CloudBank cx={70} cy={56} scale={0.55} uid="cloud-compact-l" />
+              <CloudBank cx={540} cy={70} scale={0.5} uid="cloud-compact-r" />
+              <FloatingStone cx={40} cy={96} r={5} seed={11} />
+              <FloatingStone cx={566} cy={110} r={4} seed={13} />
+              <WindSparkles y={80} seed={23} />
+
+              {/* Forested temple mound, after the reference image */}
+              <polygon
+                points="60,180 140,86 260,120 340,78 470,124 560,180"
+                fill="#365314"
+                opacity="0.9"
               />
-              <path
-                d="M 380 40 Q 440 25 500 45 T 580 40"
-                stroke="#14b8a6"
-                strokeWidth="2.5"
-                strokeDasharray="8 6"
-                fill="none"
-                opacity="0.6"
-              />
-              <rect x="60" y="70" width="16" height="60" fill="url(#temple-pillars)" rx="2" />
-              <rect x="100" y="70" width="16" height="60" fill="url(#temple-pillars)" rx="2" />
-              <rect x="52" y="66" width="72" height="8" fill="#115e59" rx="2" />
-              <rect x="480" y="70" width="16" height="60" fill="url(#temple-pillars)" rx="2" />
-              <rect x="520" y="70" width="16" height="60" fill="url(#temple-pillars)" rx="2" />
-              <rect x="472" y="66" width="72" height="8" fill="#115e59" rx="2" />
-              <ShadeOverlay
-                x={60}
-                y={70}
-                width={56}
-                height={60}
-                uid="wind-compact-l"
-                strength={0.5}
-              />
-              <ShadeOverlay
-                x={480}
-                y={70}
-                width={56}
-                height={60}
-                uid="wind-compact-r"
-                strength={0.5}
-              />
+              <circle cx="150" cy="118" r="26" fill="#4d7c0f" />
+              <circle cx="330" cy="102" r="30" fill="#4d7c0f" />
+              <circle cx="450" cy="126" r="24" fill="#3f6212" />
+              <circle cx="240" cy="128" r="20" fill="#65a30d" />
+              <circle cx="392" cy="128" r="18" fill="#65a30d" />
+              <TempleHall x={236} baseY={160} width={128} tiers={3} uid="hall-compact" seed={7} />
+              <PrayerFlagString x1={90} y1={128} x2={230} y2={130} uid="flags-compact-l" />
+              <PrayerFlagString x1={372} y1={130} x2={510} y2={126} uid="flags-compact-r" />
+              <IncenseBrazier x={210} baseY={166} height={18} uid="brazier-compact-l" />
+              <IncenseBrazier x={392} baseY={166} height={18} uid="brazier-compact-r" />
+              <CloudBank cx={120} cy={44} scale={0.4} uid="cloud-compact-h" />
 
               {/* Sky Temple Dais & Statues */}
               {renderCenterPromontory(equippedStatue, true, '#115e59', '#2dd4bf')}
@@ -1625,8 +1639,8 @@ export const RangeBackdrop: React.FC<RangeBackdropProps> = ({
               {/* Flanking Standards */}
               {renderBackdropBanners(bannerLeft, bannerRight, true, '#0d9488')}
 
-              <rect x="0" y="130" width="600" height="50" fill="#134e4a" />
-              <rect x="0" y="130" width="600" height="6" fill="#2dd4bf" />
+              {/* Jade terrace ground */}
+              <ZephyrGround y={130} height={50} uid="zephyr-compact" seed={5} />
 
               {/* Tournament Platform Customization */}
               {renderBackdropGround(equippedGround, true)}
@@ -1637,64 +1651,85 @@ export const RangeBackdrop: React.FC<RangeBackdropProps> = ({
               <rect x="0" y="0" width="600" height="500" fill="url(#wind-sky)" />
               <CartographicLayer areaId={areaId} variant="arena" />
 
-              {/* Wind vortex swirls across the sky */}
+              {/* Zephyr trails in the high sky */}
               <path
                 d="M 30 80 Q 90 40 160 80 T 260 80"
-                stroke="#14b8a6"
-                strokeWidth="3.5"
+                stroke="#e8ede0"
+                strokeWidth="2.5"
                 strokeDasharray="10 8"
+                fill="none"
+                opacity="0.7"
+              />
+              <path
+                d="M 380 64 Q 450 34 520 60"
+                stroke="#e8ede0"
+                strokeWidth="2"
+                strokeDasharray="8 6"
                 fill="none"
                 opacity="0.6"
               />
-              <path
-                d="M 340 70 Q 420 30 500 70 T 580 65"
-                stroke="#14b8a6"
-                strokeWidth="3.5"
-                strokeDasharray="10 8"
-                fill="none"
-                opacity="0.6"
-              />
-              <path
-                d="M 60 210 Q 150 170 240 210"
-                stroke="#14b8a6"
-                strokeWidth="2.5"
-                strokeDasharray="8 6"
-                fill="none"
-                opacity="0.4"
-              />
-              <path
-                d="M 360 200 Q 450 160 540 200"
-                stroke="#14b8a6"
-                strokeWidth="2.5"
-                strokeDasharray="8 6"
-                fill="none"
-                opacity="0.4"
-              />
 
-              {/* Sky Temple Colonnade Pillars flanking the Arena */}
-              <rect x="40" y="130" width="22" height="250" fill="url(#temple-pillars)" rx="3" />
-              <rect x="80" y="130" width="22" height="250" fill="url(#temple-pillars)" rx="3" />
-              <rect x="30" y="120" width="82" height="14" fill="#115e59" rx="3" />
+              {/* Floating mountain: forested mass over the dark rock foot */}
+              <path
+                d="M 40 500 Q 80 420 60 340 Q 90 250 150 200 L 430 500 Z"
+                fill="#292524"
+                opacity="0.9"
+              />
+              <path
+                d="M 90 380 Q 120 260 190 180 Q 260 110 340 100 Q 420 110 450 190 Q 470 280 470 380 L 470 500 L 90 500 Z"
+                fill="#365314"
+              />
+              {/* Foliage billows catching the light */}
+              <circle cx="150" cy="210" r="52" fill="#4d7c0f" />
+              <circle cx="230" cy="150" r="58" fill="#4d7c0f" />
+              <circle cx="330" cy="120" r="62" fill="#65a30d" />
+              <circle cx="410" cy="170" r="50" fill="#4d7c0f" />
+              <circle cx="120" cy="300" r="60" fill="#3f6212" />
+              <circle cx="200" cy="260" r="64" fill="#4d7c0f" />
+              <circle cx="300" cy="220" r="60" fill="#65a30d" />
+              <circle cx="392" cy="260" r="54" fill="#3f6212" />
+              <circle cx="150" cy="380" r="58" fill="#3f6212" />
+              <circle cx="260" cy="330" r="62" fill="#4d7c0f" />
+              <circle cx="370" cy="340" r="52" fill="#65a30d" />
+              <circle cx="450" cy="380" r="46" fill="#3f6212" />
+              {/* Stone stair climbing to the gates */}
+              <path d="M 258 500 L 286 500 L 254 300 L 232 300 Z" fill="#d6d3d1" opacity="0.95" />
+              {[500, 470, 440, 410, 380, 350, 320].map((sy, i) => (
+                <line
+                  key={`step${i}`}
+                  x1={286 - (sy - 300) * 0.018}
+                  y1={sy}
+                  x2={254 - (sy - 300) * 0.017}
+                  y2={sy}
+                  stroke="#a8a29e"
+                  strokeWidth="2"
+                  opacity="0.85"
+                />
+              ))}
 
-              <rect x="500" y="130" width="22" height="250" fill="url(#temple-pillars)" rx="3" />
-              <rect x="540" y="130" width="22" height="250" fill="url(#temple-pillars)" rx="3" />
-              <ShadeOverlay
-                x={40}
-                y={130}
-                width={62}
-                height={250}
-                uid="wind-pillars-l"
-                strength={0.55}
-              />
-              <ShadeOverlay
-                x={500}
-                y={130}
-                width={62}
-                height={250}
-                uid="wind-pillars-r"
-                strength={0.55}
-              />
-              <rect x="490" y="120" width="82" height="14" fill="#115e59" rx="3" />
+              {/* Tiered halls climbing toward the summit, after the reference image */}
+              <TempleHall x={196} baseY={452} width={168} tiers={4} uid="hall-great" seed={9} />
+              <TempleHall x={92} baseY={430} width={92} tiers={3} uid="hall-left" seed={12} />
+              <TempleHall x={408} baseY={436} width={96} tiers={3} uid="hall-right" seed={17} />
+              <TempleHall x={244} baseY={288} width={104} tiers={2} uid="hall-upper" seed={23} />
+              <PrayerFlagString x1={0} y1={420} x2={196} y2={424} uid="flags-arena-l" />
+              <PrayerFlagString x1={364} y1={424} x2={600} y2={418} uid="flags-arena-r" />
+              <PrayerFlagString x1={160} y1={310} x2={440} y2={306} uid="flags-arena-high" />
+              <IncenseBrazier x={130} baseY={474} height={44} uid="brazier-arena-l" />
+              <IncenseBrazier x={470} baseY={474} height={44} uid="brazier-arena-r" />
+              <IncenseBrazier x={300} baseY={496} height={52} uid="brazier-arena-c" />
+
+              {/* Drifting clouds and shattered stones around the island */}
+              <CloudBank cx={90} cy={130} scale={0.8} uid="cloud-a1" />
+              <CloudBank cx={510} cy={92} scale={1} uid="cloud-a2" />
+              <CloudBank cx={60} cy={330} scale={0.65} uid="cloud-a3" />
+              <CloudBank cx={545} cy={300} scale={0.7} uid="cloud-a4" />
+              <FloatingStone cx={38} cy={210} r={9} seed={5} />
+              <FloatingStone cx={560} cy={200} r={7} seed={9} />
+              <FloatingStone cx={520} cy={160} r={5} seed={14} />
+              <FloatingStone cx={80} cy={160} r={6} seed={21} />
+              <KiteGlider cx={498} cy={158} uid="kite-arena" />
+              <WindSparkles y={340} seed={31} />
 
               {/* Sky Temple Dais & Statues */}
               {renderCenterPromontory(equippedStatue, false, '#115e59', '#2dd4bf')}
@@ -1703,14 +1738,8 @@ export const RangeBackdrop: React.FC<RangeBackdropProps> = ({
               {/* Flanking Standards */}
               {renderBackdropBanners(bannerLeft, bannerRight, false, '#0d9488')}
 
-              {/* High altitude stone terrace (y: 380 to 500) */}
-              <rect x="0" y="380" width="600" height="120" fill="#134e4a" />
-              <rect x="0" y="380" width="600" height="10" fill="#2dd4bf" />
-              <line x1="100" y1="390" x2="100" y2="500" stroke="#0f766e" strokeWidth="2" />
-              <line x1="200" y1="390" x2="200" y2="500" stroke="#0f766e" strokeWidth="2" />
-              <line x1="300" y1="390" x2="300" y2="500" stroke="#0f766e" strokeWidth="2" />
-              <line x1="400" y1="390" x2="400" y2="500" stroke="#0f766e" strokeWidth="2" />
-              <line x1="500" y1="390" x2="500" y2="500" stroke="#0f766e" strokeWidth="2" />
+              {/* High-altitude jade terrace (y: 380 to 500) */}
+              <ZephyrGround y={380} height={120} uid="zephyr-arena" seed={8} />
 
               {/* Tournament Platform Customization */}
               {renderBackdropGround(equippedGround, false)}
@@ -1728,157 +1757,120 @@ export const RangeBackdrop: React.FC<RangeBackdropProps> = ({
           viewBox={isCompact ? '0 0 600 180' : '0 0 600 500'}
           preserveAspectRatio="none"
         >
-          <defs>
-            <linearGradient id="earth-sky" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stopColor="#b45309" />
-              <stop offset="40%" stopColor="#d97706" />
-              <stop offset="70%" stopColor="#fde68a" />
-              <stop offset="100%" stopColor="#fef3c7" />
-            </linearGradient>
-            <linearGradient id="granite-peak" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stopColor="#78350f" />
-              <stop offset="100%" stopColor="#451a03" />
-            </linearGradient>
-            <linearGradient id="stone-monolith" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stopColor="#92400e" />
-              <stop offset="100%" stopColor="#78350f" />
-            </linearGradient>
-          </defs>
-
           {isCompact ? (
             <>
-              <rect x="0" y="0" width="600" height="180" fill="url(#earth-sky)" />
+              <EarthSky height={180} uid="earth-compact" />
               <CartographicLayer areaId={areaId} variant="compact" />
-              <polygon points="0,130 80,40 170,130" fill="url(#granite-peak)" opacity="0.9" />
-              <polygon points="120,130 220,55 310,130" fill="url(#granite-peak)" opacity="0.8" />
-              <polygon points="420,130 510,35 600,130" fill="url(#granite-peak)" opacity="0.9" />
-              <rect
-                x="60"
-                y="90"
-                width="18"
-                height="40"
-                fill="url(#stone-monolith)"
-                transform="rotate(-4 60 90)"
-                rx="3"
+              <StormClouds y={46} seed={31} />
+              <path
+                d="M 0 126 Q 120 108 250 119 T 600 113 L 600 131 L 0 131 Z"
+                fill="#3d4542"
+                opacity="0.5"
               />
-              <rect
-                x="510"
-                y="85"
-                width="20"
-                height="45"
-                fill="url(#stone-monolith)"
-                transform="rotate(3 510 85)"
-                rx="3"
+              <CragSpur
+                x={-40}
+                baseY={132}
+                width={180}
+                height={94}
+                uid="earth-compact-l"
+                seed={17}
               />
+              <CragSpur
+                x={468}
+                baseY={132}
+                width={186}
+                height={104}
+                uid="earth-compact-r"
+                seed={19}
+                flip
+              />
+              <CliffRuin x={448} baseY={124} width={96} uid="earth-compact-ruin" />
+              <HeatherDrift y={110} height={16} seed={41} clumps={7} />
 
               {/* Granite Altar Dais & Statues */}
-              {renderCenterPromontory(equippedStatue, true, '#78350f', '#b45309')}
+              {renderCenterPromontory(equippedStatue, true, '#5c635c', '#b8bfae')}
               {renderBackdropStatues(equippedStatue, true)}
 
               {/* Flanking Standards */}
-              {renderBackdropBanners(bannerLeft, bannerRight, true, '#78350f')}
+              {renderBackdropBanners(bannerLeft, bannerRight, true, '#3d4542')}
 
-              <rect x="0" y="130" width="600" height="50" fill="#451a03" />
-              <line x1="0" y1="130" x2="600" y2="130" stroke="#b45309" strokeWidth="3" />
+              <EarthGround y={130} height={50} uid="earth-compact-ground" />
 
               {/* Tournament Platform Customization */}
               {renderBackdropGround(equippedGround, true)}
             </>
           ) : (
             <>
-              {/* Sky spanning the view */}
-              <rect x="0" y="0" width="600" height="500" fill="url(#earth-sky)" />
+              {/* Storm-dusk sky spanning the view */}
+              <EarthSky height={500} uid="earth-arena" />
               <CartographicLayer areaId={areaId} variant="arena" />
+              <StormClouds y={158} seed={7} />
+              <defs>
+                <linearGradient id="earth-gorge-haze" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stopColor="#2f2a3d" stopOpacity="0" />
+                  <stop offset="100%" stopColor="#23292a" stopOpacity="0.72" />
+                </linearGradient>
+              </defs>
+              <rect x="0" y="150" width="600" height="242" fill="url(#earth-gorge-haze)" />
 
-              {/* Jagged Canyon peaks */}
-              <polygon points="0,380 90,130 200,380" fill="url(#granite-peak)" opacity="0.85" />
-              <polygon points="130,380 260,150 380,380" fill="url(#granite-peak)" opacity="0.75" />
-              <polygon points="380,380 500,120 600,380" fill="url(#granite-peak)" opacity="0.85" />
-              <ShadeOverlay
-                x={0}
-                y={130}
-                width={200}
-                height={250}
-                uid="earth-peak-l"
-                clipPoints="0,380 90,130 200,380"
-                strength={0.6}
+              {/* Distant moor ridges behind the crags */}
+              <path
+                d="M 0 352 Q 110 302 240 330 T 600 312 L 600 392 L 0 392 Z"
+                fill="#3d4542"
+                opacity="0.4"
               />
-              <ShadeOverlay
-                x={380}
-                y={120}
-                width={220}
-                height={260}
-                uid="earth-peak-r"
-                clipPoints="380,380 500,120 600,380"
-                strength={0.6}
+              <path
+                d="M 0 332 Q 150 294 320 326 T 600 316 L 600 392 L 0 392 Z"
+                fill="#55633f"
+                opacity="0.5"
+              />
+              <path
+                d="M 0 372 Q 150 332 300 356 T 600 344 L 600 392 L 0 392 Z"
+                fill="#23292a"
+                opacity="0.5"
               />
 
-              {/* Ancient Standing Monoliths flanking the Arena */}
-              <rect
-                x="45"
-                y="140"
-                width="28"
-                height="240"
-                fill="url(#stone-monolith)"
-                transform="rotate(-3 45 140)"
-                rx="4"
+              {/* Granite crags framing the gorge */}
+              <CragSpur x={-70} baseY={392} width={330} height={260} uid="earth-crag-l" seed={11} />
+              <CragSpur
+                x={340}
+                baseY={392}
+                width={330}
+                height={300}
+                uid="earth-crag-r"
+                seed={29}
+                flip
               />
-              <rect
-                x="85"
-                y="180"
-                width="24"
-                height="200"
-                fill="url(#stone-monolith)"
-                transform="rotate(2 85 180)"
-                rx="4"
+              <CliffRuin x={14} baseY={226} width={140} uid="earth-ruin" seed={9} />
+              <CragSpur
+                x={-30}
+                baseY={392}
+                width={180}
+                height={126}
+                uid="earth-crag-stub-l"
+                seed={47}
               />
-              <rect
-                x="490"
-                y="180"
-                width="24"
-                height="200"
-                fill="url(#stone-monolith)"
-                transform="rotate(-2 490 180)"
-                rx="4"
+              <CragSpur
+                x={462}
+                baseY={392}
+                width={170}
+                height={104}
+                uid="earth-crag-stub-r"
+                seed={53}
+                flip
               />
-              <rect
-                x="530"
-                y="140"
-                width="28"
-                height="240"
-                fill="url(#stone-monolith)"
-                transform="rotate(3 530 140)"
-                rx="4"
-              />
+              <GorgeMist y={300} seed={23} />
 
               {/* Granite Altar Dais & Statues */}
-              {renderCenterPromontory(equippedStatue, false, '#78350f', '#b45309')}
+              {renderCenterPromontory(equippedStatue, false, '#5c635c', '#b8bfae')}
               {renderBackdropStatues(equippedStatue, false)}
 
               {/* Flanking Standards */}
-              {renderBackdropBanners(bannerLeft, bannerRight, false, '#78350f')}
+              {renderBackdropBanners(bannerLeft, bannerRight, false, '#3d4542')}
 
-              {/* Rocky canyon bedrock ground (y: 380 to 500) */}
-              <rect x="0" y="380" width="600" height="120" fill="#451a03" />
-              <line x1="0" y1="380" x2="600" y2="380" stroke="#b45309" strokeWidth="4" />
-              <line
-                x1="0"
-                y1="420"
-                x2="600"
-                y2="420"
-                stroke="#78350f"
-                strokeWidth="2"
-                strokeDasharray="20 10"
-              />
-              <line
-                x1="0"
-                y1="460"
-                x2="600"
-                y2="460"
-                stroke="#78350f"
-                strokeWidth="2"
-                strokeDasharray="20 10"
-              />
+              {/* Rocky crag forecourt (y: 380 to 500) */}
+              <EarthGround y={380} height={120} uid="earth-ground-main" />
+              <HeatherDrift y={368} height={34} seed={13} clumps={14} />
 
               {/* Tournament Platform Customization */}
               {renderBackdropGround(equippedGround, false)}
@@ -1900,86 +1892,37 @@ export const RangeBackdrop: React.FC<RangeBackdropProps> = ({
 
           {isCompact ? (
             <>
-              <rect x="0" y="0" width="600" height="180" fill="url(#space-sky)" />
+              <StationSky height={180} uid="space-compact" />
               <CartographicLayer areaId={areaId} variant="compact" />
-              <ellipse cx="180" cy="55" rx="120" ry="40" fill="url(#nebula-glow)" />
-              <ellipse cx="440" cy="45" rx="100" ry="35" fill="url(#nebula-glow)" />
-              <circle cx="40" cy="25" r="1.5" fill="#f8fafc" opacity="0.9" />
-              <circle cx="110" cy="18" r="1" fill="#e0e7ff" opacity="0.7" />
-              <circle cx="240" cy="16" r="2" fill="#fde047" opacity="0.85" />
-              <circle cx="350" cy="20" r="1.5" fill="#f8fafc" opacity="0.8" />
-              <circle cx="520" cy="18" r="1.5" fill="#38bdf8" opacity="0.9" />
+              <MilkyWay height={180} uid="space-milky-c" />
+              <Starfield height={172} seed={61} count={30} />
+              <CometTrail x={516} y={24} angle={-16} length={54} uid="space-comet-c" />
+              <OrbitalRing cx={300} cy={70} rx={310} ry={52} modules={5} />
               {renderCompactSolarSystem(elapsedSec)}
-              <rect x="55" y="75" width="18" height="55" fill="url(#orbital-pylon)" rx="3" />
-              <rect x="527" y="75" width="18" height="55" fill="url(#orbital-pylon)" rx="3" />
+              <StationSpire x={16} baseY={134} width={64} height={78} uid="space-spire-c-l" />
+              <StationSpire x={520} baseY={134} width={64} height={78} uid="space-spire-c-r" flip />
               {renderCenterPromontory(equippedStatue, true, '#1e293b', '#818cf8')}
               {renderBackdropStatues(equippedStatue, true)}
               {renderBackdropBanners(bannerLeft, bannerRight, true, '#6366f1')}
-              <rect x="0" y="130" width="600" height="50" fill="#0f172a" />
-              <line x1="0" y1="130" x2="600" y2="130" stroke="#818cf8" strokeWidth="3" />
+              <OrbitalDeck y={130} height={50} uid="space-deck-compact" />
               {renderBackdropGround(equippedGround, true)}
             </>
           ) : (
             <>
-              <rect x="0" y="0" width="600" height="500" fill="url(#space-sky)" />
+              <StationSky height={500} uid="space-arena" />
               <CartographicLayer areaId={areaId} variant="arena" />
-              <ellipse cx="170" cy="145" rx="165" ry="75" fill="url(#nebula-glow)" />
-              <ellipse cx="430" cy="115" rx="150" ry="65" fill="url(#nebula-glow)" />
-              <circle cx="85" cy="32" r="2" fill="#ffffff" opacity="0.9" />
-              <circle cx="145" cy="48" r="1.5" fill="#e0e7ff" opacity="0.75" />
-              <circle cx="215" cy="28" r="2.2" fill="#fde047" opacity="0.9" />
-              <circle cx="290" cy="36" r="1.5" fill="#ffffff" opacity="0.8" />
-              <circle cx="365" cy="25" r="2" fill="#38bdf8" opacity="0.85" />
-              <circle cx="445" cy="38" r="1.5" fill="#ffffff" opacity="0.7" />
-              <circle cx="545" cy="42" r="2" fill="#f8fafc" opacity="0.9" />
-              <circle cx="515" cy="185" r="1.5" fill="#c084fc" opacity="0.8" />
+              <MilkyWay height={500} uid="space-milky-a" />
+              <Starfield height={486} seed={97} count={115} />
+              <CometTrail x={468} y={72} angle={-22} length={92} uid="space-comet-a1" />
+              <CometTrail x={168} y={236} angle={14} length={46} uid="space-comet-a2" />
+              <OrbitalRing cx={300} cy={210} rx={338} ry={152} modules={8} />
               {renderArenaSolarSystem(elapsedSec)}
-              <path d="M 0 380 Q 300 320 600 380 Z" fill="#1e1b4b" opacity="0.7" />
-              <rect x="42" y="135" width="24" height="245" fill="url(#orbital-pylon)" rx="4" />
-              <rect x="48" y="155" width="12" height="205" fill="#38bdf8" opacity="0.35" rx="2" />
-              <rect x="82" y="215" width="20" height="165" fill="url(#orbital-pylon)" rx="4" />
-              <rect x="498" y="215" width="20" height="165" fill="url(#orbital-pylon)" rx="4" />
-              <rect x="534" y="135" width="24" height="245" fill="url(#orbital-pylon)" rx="4" />
-              <ShadeOverlay
-                x={42}
-                y={135}
-                width={60}
-                height={245}
-                uid="space-pylons-l"
-                strength={0.5}
-              />
-              <ShadeOverlay
-                x={498}
-                y={135}
-                width={60}
-                height={245}
-                uid="space-pylons-r"
-                strength={0.5}
-              />
-              <rect x="540" y="155" width="12" height="205" fill="#38bdf8" opacity="0.35" rx="2" />
+              <StationSpire x={104} baseY={386} width={86} height={212} uid="space-spire-l" />
+              <StationSpire x={410} baseY={386} width={86} height={212} uid="space-spire-r" flip />
               {renderCenterPromontory(equippedStatue, false, '#1e293b', '#818cf8')}
               {renderBackdropStatues(equippedStatue, false)}
               {renderBackdropBanners(bannerLeft, bannerRight, false, '#6366f1')}
-              <rect x="0" y="380" width="600" height="120" fill="#0f172a" />
-              <line x1="0" y1="380" x2="600" y2="380" stroke="#818cf8" strokeWidth="4" />
-              <line
-                x1="0"
-                y1="420"
-                x2="600"
-                y2="420"
-                stroke="#312e81"
-                strokeWidth="2"
-                strokeDasharray="24 12"
-              />
-              <line
-                x1="0"
-                y1="460"
-                x2="600"
-                y2="460"
-                stroke="#312e81"
-                strokeWidth="2"
-                strokeDasharray="24 12"
-              />
+              <OrbitalDeck y={380} height={120} uid="space-deck-arena" />
               {renderBackdropGround(equippedGround, false)}
             </>
           )}
