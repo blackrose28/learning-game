@@ -5,6 +5,8 @@
   "type": "module",
   "scripts": {
     "dev": "pnpm --filter web --filter api --parallel run dev",
+    "dev:api": "pnpm --filter api run dev",
+    "dev:web": "pnpm --filter web run dev",
     "db:migrate": "pnpm --filter api db:migrate",
     "db:migrate:remote": "pnpm --filter api db:migrate:remote",
     "deploy": "pnpm build && pnpm --filter api deploy",
