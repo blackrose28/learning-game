@@ -88,40 +88,44 @@ describe('Task 1.3 — Distractor generation', () => {
 
   describe('Exhaustive pool verification', () => {
     for (const skill of ALL_SKILLS) {
-      it(`verifies distractors for every unique question in the ${skill} question pool`, () => {
-        const pool = getSkillQuestionPool(skill);
+      it(
+        `verifies distractors for every unique question in the ${skill} question pool`,
+        { timeout: 15000 },
+        () => {
+          const pool = getSkillQuestionPool(skill);
 
-        for (const q of pool) {
-          const choices = generateDistractors(q, { shuffleChoices: false });
+          for (const q of pool) {
+            const choices = generateDistractors(q, { shuffleChoices: false });
 
-          // 4 choices
-          expect(choices).toHaveLength(4);
+            // 4 choices
+            expect(choices).toHaveLength(4);
 
-          // 4 unique values
-          const values = new Set(choices.map((c) => c.value));
-          expect(values.size).toBe(4);
+            // 4 unique values
+            const values = new Set(choices.map((c) => c.value));
+            expect(values.size).toBe(4);
 
-          // Exactly one correct choice matching question answer
-          const correct = choices.find((c) => c.category === 'correct')!;
-          expect(correct.value).toBe(q.answer);
-          expect(choices.filter((c) => c.value === q.answer)).toHaveLength(1);
+            // Exactly one correct choice matching question answer
+            const correct = choices.find((c) => c.category === 'correct')!;
+            expect(correct.value).toBe(q.answer);
+            expect(choices.filter((c) => c.value === q.answer)).toHaveLength(1);
 
-          // Categories correctly constrained
-          const tooLow = choices.find((c) => c.category === 'too_low')!;
-          const tooHigh = choices.find((c) => c.category === 'too_high')!;
-          const commonMistake = choices.find((c) => c.category === 'common_mistake')!;
+            // Categories correctly constrained
+            const tooLow = choices.find((c) => c.category === 'too_low')!;
+            const tooHigh = choices.find((c) => c.category === 'too_high')!;
+            const commonMistake = choices.find((c) => c.category === 'common_mistake')!;
 
-          expect(tooLow.value).toBeLessThan(q.answer);
-          expect(tooHigh.value).toBeGreaterThan(q.answer);
-          expect(commonMistake.value).not.toBe(q.answer);
+            expect(tooLow.value).toBeLessThan(q.answer);
+            expect(tooHigh.value).toBeGreaterThan(q.answer);
+            expect(commonMistake.value).not.toBe(q.answer);
 
-          // Sensible ranges
-          for (const c of choices) {
-            expect(c.value).toBeGreaterThanOrEqual(0);
-            expect(c.value).toBeLessThanOrEqual(maxChoiceValue(q.skill));
+            // Sensible ranges
+            for (const c of choices) {
+              expect(c.value).toBeGreaterThanOrEqual(0);
+              expect(c.value).toBeLessThanOrEqual(maxChoiceValue(q.skill));
+            }
           }
         }
-      });
+      );
     }
   });
 

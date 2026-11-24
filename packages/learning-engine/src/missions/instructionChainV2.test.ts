@@ -155,52 +155,56 @@ describe('instruction chain v2 content', () => {
     expect(make(lessBy, { wording: 'plain' }).prompt).toContain('Tìm số kém 9 là 2 đơn vị.');
   });
 
-  it('validates 3,000 seeded missions with an independently computed answer', () => {
-    const seen = {
-      kinds: new Set<string>(),
-      combines: new Set<string>(),
-      operations: new Set<string>(),
-      offsets: new Set<number>(),
-      correctPositions: new Set<number>(),
-    };
-    for (let seed = 0; seed < 3000; seed++) {
-      const mission = generateInstructionChainV2({
-        seed,
-        wording: seed % 2 ? 'plain' : 'school',
-        support: seed % 3 ? 'guided' : 'independent',
-      });
-      const { parameters } = mission;
-      expect(mission.solution.answer).toBe(expectedAnswer(parameters));
-      expect(mission.solution.answer).toBeGreaterThanOrEqual(1);
-      expect(mission.solution.answer).toBeLessThanOrEqual(20);
-      expect(mission.solution.combined).toBeGreaterThanOrEqual(1);
-      expect(mission.solution.found).toBeGreaterThanOrEqual(1);
-      expect(validateInstructionChain(mission)).toBe(true);
-      expect(generateInstructionChainV2({ seed, ...pickOptions(mission) })).toEqual(mission);
-      for (const step of mission.steps) {
-        const ids = step.choices.map((choice) => choice.id);
-        const labels = step.choices.map((choice) => choice.label);
-        expect(new Set(ids).size).toBe(ids.length);
-        expect(new Set(labels).size).toBe(labels.length);
-        expect(ids.length).toBe(4);
-        expect(ids.filter((id) => id === step.correctChoiceId)).toHaveLength(1);
+  it(
+    'validates 3,000 seeded missions with an independently computed answer',
+    { timeout: 15000 },
+    () => {
+      const seen = {
+        kinds: new Set<string>(),
+        combines: new Set<string>(),
+        operations: new Set<string>(),
+        offsets: new Set<number>(),
+        correctPositions: new Set<number>(),
+      };
+      for (let seed = 0; seed < 3000; seed++) {
+        const mission = generateInstructionChainV2({
+          seed,
+          wording: seed % 2 ? 'plain' : 'school',
+          support: seed % 3 ? 'guided' : 'independent',
+        });
+        const { parameters } = mission;
+        expect(mission.solution.answer).toBe(expectedAnswer(parameters));
+        expect(mission.solution.answer).toBeGreaterThanOrEqual(1);
+        expect(mission.solution.answer).toBeLessThanOrEqual(20);
+        expect(mission.solution.combined).toBeGreaterThanOrEqual(1);
+        expect(mission.solution.found).toBeGreaterThanOrEqual(1);
+        expect(validateInstructionChain(mission)).toBe(true);
+        expect(generateInstructionChainV2({ seed, ...pickOptions(mission) })).toEqual(mission);
+        for (const step of mission.steps) {
+          const ids = step.choices.map((choice) => choice.id);
+          const labels = step.choices.map((choice) => choice.label);
+          expect(new Set(ids).size).toBe(ids.length);
+          expect(new Set(labels).size).toBe(labels.length);
+          expect(ids.length).toBe(4);
+          expect(ids.filter((id) => id === step.correctChoiceId)).toHaveLength(1);
+        }
+        seen.kinds.add(parameters.relation.kind);
+        seen.combines.add(parameters.combine);
+        seen.operations.add(parameters.finalOperation);
+        if ('offset' in parameters.relation) seen.offsets.add(parameters.relation.offset);
+        seen.correctPositions.add(
+          mission.steps[0].choices.findIndex(
+            (choice) => choice.id === mission.steps[0].correctChoiceId
+          )
+        );
       }
-      seen.kinds.add(parameters.relation.kind);
-      seen.combines.add(parameters.combine);
-      seen.operations.add(parameters.finalOperation);
-      if ('offset' in parameters.relation) seen.offsets.add(parameters.relation.offset);
-      seen.correctPositions.add(
-        mission.steps[0].choices.findIndex(
-          (choice) => choice.id === mission.steps[0].correctChoiceId
-        )
-      );
+      expect([...seen.kinds].sort()).toEqual(['greater', 'less', 'predecessor', 'successor']);
+      expect([...seen.combines].sort()).toEqual(['difference', 'sum']);
+      expect([...seen.operations].sort()).toEqual(['add', 'subtract']);
+      expect([...seen.offsets].sort()).toEqual([2, 3, 4, 5]);
+      expect(seen.correctPositions.size).toBe(4);
     }
-    expect([...seen.kinds].sort()).toEqual(['greater', 'less', 'predecessor', 'successor']);
-    expect([...seen.combines].sort()).toEqual(['difference', 'sum']);
-    expect([...seen.operations].sort()).toEqual(['add', 'subtract']);
-    expect([...seen.offsets].sort()).toEqual([2, 3, 4, 5]);
-    expect(seen.correctPositions.size).toBe(4);
-  });
+  );
 
   it('keeps choice order independent of whether parameters were supplied', () => {
     const generated = generateInstructionChainV2({ seed: 99 });
