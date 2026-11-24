@@ -1,0 +1,215 @@
+.character-graphic {
+  position: relative;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  width: clamp(65px, 9vh, 95px);
+  height: clamp(55px, 8vh, 85px);
+}
+
+.character-sprite {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  object-position: center bottom;
+  transform-origin: 50% 100%;
+  filter: drop-shadow(0 6px 10px rgba(15, 23, 42, 0.18));
+  transition:
+    transform 160ms ease-out,
+    filter 160ms ease-out;
+  user-select: none;
+  -webkit-user-drag: none;
+}
+
+.state-drawing .character-sprite {
+  transform: translateY(-4%) scale(1.05);
+  filter: drop-shadow(0 8px 14px rgba(15, 23, 42, 0.22));
+}
+
+.state-released .character-sprite {
+  animation: character-recoil 280ms cubic-bezier(0.2, 0.9, 0.3, 1);
+}
+
+.state-reloading .character-sprite {
+  animation: character-reload-bob 620ms ease-in-out infinite;
+}
+
+.character-graphic-aura {
+  position: absolute;
+  inset: -12% -6% 4%;
+  z-index: 0;
+  border-radius: 50%;
+  background: radial-gradient(
+    circle at 50% 60%,
+    var(--character-glow, rgba(251, 191, 36, 0.6)) 0%,
+    transparent 68%
+  );
+  opacity: 0;
+  transition: opacity 180ms ease-out;
+  pointer-events: none;
+}
+
+.state-drawing .character-graphic-aura {
+  opacity: 0.55;
+  animation: character-aura-pulse 900ms ease-in-out infinite alternate;
+}
+
+.state-released .character-graphic-aura {
+  opacity: 0.9;
+  animation: character-aura-flash 340ms ease-out;
+}
+
+.character-muzzle-flash {
+  position: absolute;
+  left: 72%;
+  bottom: 48%;
+  z-index: 2;
+  width: 20%;
+  aspect-ratio: 1;
+  background: var(--character-glow, #fbbf24);
+  clip-path: polygon(50% 0%, 61% 36%, 100% 50%, 61% 64%, 50% 100%, 39% 64%, 0% 50%, 39% 36%);
+  filter: drop-shadow(0 0 6px rgba(254, 240, 138, 0.9));
+  animation: character-muzzle-flash 260ms ease-out both;
+  pointer-events: none;
+}
+
+.character-release-swoosh {
+  position: absolute;
+  left: 4%;
+  top: 24%;
+  z-index: 2;
+  width: 46%;
+  aspect-ratio: 1.6;
+  border-top: 3px dashed var(--character-glow, #fbbf24);
+  border-radius: 50% 50% 0 0;
+  transform: rotate(-18deg);
+  animation: character-swoosh 300ms ease-out both;
+  pointer-events: none;
+}
+
+.character-reload-shell {
+  position: absolute;
+  right: 14%;
+  bottom: 46%;
+  z-index: 2;
+  width: 11%;
+  aspect-ratio: 2.4 / 1;
+  border-radius: 1px;
+  background: linear-gradient(90deg, #f59e0b 0%, #fbbf24 45%, #b45309 100%);
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.35);
+  animation: character-shell-toss 620ms cubic-bezier(0.3, 0.7, 0.4, 1) infinite;
+  pointer-events: none;
+}
+
+@keyframes character-recoil {
+  0% {
+    transform: translateY(-1%) scale(1.04);
+  }
+  35% {
+    transform: translateY(2%) scale(0.97) rotate(-1.5deg);
+  }
+  100% {
+    transform: translateY(0) scale(1) rotate(0deg);
+  }
+}
+
+@keyframes character-reload-bob {
+  0%,
+  100% {
+    transform: translateY(0) rotate(0deg);
+  }
+  50% {
+    transform: translateY(2%) rotate(-1deg);
+  }
+}
+
+@keyframes character-aura-pulse {
+  from {
+    transform: scale(0.94);
+    opacity: 0.4;
+  }
+  to {
+    transform: scale(1.06);
+    opacity: 0.7;
+  }
+}
+
+@keyframes character-aura-flash {
+  from {
+    transform: scale(1.12);
+    opacity: 1;
+  }
+  to {
+    transform: scale(0.9);
+    opacity: 0;
+  }
+}
+
+@keyframes character-shell-toss {
+  0% {
+    transform: translate(0, 40%) rotate(0deg) scale(0.6);
+    opacity: 0;
+  }
+  40% {
+    transform: translate(10%, -30%) rotate(140deg) scale(1);
+    opacity: 1;
+  }
+  100% {
+    transform: translate(0, 0) rotate(320deg) scale(0.8);
+    opacity: 0;
+  }
+}
+
+@keyframes character-muzzle-flash {
+  0% {
+    transform: scale(0.4);
+    opacity: 1;
+  }
+  45% {
+    transform: scale(1.15);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(0.85);
+    opacity: 0;
+  }
+}
+
+@keyframes character-swoosh {
+  0% {
+    transform: rotate(-18deg) translate(6%, 8%) scale(0.7);
+    opacity: 0;
+  }
+  40% {
+    opacity: 1;
+  }
+  100% {
+    transform: rotate(-4deg) translate(-6%, -10%) scale(1.05);
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .character-sprite,
+  .state-drawing .character-sprite,
+  .state-released .character-sprite,
+  .state-reloading .character-sprite {
+    animation: none;
+    transform: none;
+    transition: none;
+  }
+
+  .state-drawing .character-graphic-aura,
+  .state-released .character-graphic-aura {
+    animation: none;
+    opacity: 0.5;
+  }
+
+  .character-reload-shell {
+    animation: none;
+    opacity: 0.9;
+    transform: none;
+  }
+}

@@ -25,6 +25,7 @@ import { InstallPrompt } from './components/InstallPrompt';
 import { UpdatePrompt } from './components/UpdatePrompt';
 import { WorldMap } from './components/WorldMap';
 import { RewardsScreen } from './components/RewardsScreen';
+import { CastScreen } from './components/CastScreen';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import type { MathArcherApiClient } from './api/client';
 import { useGamepad, XboxButton } from './input/useGamepad';
@@ -34,13 +35,20 @@ import { loadReasoningSettings, saveReasoningSettings } from './reasoningPrefere
 import { audioFx } from './audio/AudioFx';
 import './App.css';
 
-const APP_TABS = ['game', 'world', 'rewards', 'dashboard', 'history', 'curriculum'] as const;
+const APP_TABS = [
+  'game',
+  'world',
+  'rewards',
+  'dashboard',
+  'history',
+  'curriculum',
+  'cast',
+] as const;
+type AppTab = (typeof APP_TABS)[number];
 
 export const AppContent: React.FC = () => {
   const { activeChild, isParentUnlocked, apiClient, isAuthenticated, authToken } = useAuth();
-  const [activeTab, setActiveTab] = useState<
-    'game' | 'world' | 'rewards' | 'dashboard' | 'history' | 'curriculum'
-  >('game');
+  const [activeTab, setActiveTab] = useState<AppTab>('game');
   const [progress, setProgress] = useState<LocalProgress>(() => loadLocalProgress());
   const [syncTick, setSyncTick] = useState<number>(0);
   const [showChildPicker, setShowChildPicker] = useState<boolean>(false);
@@ -143,9 +151,7 @@ export const AppContent: React.FC = () => {
     };
   }, [activeChild.id, apiClient, isAuthenticated, authToken]);
 
-  const handleSwitchTab = (
-    tab: 'game' | 'world' | 'rewards' | 'dashboard' | 'history' | 'curriculum'
-  ) => {
+  const handleSwitchTab = (tab: AppTab) => {
     if (tab === 'history' || tab === 'dashboard') {
       setProgress(loadLocalProgress(activeChild.id));
     }
@@ -244,6 +250,16 @@ export const AppContent: React.FC = () => {
           >
             🏆
             <span className="nav-tab-label"> Royal Armory</span>
+          </button>
+          <button
+            type="button"
+            data-testid="tab-cast"
+            onClick={() => handleSwitchTab('cast')}
+            className={`nav-tab-btn ${activeTab === 'cast' ? 'active' : ''}`}
+            aria-label="Cast of Characters"
+          >
+            🎭
+            <span className="nav-tab-label"> Cast</span>
           </button>
 
           {/* Active indicator pill when viewing a secondary menu view */}
@@ -494,6 +510,22 @@ export const AppContent: React.FC = () => {
               <span className="menu-item-desc">Trophies, bows, and quiver cosmetics</span>
             </div>
           </button>
+
+          <button
+            type="button"
+            data-testid="drawer-tab-cast"
+            onClick={() => {
+              handleSwitchTab('cast');
+              setIsMenuOpen(false);
+            }}
+            className={`menu-drawer-item ${activeTab === 'cast' ? 'active' : ''}`}
+          >
+            <span className="menu-item-icon">🎭</span>
+            <div className="menu-item-content">
+              <span className="menu-item-title">Cast of Characters</span>
+              <span className="menu-item-desc">Meet the four heroes and their realms</span>
+            </div>
+          </button>
         </nav>
 
         <div className="menu-drawer-footer">
@@ -615,6 +647,11 @@ export const AppContent: React.FC = () => {
           apiClient={apiClient}
           onRewardsChange={() => setSyncTick((t) => t + 1)}
           onBackToGame={() => handleSwitchTab('game')}
+        />
+      ) : activeTab === 'cast' ? (
+        <CastScreen
+          onBackToGame={() => handleSwitchTab('game')}
+          onOpenArmory={() => handleSwitchTab('rewards')}
         />
       ) : (
         <div className="app-scrollable-content">
