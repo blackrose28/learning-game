@@ -50,6 +50,13 @@ export const REASONING_OBJECTIVE_LABELS: Record<MissionObjective, string> = {
   choose_cards: 'Choosing which card to leave out',
   tens_placement: 'Choosing the tens cards',
   maximize_sum: 'Arranging cards for the largest total',
+  remainder_quotient: 'Dividing and naming the remainder',
+  remainder_check: 'Checking what is left over',
+  remainder_decision: 'Deciding whether the remainder needs one more group',
+  grouping_operation: 'Seeing equal groups means dividing',
+  unknown_factor: 'Finding the unknown factor',
+  ratio_observation: 'Seeing how much each term multiplies',
+  extend_ratio: 'Naming the multiplying rule',
   calculation: 'Guided calculation up to 20',
   calculation_over_20: 'Guided calculation above 20',
 };
@@ -75,6 +82,18 @@ export const REASONING_FAMILY_META: Record<MissionFamily, { name: string; descri
   max_sum_digit_cards: {
     name: 'Digit-card sums',
     description: 'Place digit cards in tens and units slots to make the largest total.',
+  },
+  remainder_decision: {
+    name: 'Division with remainders',
+    description: 'Divide, check the leftover, and decide it still needs one more container.',
+  },
+  unknown_group: {
+    name: 'Unknown number of groups',
+    description: 'Division as the unknown factor: how many equal stacks make the total?',
+  },
+  double_half_chain: {
+    name: 'Multiplying chains',
+    description: 'Spot how each term multiplies the one before and extend the chain.',
   },
 };
 

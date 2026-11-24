@@ -6,13 +6,19 @@ export type MissionFamily =
   | 'daily_collection'
   | 'unknown_start'
   | 'growing_gap_sequence'
-  | 'max_sum_digit_cards';
+  | 'max_sum_digit_cards'
+  | 'remainder_decision'
+  | 'unknown_group'
+  | 'double_half_chain';
 export const MISSION_FAMILIES: readonly MissionFamily[] = [
   'instruction_chain',
   'daily_collection',
   'unknown_start',
   'growing_gap_sequence',
   'max_sum_digit_cards',
+  'remainder_decision',
+  'unknown_group',
+  'double_half_chain',
 ];
 export type MissionObjective =
   | 'successor_vocabulary'
@@ -35,6 +41,13 @@ export type MissionObjective =
   | 'choose_cards'
   | 'tens_placement'
   | 'maximize_sum'
+  | 'remainder_quotient'
+  | 'remainder_check'
+  | 'remainder_decision'
+  | 'grouping_operation'
+  | 'unknown_factor'
+  | 'ratio_observation'
+  | 'extend_ratio'
   | 'calculation'
   | 'calculation_over_20';
 export type MissionStepId =
@@ -56,6 +69,13 @@ export type MissionStepId =
   | 'place_value'
   | 'choose_cards'
   | 'tens_cards'
+  | 'quotient'
+  | 'check_remainder'
+  | 'round_up'
+  | 'choose_operation'
+  | 'think_pair'
+  | 'observe_ratio'
+  | 'next_ratio'
   | 'final';
 export type MissionHintLevel = 'strategy' | 'partial' | 'worked';
 
@@ -243,6 +263,56 @@ export interface MaxSumDigitCardsMission extends MissionBase<'max_sum_digit_card
   solution: { answer: number; arrangement: string };
 }
 
+export interface RemainderDecisionParameters {
+  name: string;
+  item: 'marble' | 'candy' | 'sticker' | 'book';
+  container: 'box' | 'bag' | 'tray';
+  total: number;
+  perContainer: number;
+}
+
+/** Internal definition. Render through getMissionView to avoid revealing solutions. */
+export interface RemainderDecisionMission extends MissionBase<'remainder_decision'> {
+  templateId: 'remainder_decision_v1';
+  parameters: RemainderDecisionParameters;
+  solution: { quotient: number; remainder: number; answer: number };
+}
+
+export type UnknownGroupItem = 'marble' | 'candy' | 'sticker' | 'pencil';
+
+export interface UnknownGroupParameters {
+  name: string;
+  item: UnknownGroupItem;
+  total: number;
+  perStack: number;
+}
+
+/** Internal definition. Render through getMissionView to avoid revealing solutions. */
+export interface UnknownGroupMission extends MissionBase<'unknown_group'> {
+  templateId: 'unknown_group_v1';
+  parameters: UnknownGroupParameters;
+  solution: { stacks: number; answer: number };
+}
+
+export interface DoubleHalfChainParameters {
+  /** Term 1. */
+  first: number;
+  /** The rule: each term is this many times the one before. */
+  ratio: 2 | 3 | 5;
+  /** How many leading terms the problem lists. */
+  shown: number;
+  /** The position asked for: one or two terms past the listed ones. */
+  target: number;
+}
+
+/** Internal definition. Render through getMissionView to avoid revealing solutions. */
+export interface DoubleHalfChainMission extends MissionBase<'double_half_chain'> {
+  templateId: 'double_half_chain_v1';
+  parameters: DoubleHalfChainParameters;
+  /** Terms 1 through target. */
+  solution: { terms: number[]; answer: number };
+}
+
 /** Guided-only visual support. Cells for unanswered steps stay blank; independent has none. */
 export interface MissionDiagram {
   caption: string;
@@ -254,7 +324,10 @@ export type ReasoningMission =
   | DailyCollectionMission
   | UnknownStartMission
   | GrowingGapSequenceMission
-  | MaxSumDigitCardsMission;
+  | MaxSumDigitCardsMission
+  | RemainderDecisionMission
+  | UnknownGroupMission
+  | DoubleHalfChainMission;
 
 export type LearningTask =
   | { kind: 'arithmetic'; schemaVersion: 1; question: Question }

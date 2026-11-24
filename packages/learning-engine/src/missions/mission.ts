@@ -23,6 +23,17 @@ import {
   getMaxSumDigitCardsHint,
 } from './maxSumDigitCards';
 import {
+  generateRemainderDecision,
+  getRemainderDecisionFeedback,
+  getRemainderDecisionHint,
+} from './remainderDecision';
+import { generateUnknownGroup, getUnknownGroupFeedback, getUnknownGroupHint } from './unknownGroup';
+import {
+  generateDoubleHalfChain,
+  getDoubleHalfChainFeedback,
+  getDoubleHalfChainHint,
+} from './doubleHalfChain';
+import {
   generateUnknownStart,
   getUnknownStartDiagram,
   getUnknownStartFeedback,
@@ -76,6 +87,21 @@ export function validateMission(value: unknown): value is ReasoningMission {
           canonical(value) ===
           canonical(generateMaxSumDigitCards({ ...options, parameters: mission.parameters }))
         );
+      case 'remainder_decision_v1':
+        return (
+          canonical(value) ===
+          canonical(generateRemainderDecision({ ...options, parameters: mission.parameters }))
+        );
+      case 'unknown_group_v1':
+        return (
+          canonical(value) ===
+          canonical(generateUnknownGroup({ ...options, parameters: mission.parameters }))
+        );
+      case 'double_half_chain_v1':
+        return (
+          canonical(value) ===
+          canonical(generateDoubleHalfChain({ ...options, parameters: mission.parameters }))
+        );
       default:
         return validateInstructionChain(value);
     }
@@ -125,6 +151,12 @@ export function getMissionHint(mission: ReasoningMission, level: MissionHintLeve
       return getGrowingGapSequenceHint(mission, level);
     case 'max_sum_digit_cards':
       return getMaxSumDigitCardsHint(mission, level);
+    case 'remainder_decision':
+      return getRemainderDecisionHint(mission, level);
+    case 'unknown_group':
+      return getUnknownGroupHint(mission, level);
+    case 'double_half_chain':
+      return getDoubleHalfChainHint(mission, level);
     case 'daily_collection':
       return getDailyCollectionHint(mission, level);
     case 'unknown_start':
@@ -143,6 +175,12 @@ export function getMissionStepFeedback(mission: ReasoningMission, stepId: Missio
       return getGrowingGapSequenceFeedback(mission, stepId);
     case 'max_sum_digit_cards':
       return getMaxSumDigitCardsFeedback(mission, stepId);
+    case 'remainder_decision':
+      return getRemainderDecisionFeedback(mission, stepId);
+    case 'unknown_group':
+      return getUnknownGroupFeedback(mission, stepId);
+    case 'double_half_chain':
+      return getDoubleHalfChainFeedback(mission, stepId);
     case 'daily_collection':
       return getDailyCollectionFeedback(mission, stepId);
     case 'unknown_start':

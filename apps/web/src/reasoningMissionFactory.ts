@@ -1,16 +1,22 @@
 import {
   generateDailyCollection,
+  generateDoubleHalfChain,
   generateGrowingGapSequence,
   generateInstructionChainV2,
   generateMaxSumDigitCards,
+  generateRemainderDecision,
+  generateUnknownGroup,
   generateUnknownStartV2,
   type DailyCollectionParameters,
+  type DoubleHalfChainParameters,
   type GrowingGapSequenceParameters,
   type InstructionChainV2Parameters,
   type MaxSumDigitCardsParameters,
   type MissionFamily,
   type MissionSupport,
   type ReasoningMission,
+  type RemainderDecisionParameters,
+  type UnknownGroupParameters,
   type UnknownStartV2Parameters,
 } from '@math-archer/learning-engine';
 
@@ -20,6 +26,9 @@ export const familyLabels: Record<MissionFamily, string> = {
   unknown_start: 'Tìm số lúc đầu',
   growing_gap_sequence: 'Dãy số có quy luật',
   max_sum_digit_cards: 'Xếp thẻ số',
+  remainder_decision: 'Phép chia có dư',
+  unknown_group: 'Tìm số nhóm',
+  double_half_chain: 'Dãy số gấp lên',
 };
 
 export interface NewMissionRequest {
@@ -40,6 +49,9 @@ const ORIGINALS: {
   growing_gap_sequence: GrowingGapSequenceParameters;
   max_sum_digit_cards: MaxSumDigitCardsParameters;
   instruction_chain: InstructionChainV2Parameters;
+  remainder_decision: RemainderDecisionParameters;
+  unknown_group: UnknownGroupParameters;
+  double_half_chain: DoubleHalfChainParameters;
 } = {
   // Hải has 8 thẻ Kun, 1 more each day for 5 days: 13.
   daily_collection: { name: 'Hải', object: 'kun_cards', start: 8, perDay: 1, days: 5 },
@@ -65,6 +77,12 @@ const ORIGINALS: {
     finalOperation: 'add',
     amount: 9,
   },
+  // 50 viên bi, mỗi hộp đựng 6: 8 hộp đầy còn dư 2, nên cần 9 hộp.
+  remainder_decision: { name: 'Nam', item: 'marble', container: 'box', total: 50, perContainer: 6 },
+  // 42 viên bi xếp thành các chồng 7 viên: 42 : 7 = 6 chồng.
+  unknown_group: { name: 'An', item: 'marble', total: 42, perStack: 7 },
+  // 3; 6; 12; 24; … mỗi số gấp đôi: số thứ 6 là 96.
+  double_half_chain: { first: 3, ratio: 2, shown: 4, target: 6 },
 };
 
 /**
@@ -101,6 +119,21 @@ export function createMission({
       return generateMaxSumDigitCards({
         ...options,
         ...(first ? { parameters: ORIGINALS.max_sum_digit_cards } : {}),
+      });
+    case 'remainder_decision':
+      return generateRemainderDecision({
+        ...options,
+        ...(first ? { parameters: ORIGINALS.remainder_decision } : {}),
+      });
+    case 'unknown_group':
+      return generateUnknownGroup({
+        ...options,
+        ...(first ? { parameters: ORIGINALS.unknown_group } : {}),
+      });
+    case 'double_half_chain':
+      return generateDoubleHalfChain({
+        ...options,
+        ...(first ? { parameters: ORIGINALS.double_half_chain } : {}),
       });
     default:
       return generateInstructionChainV2({

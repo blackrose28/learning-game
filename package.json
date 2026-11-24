@@ -4,8 +4,7 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "pnpm --filter web dev",
-    "dev:api": "pnpm --filter api dev",
+    "dev": "pnpm --filter web --filter api --parallel run dev",
     "db:migrate": "pnpm --filter api db:migrate",
     "db:migrate:remote": "pnpm --filter api db:migrate:remote",
     "deploy": "pnpm build && pnpm --filter api deploy",
