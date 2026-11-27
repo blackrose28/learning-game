@@ -128,33 +128,6 @@ describe('parent reasoning controls and recovery', () => {
     expect(loadReasoningSettings('child', storage).adventureEnabled).toBeUndefined();
   });
 
-  it('reports family counts and above-20 calculation evidence separately', async () => {
-    const storage = createMemoryStorage();
-    const time = '2026-10-05T10:00:00.000Z';
-    const mission = generateDailyCollection({
-      seed: 1,
-      parameters: { name: 'Hải', object: 'kun_cards', start: 30, perDay: 2, days: 3 },
-    });
-    let attempt = startMissionAttempt(mission, 'child', 'daily', time);
-    for (const step of mission.steps) {
-      attempt = recordMissionResponse(attempt, {
-        eventId: step.id,
-        stepId: step.id,
-        choiceId: step.correctChoiceId,
-        timestamp: time,
-        responseTimeMs: 1,
-      });
-    }
-    queueMissionAttempt(attempt, storage);
-    render(<ReasoningPanel playerId="child" storage={storage} preview={false} busy={false} />);
-    expect(
-      await screen.findByText(/Daily collection: 1\/1 missions completed; 0 with help/)
-    ).toBeVisible();
-    expect(screen.getByText(/Guided calculation above 20: 1\/1/)).toBeVisible();
-    expect(screen.getByText(/Finding the starting amount: 1\/1/)).toBeVisible();
-    expect(screen.queryByText(/Instruction chains:/)).not.toBeInTheDocument();
-  });
-
   it('disables preview edits and rejects a server that ignores the preference', async () => {
     const storage = createMemoryStorage();
     const update = vi.fn(async () => ({
@@ -290,6 +263,37 @@ describe('ReasoningPerformanceSection in ParentDashboard', () => {
     expect(screen.getByTestId('reasoning-objective-card-difference_vocabulary')).toBeVisible();
     expect(screen.getByTestId('reasoning-objective-weak-difference_vocabulary')).toBeVisible();
     expect(screen.getByTestId('reasoning-focus-card')).toHaveTextContent('“Hiệu”');
+  });
+
+  it('shows daily-collection family counts and above-20 calculation evidence on the Reasoning tab', () => {
+    const storage = createMemoryStorage();
+    const time = '2026-10-05T10:00:00.000Z';
+    const mission = generateDailyCollection({
+      seed: 1,
+      parameters: { name: 'Hải', object: 'kun_cards', start: 30, perDay: 2, days: 3 },
+    });
+    let attempt = startMissionAttempt(mission, 'child', 'daily', time);
+    for (const step of mission.steps) {
+      attempt = recordMissionResponse(attempt, {
+        eventId: step.id,
+        stepId: step.id,
+        choiceId: step.correctChoiceId,
+        timestamp: time,
+        responseTimeMs: 1,
+      });
+    }
+    queueMissionAttempt(attempt, storage);
+    render(<ReasoningPerformanceSection playerId="child" storage={storage} preview={false} />);
+
+    expect(screen.getByTestId('reasoning-completed-metric')).toHaveTextContent('1 / 1');
+    expect(screen.getByTestId('reasoning-family-row-daily_collection')).toHaveTextContent(
+      /1\/1 completed/
+    );
+    expect(screen.getByTestId('reasoning-family-badge-instruction_chain')).toHaveTextContent(
+      'not practiced'
+    );
+    expect(screen.getByTestId('reasoning-objective-card-calculation_over_20')).toBeVisible();
+    expect(screen.getByTestId('reasoning-objective-card-starting_amount')).toBeVisible();
   });
 
   it('populates sample reasoning performance in preview mode and syncs cloud missions on dashboard hydration', async () => {

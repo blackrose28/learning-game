@@ -7,13 +7,11 @@ import {
   type MissionObjective,
   type ReasoningSettings,
   type SessionStorageAdapter,
-  type ReasoningProgress,
 } from '@math-archer/learning-engine';
 import type { ChildPublicProfile, MathArcherApiClient } from '../api/client';
 import { loadReasoningSettings, saveReasoningSettings } from '../reasoningPreferences';
 import {
   loadMissionWorkspace,
-  loadReasoningProgress,
   syncMissionAttempts,
   useCloudMissionHistory,
   type MissionSyncItem,
@@ -97,7 +95,6 @@ export const REASONING_FAMILY_META: Record<MissionFamily, { name: string; descri
   },
 };
 
-const labels = REASONING_OBJECTIVE_LABELS;
 const families = REASONING_FAMILY_META;
 
 export const ReasoningPanel: React.FC<ReasoningPanelProps> = ({
@@ -113,7 +110,6 @@ export const ReasoningPanel: React.FC<ReasoningPanelProps> = ({
   const [saving, setSaving] = useState(false);
   const [feedback, setFeedback] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [progress, setProgress] = useState<ReasoningProgress | null>(null);
   const [conflicts, setConflicts] = useState<MissionSyncItem[]>([]);
   const [pending, setPending] = useState(0);
 
@@ -130,14 +126,12 @@ export const ReasoningPanel: React.FC<ReasoningPanelProps> = ({
   useEffect(() => {
     const refresh = () => {
       if (preview) {
-        setProgress(null);
         setConflicts([]);
         setPending(0);
         return;
       }
       try {
         const workspace = loadMissionWorkspace(playerId, storage);
-        setProgress(loadReasoningProgress(playerId, storage));
         setConflicts(workspace.items.filter((item) => item.conflict));
         setPending(workspace.items.filter((item) => item.pending).length);
       } catch (err) {
@@ -260,40 +254,9 @@ export const ReasoningPanel: React.FC<ReasoningPanelProps> = ({
       ) : (
         <>
           <p>
-            {progress?.completedMissions ?? 0} missions completed;{' '}
-            {progress?.assistedCompletions ?? 0} with help.
+            Mission results live on the Reasoning tab — completed and assisted counts, independent
+            first answers, and the breakdown by family and vocabulary.
           </p>
-          <p>
-            {progress?.independentAttempts
-              ? `${progress.independentSuccesses}/${progress.independentAttempts} independent first answers correct.`
-              : 'No independent attempts yet.'}
-          </p>
-          {progress &&
-            MISSION_FAMILIES.map((family) => {
-              const counts = progress.families[family];
-              return (
-                counts && (
-                  <p key={family}>
-                    {families[family].name}: {counts.completedMissions}/{counts.startedMissions}{' '}
-                    missions completed; {counts.assistedCompletions} with help;{' '}
-                    {counts.independentAttempts
-                      ? `${counts.independentSuccesses}/${counts.independentAttempts} independent first answers correct.`
-                      : 'no independent attempts yet.'}
-                  </p>
-                )
-              );
-            })}
-          {progress &&
-            Object.entries(progress.objectives).map(
-              ([objective, evidence]) =>
-                evidence && (
-                  <p key={objective}>
-                    {labels[objective as keyof typeof labels]}: {evidence.firstCorrect}/
-                    {evidence.observations} first answers correct; {evidence.unassistedCorrect}/
-                    {evidence.unassistedObservations} without hints or earlier correction.
-                  </p>
-                )
-            )}
           {pending > 0 && <p>{pending} mission histories waiting to sync.</p>}
           {api && (
             <button type="button" disabled={saving || busy || !!error} onClick={() => void sync()}>
