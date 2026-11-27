@@ -50,8 +50,9 @@ describe('Parent Dashboard Analytics (Task 5.2)', () => {
 
     // 3. Operation comparison
     expect(data.operationComparison.weakerOperation).toBe('insufficient_data');
-    expect(data.operationComparison.isAdditionWeaker).toBe(false);
-    expect(data.operationComparison.isSubtractionWeaker).toBe(false);
+    expect(data.operationComparison.operations).toHaveLength(4);
+    expect(data.operationComparison.operations.every((op) => op.attempts === 0)).toBe(true);
+    expect(data.operationComparison.operations.every((op) => !op.isWeakest)).toBe(true);
 
     // 4. Skills breakdown
     expect(data.skills.length).toBeGreaterThanOrEqual(6);
@@ -216,11 +217,15 @@ describe('Parent Dashboard Analytics (Task 5.2)', () => {
       date: '2026-09-16',
     });
 
-    expect(data.operationComparison.additionAccuracy).toBe(0.9);
-    expect(data.operationComparison.subtractionAccuracy).toBe(0.6);
+    const byOp = new Map(data.operationComparison.operations.map((op) => [op.operation, op]));
+    expect(byOp.get('add')?.accuracy).toBe(0.9);
+    expect(byOp.get('add')?.attempts).toBe(10);
+    expect(byOp.get('subtract')?.accuracy).toBe(0.6);
+    expect(byOp.get('multiply')?.attempts).toBe(0);
+    expect(byOp.get('divide')?.attempts).toBe(0);
     expect(data.operationComparison.weakerOperation).toBe('subtraction');
-    expect(data.operationComparison.isSubtractionWeaker).toBe(true);
-    expect(data.operationComparison.isAdditionWeaker).toBe(false);
+    expect(byOp.get('subtract')?.isWeakest).toBe(true);
+    expect(byOp.get('add')?.isWeakest).toBe(false);
     expect(data.operationComparison.summary).toContain('Subtraction is weaker');
     expect(data.operationComparison.summary).toContain('60% vs 90%');
   });
@@ -262,9 +267,99 @@ describe('Parent Dashboard Analytics (Task 5.2)', () => {
       date: '2026-09-16',
     });
 
+    const byOp = new Map(data.operationComparison.operations.map((op) => [op.operation, op]));
     expect(data.operationComparison.weakerOperation).toBe('addition');
-    expect(data.operationComparison.isAdditionWeaker).toBe(true);
+    expect(byOp.get('add')?.isWeakest).toBe(true);
+    expect(byOp.get('subtract')?.isWeakest).toBe(false);
     expect(data.operationComparison.summary).toContain('Addition is weaker');
+  });
+
+  it('Question 3: Compares all four operations and names multiplication as weakest', () => {
+    const makeAttempts = (
+      prefix: string,
+      operation: 'add' | 'subtract' | 'multiply' | 'divide',
+      skill:
+        'basic_addition' | 'basic_subtraction' | 'multiplication_below_10' | 'division_below_10',
+      left: number,
+      right: number,
+      answer: number,
+      correctCount: number
+    ): Attempt[] =>
+      Array.from({ length: 10 }, (_, i) => ({
+        questionId: `${prefix}_${i}`,
+        operation,
+        left,
+        right,
+        answer,
+        selectedAnswer: i < correctCount ? answer : answer + 1,
+        correct: i < correctCount,
+        responseTimeMs: 2500,
+        skill,
+        hintUsed: false,
+        timestamp: `2026-09-16T10:0${i}:00.000Z`,
+      }));
+
+    const data = computeParentDashboardData({
+      profile: emptyProfile,
+      attempts: [
+        ...makeAttempts('add', 'add', 'basic_addition', 5, 4, 9, 9),
+        ...makeAttempts('sub', 'subtract', 'basic_subtraction', 14, 6, 8, 8),
+        ...makeAttempts('mul', 'multiply', 'multiplication_below_10', 3, 4, 12, 4),
+        ...makeAttempts('div', 'divide', 'division_below_10', 12, 3, 4, 7),
+      ],
+      date: '2026-09-16',
+    });
+
+    const byOp = new Map(data.operationComparison.operations.map((op) => [op.operation, op]));
+    expect(byOp.get('add')?.accuracy).toBe(0.9);
+    expect(byOp.get('subtract')?.accuracy).toBe(0.8);
+    expect(byOp.get('multiply')?.accuracy).toBe(0.4);
+    expect(byOp.get('divide')?.accuracy).toBe(0.7);
+    expect(data.operationComparison.weakerOperation).toBe('multiplication');
+    expect(byOp.get('multiply')?.isWeakest).toBe(true);
+    expect(data.operationComparison.summary).toContain('Multiplication is weaker');
+    expect(data.operationComparison.summary).toContain('40% vs 90%');
+  });
+
+  it('Question 3: Reports balanced when practiced operations are within 4%', () => {
+    // 10 addition attempts (8 correct = 80%)
+    const addAttempts: Attempt[] = Array.from({ length: 10 }, (_, i) => ({
+      questionId: `add_${i}`,
+      operation: 'add' as const,
+      left: 5,
+      right: 4,
+      answer: 9,
+      selectedAnswer: i < 2 ? 8 : 9,
+      correct: i >= 2,
+      responseTimeMs: 2000,
+      skill: 'basic_addition' as const,
+      hintUsed: false,
+      timestamp: `2026-09-16T10:0${i}:00.000Z`,
+    }));
+
+    // 10 subtraction attempts (8 correct = 80%)
+    const subAttempts: Attempt[] = Array.from({ length: 10 }, (_, i) => ({
+      questionId: `sub_${i}`,
+      operation: 'subtract' as const,
+      left: 14,
+      right: 6,
+      answer: 8,
+      selectedAnswer: i < 2 ? 7 : 8,
+      correct: i >= 2,
+      responseTimeMs: 4000,
+      skill: 'cross_10_subtraction' as const,
+      hintUsed: false,
+      timestamp: `2026-09-16T10:1${i}:00.000Z`,
+    }));
+
+    const data = computeParentDashboardData({
+      profile: emptyProfile,
+      attempts: [...addAttempts, ...subAttempts],
+      date: '2026-09-16',
+    });
+
+    expect(data.operationComparison.weakerOperation).toBe('equal');
+    expect(data.operationComparison.summary).toContain('balanced');
   });
 
   it('Question 4: Answers which specific skills are weak with full breakdown', () => {

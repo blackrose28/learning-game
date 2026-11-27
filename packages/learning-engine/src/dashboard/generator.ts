@@ -11,6 +11,7 @@ import type { Attempt, SkillProfile } from '../skills/types';
 import { loadLocalProgress } from '../history/attemptHistory';
 import type {
   DailyChartPoint,
+  OperationAccuracy,
   OverallDashboardMetrics,
   OperationComparison,
   ParentDashboardData,
@@ -202,46 +203,66 @@ export function computeParentDashboardData(options: {
   };
 
   // -------------------------------------------------------------
-  // 3. Operation Comparison (Question 3: Is addition or subtraction weaker?)
+  // 3. Operation Comparison (Question 3: Which operation is weakest?)
   // -------------------------------------------------------------
-  let weakerOperation: WeakerOperation = 'insufficient_data';
-  let summary = 'Need at least 2 attempts in both addition and subtraction to compare.';
-  const diff = Number((additionAccuracy - subtractionAccuracy).toFixed(4));
+  const OPERATION_ORDER: Operation[] = ['add', 'subtract', 'multiply', 'divide'];
+  const OPERATION_LABELS: Record<Operation, string> = {
+    add: 'Addition',
+    subtract: 'Subtraction',
+    multiply: 'Multiplication',
+    divide: 'Division',
+  };
+  const OPERATION_WEAKER: Record<Operation, WeakerOperation> = {
+    add: 'addition',
+    subtract: 'subtraction',
+    multiply: 'multiplication',
+    divide: 'division',
+  };
 
-  if (additionAttempts.length < 2 && subtractionAttempts.length < 2) {
-    weakerOperation = 'insufficient_data';
-    summary = 'Not enough practice in either operation to determine relative strengths.';
-  } else if (additionAttempts.length < 2) {
-    weakerOperation = 'insufficient_data';
-    summary = 'Need more practice in addition to compare against subtraction.';
-  } else if (subtractionAttempts.length < 2) {
-    weakerOperation = 'insufficient_data';
-    summary = 'Need more practice in subtraction to compare against addition.';
-  } else {
-    // Both have at least 2 attempts
-    const threshold = 0.04; // 4% difference
-    if (diff > threshold) {
-      weakerOperation = 'subtraction';
-      summary = `Subtraction is weaker (${Math.round(subtractionAccuracy * 100)}% vs ${Math.round(additionAccuracy * 100)}% for addition).`;
-    } else if (diff < -threshold) {
-      weakerOperation = 'addition';
-      summary = `Addition is weaker (${Math.round(additionAccuracy * 100)}% vs ${Math.round(subtractionAccuracy * 100)}% for subtraction).`;
-    } else {
+  const operations: OperationAccuracy[] = OPERATION_ORDER.map((operation) => {
+    const opAttempts = attempts.filter((a) => a.operation === operation);
+    const opCorrect = opAttempts.filter((a) => a.correct).length;
+    return {
+      operation,
+      accuracy: opAttempts.length > 0 ? Number((opCorrect / opAttempts.length).toFixed(4)) : 0,
+      attempts: opAttempts.length,
+      correct: opCorrect,
+      isWeakest: false,
+    };
+  });
+
+  // Only operations with at least 2 attempts can be compared.
+  const compared = operations.filter((o) => o.attempts >= 2);
+  let weakerOperation: WeakerOperation = 'insufficient_data';
+  let summary = 'Need at least 2 attempts in two operations to compare.';
+  let difference = 0;
+
+  if (compared.length >= 2) {
+    const best = compared.reduce((a, b) => (b.accuracy > a.accuracy ? b : a));
+    const worst = compared.reduce((a, b) => (b.accuracy < a.accuracy ? b : a));
+    difference = Number((best.accuracy - worst.accuracy).toFixed(4));
+    if (difference <= 0.04) {
+      // 4% difference or less counts as balanced
       weakerOperation = 'equal';
-      summary = `Addition and subtraction performance are balanced (${Math.round(additionAccuracy * 100)}% vs ${Math.round(subtractionAccuracy * 100)}%).`;
+      const labels = compared.map((o) => OPERATION_LABELS[o.operation]).join(', ');
+      const low = Math.round(worst.accuracy * 100);
+      const high = Math.round(best.accuracy * 100);
+      summary = `${labels} are balanced (${low}%–${high}%).`;
+    } else {
+      weakerOperation = OPERATION_WEAKER[worst.operation];
+      worst.isWeakest = true;
+      const weakPct = Math.round(worst.accuracy * 100);
+      const bestPct = Math.round(best.accuracy * 100);
+      const bestLabel = OPERATION_LABELS[best.operation].toLowerCase();
+      summary = `${OPERATION_LABELS[worst.operation]} is weaker (${weakPct}% vs ${bestPct}% for ${bestLabel}).`;
     }
   }
 
   const operationComparison: OperationComparison = {
     weakerOperation,
-    additionAccuracy,
-    subtractionAccuracy,
-    additionAttempts: additionAttempts.length,
-    subtractionAttempts: subtractionAttempts.length,
-    difference: diff,
+    operations,
+    difference,
     summary,
-    isAdditionWeaker: weakerOperation === 'addition',
-    isSubtractionWeaker: weakerOperation === 'subtraction',
   };
 
   // -------------------------------------------------------------

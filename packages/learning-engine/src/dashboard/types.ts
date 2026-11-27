@@ -2,7 +2,16 @@ import type { Operation, Skill } from '../curriculum';
 import type { PracticeRecommendation } from '../recommendations/types';
 import type { MasteryLevel } from '../skills/types';
 
-export type WeakerOperation = 'addition' | 'subtraction' | 'equal' | 'insufficient_data';
+export type WeakerOperation =
+  'addition' | 'subtraction' | 'multiplication' | 'division' | 'equal' | 'insufficient_data';
+
+export interface OperationAccuracy {
+  operation: Operation;
+  accuracy: number;
+  attempts: number;
+  correct: number;
+  isWeakest: boolean;
+}
 
 export type PerformanceTrendStatus = 'improving' | 'declining' | 'steady' | 'insufficient_data';
 
@@ -43,14 +52,9 @@ export interface OverallDashboardMetrics {
 
 export interface OperationComparison {
   weakerOperation: WeakerOperation;
-  additionAccuracy: number;
-  subtractionAccuracy: number;
-  additionAttempts: number;
-  subtractionAttempts: number;
-  difference: number; // positive means addition is higher than subtraction
+  operations: OperationAccuracy[];
+  difference: number; // best accuracy minus weakest accuracy
   summary: string;
-  isAdditionWeaker: boolean;
-  isSubtractionWeaker: boolean;
 }
 
 export type SkillCategory =

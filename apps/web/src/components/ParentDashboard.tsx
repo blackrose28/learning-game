@@ -14,6 +14,7 @@ import {
   type ParentDashboardData,
   type Attempt,
   type DailySession,
+  type Operation,
   type SessionStorageAdapter,
 } from '@math-archer/learning-engine';
 import { useSafeAuth } from '../context/AuthContext';
@@ -44,6 +45,14 @@ export const AVATAR_OPTIONS = [
 ];
 
 export const GRADE_OPTIONS = ['Kindergarten', '1st Grade', '2nd Grade', '3rd Grade', '4th Grade'];
+
+/** Display details for each operation in the comparison section. */
+const OPERATION_META: Record<Operation, { label: string; slug: string; icon: string }> = {
+  add: { label: 'Addition', slug: 'addition', icon: '➕' },
+  subtract: { label: 'Subtraction', slug: 'subtraction', icon: '➖' },
+  multiply: { label: 'Multiplication', slug: 'multiplication', icon: '✖️' },
+  divide: { label: 'Division', slug: 'division', icon: '➗' },
+};
 
 /**
  * Creates realistic sample data for previewing the parent dashboard
@@ -576,16 +585,7 @@ export const ParentDashboard: React.FC<ParentDashboardProps> = ({
     );
   }
 
-  const {
-    today,
-    overall,
-    operationComparison,
-    skills,
-    weakSkills,
-    weakPairs,
-    trend,
-    recommendation,
-  } = data;
+  const { today, operationComparison, skills, weakSkills, weakPairs, trend, recommendation } = data;
 
   // Today tab: one verdict line and the single thing needing attention, so a
   // parent gets the answer without skimming the detail tabs.
@@ -1797,14 +1797,13 @@ export const ParentDashboard: React.FC<ParentDashboardProps> = ({
             {/* Operation Comparison (Question 3) */}
             <section className="dashboard-section" data-testid="operation-comparison-section">
               <div className="section-header">
-                <h3>⚖️ Addition vs Subtraction</h3>
+                <h3>⚖️ Operation Comparison</h3>
                 <span
                   className={`badge ${
-                    operationComparison.weakerOperation === 'subtraction'
-                      ? 'badge-developing'
-                      : operationComparison.weakerOperation === 'addition'
-                        ? 'badge-weak'
-                        : 'badge-strong'
+                    operationComparison.weakerOperation === 'equal' ||
+                    operationComparison.weakerOperation === 'insufficient_data'
+                      ? 'badge-strong'
+                      : 'badge-weak'
                   }`}
                 >
                   {operationComparison.weakerOperation === 'equal'
@@ -1817,31 +1816,31 @@ export const ParentDashboard: React.FC<ParentDashboardProps> = ({
 
               <div className="operation-comparison-container">
                 <div className="operation-cards">
-                  <div
-                    className={`op-box ${operationComparison.isAdditionWeaker ? 'weaker' : 'stronger'}`}
-                    data-testid="addition-op-box"
-                  >
-                    <div className="op-title">➕ Addition</div>
-                    <div className="op-acc" data-testid="addition-accuracy-metric">
-                      {Math.round(overall.additionAccuracy * 100)}%
-                    </div>
-                    <div className="op-sub">
-                      {overall.additionCorrect} / {overall.additionAttempts} correct
-                    </div>
-                  </div>
-
-                  <div
-                    className={`op-box ${operationComparison.isSubtractionWeaker ? 'weaker' : 'stronger'}`}
-                    data-testid="subtraction-op-box"
-                  >
-                    <div className="op-title">➖ Subtraction</div>
-                    <div className="op-acc" data-testid="subtraction-accuracy-metric">
-                      {Math.round(overall.subtractionAccuracy * 100)}%
-                    </div>
-                    <div className="op-sub">
-                      {overall.subtractionCorrect} / {overall.subtractionAttempts} correct
-                    </div>
-                  </div>
+                  {operationComparison.operations
+                    .filter((op) => op.attempts > 0)
+                    .map((op) => (
+                      <div
+                        key={op.operation}
+                        className={`op-box ${op.isWeakest ? 'weaker' : 'stronger'}`}
+                        data-testid={`${OPERATION_META[op.operation].slug}-op-box`}
+                      >
+                        <div className="op-title">
+                          {OPERATION_META[op.operation].icon} {OPERATION_META[op.operation].label}
+                        </div>
+                        <div
+                          className="op-acc"
+                          data-testid={`${OPERATION_META[op.operation].slug}-accuracy-metric`}
+                        >
+                          {Math.round(op.accuracy * 100)}%
+                        </div>
+                        <div className="op-sub">
+                          {op.correct} / {op.attempts} correct
+                        </div>
+                      </div>
+                    ))}
+                  {operationComparison.operations.every((op) => op.attempts === 0) && (
+                    <div className="op-sub">No practice yet — play to compare operations.</div>
+                  )}
                 </div>
 
                 <div
