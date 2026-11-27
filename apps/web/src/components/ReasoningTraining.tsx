@@ -53,8 +53,6 @@ export interface ReasoningTrainingProps {
   mode?: MissionMode;
   /** Adventure: spend the arrow and grant the reward. Must be safe to call twice for one attempt. */
   onMissionComplete?: (attempt: MissionAttempt) => AdventureMissionCompletion;
-  /** Adventure: the child chose not to do the offered mission now. */
-  onDecline?: () => void;
 }
 // Use real browser storage so an unavailable/quota-limited store cannot silently become an ephemeral save.
 const browserStorage: SessionStorageAdapter = {
@@ -87,7 +85,6 @@ export function ReasoningTraining({
   storage = browserStorage,
   mode = 'training',
   onMissionComplete,
-  onDecline,
 }: ReasoningTrainingProps) {
   const adventure = mode === 'adventure';
   const challenge = mode === 'challenge';
@@ -235,8 +232,12 @@ export function ReasoningTraining({
       busy.current = false;
     }
   };
-  // Leaving an unstarted Adventure offer is declining it, so it is not offered again at once.
-  const leave = adventure && !attempt ? (onDecline ?? onBack) : onBack;
+  // An offered Adventure mission cannot be skipped: before it starts there is no way out,
+  // so the child starts it. Once started it can be paused and resumed later.
+  const leave = () => {
+    if (adventure && !attempt) return;
+    onBack();
+  };
   const showStart = !attempt || (attempt.completedAt && !feedback);
   const stepId = attempt ? getActiveMissionStep(attempt) : null;
   const displayedStep = feedback?.stepId ?? stepId;
@@ -362,13 +363,15 @@ export function ReasoningTraining({
         }
       }}
     >
-      <button onClick={leave}>
-        {adventure
-          ? attempt && !attempt.completedAt
-            ? '← Tạm dừng, làm tiếp sau'
-            : '← Về trò chơi'
-          : '← Về luyện tính'}
-      </button>
+      {!(adventure && !attempt) && (
+        <button onClick={leave}>
+          {adventure
+            ? attempt && !attempt.completedAt
+              ? '← Tạm dừng, làm tiếp sau'
+              : '← Về trò chơi'
+            : '← Về luyện tính'}
+        </button>
+      )}
       <h1>
         {adventure
           ? '🏹 Nhiệm vụ suy luận'
@@ -429,7 +432,6 @@ export function ReasoningTraining({
             <button data-primary disabled={blocked} onClick={start}>
               Bắt đầu nhiệm vụ
             </button>
-            <button onClick={onDecline ?? onBack}>Để sau</button>
           </>
         )
       ) : showStart ? (

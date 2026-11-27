@@ -64,13 +64,14 @@ enter selection; with none enabled the arithmetic experience is unchanged.
 **What is offered.** `chooseAdventureMission` takes the weakest-relationship family from
 `recommendFocus` (otherwise the enabled family practised least recently) and its
 `recommendSupport` suggestion. The child sees the family, the suggestion with its evidence,
-and can switch between **Từng bước** and **Tự giải**. **Để sau** (or Back/Escape/B) declines:
-nothing is spent and the next offer waits another five arrows.
+and can switch between **Từng bước** and **Tự giải**. The offer cannot be declined:
+there is no **Để sau** button, and Back/Escape/B do nothing before the mission starts,
+so starting it is the only way forward. A mission started and then paused is offered
+again on return.
 
 **Cost and reward.** An Adventure mission is a normal `MissionAttempt` with
 `mode: 'adventure'` on the shared storage, sync and evidence pipeline (so it also feeds
-support fading and parent progress). Starting, answering, hints, retries, pausing and
-declining spend nothing. When the attempt completes, `completeAdventureMission` calls
+support fading and parent progress). Starting, answering, hints, retries and pausing spend nothing. When the attempt completes, `completeAdventureMission` calls
 `spendMissionArrow`, which records the attempt ID in the daily session
 (`missionAttemptIds`, read back from storage so a stale copy cannot charge twice) and spends
 one arrow (one hit only if no response was incorrect), then grants one `awardAttemptRewards`

@@ -323,7 +323,7 @@ See [M4 Puzzles](reasoning-missions-puzzles.md).
       [M5 Adaptive Practice](reasoning-missions-adaptive.md).
 - [x] Offer missions in Adventure using that policy: at a question boundary the app opens
       a mission screen (family from `chooseAdventureMission`, suggested support the child
-      can change, **Để sau** to decline). An interrupted Adventure mission is offered again
+      can change; the offer cannot be declined). An interrupted Adventure mission is offered again
       on return. See [M5 Adaptive Practice](reasoning-missions-adaptive.md).
 - [x] Integrate one-arrow/one-reward completion and interrupted-mission recovery: a
       completed Adventure mission spends exactly one arrow and pays exactly one reward

@@ -273,16 +273,19 @@ describe('Adventure reasoning missions', () => {
     expect(attempts()[0]).toMatchObject({ mode: 'adventure' });
   });
 
-  it('declining spends nothing and waits another five arrows', async () => {
+  it('an offered Adventure mission cannot be skipped', async () => {
     enable(5);
     render(<App />);
-    fireEvent.click(await screen.findByRole('button', { name: 'Để sau' }));
-    expect(await screen.findByTestId('question-expression')).toBeInTheDocument();
-    expect(today()).toMatchObject({ arrowsUsed: 5, missionOfferedAtArrow: 5 });
+    expect(await screen.findByRole('heading', { name: /Nhiệm vụ suy luận/ })).toBeVisible();
+    expect(screen.queryByRole('button', { name: 'Để sau' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /Về trò chơi/ })).not.toBeInTheDocument();
+    fireEvent.keyDown(screen.getByRole('region'), { key: 'Escape' });
+    expect(screen.getByRole('heading', { name: /Nhiệm vụ suy luận/ })).toBeVisible();
+    expect(today().missionOfferedAtArrow).toBeUndefined();
     expect(attempts()).toHaveLength(0);
-    cleanup();
-    render(<App />);
-    expect(screen.getByTestId('question-expression')).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'Bắt đầu nhiệm vụ' }));
+    expect(await screen.findByRole('button', { name: /Tạm dừng/ })).toBeInTheDocument();
+    expect(attempts()).toHaveLength(1);
   });
 
   it('falls back to plain arithmetic when every family is disabled, even with a paused mission', async () => {

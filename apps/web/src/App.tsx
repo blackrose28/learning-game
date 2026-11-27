@@ -3,8 +3,6 @@ import {
   getEngineInfo,
   isReasoningSettings,
   getDefaultStorage,
-  markMissionOffered,
-  startDailySession,
   type ReasoningSettings,
   type MissionFamily,
   solveExpression,
@@ -565,15 +563,6 @@ export const AppContent: React.FC = () => {
             onMissionComplete={(attempt) =>
               completeAdventureMission(attempt, getDefaultStorage(), apiClient ?? undefined)
             }
-            onDecline={() => {
-              markMissionOffered(
-                startDailySession({ playerId: activeChild.id, storage: getDefaultStorage() }),
-                getDefaultStorage()
-              );
-              setMissionOpen(false);
-              setMissionDeferred(true);
-              setSyncTick((t) => t + 1);
-            }}
             onBack={() => {
               setMissionOpen(false);
               // A paused mission is not re-offered on this page; a finished one is simply done.
