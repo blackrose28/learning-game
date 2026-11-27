@@ -817,9 +817,26 @@
   align-items: center;
 }
 
-.flying-arrow.phase-impact {
-  opacity: 0;
-  transition: opacity 0.1s ease-out;
+/* On impact the flying projectile must vanish at once: the flight animation's
+   `forwards` fill keeps applying its final keyframe (opacity 1, at the target),
+   which overrides a plain opacity rule, so the arrow would otherwise sit on the
+   target until the next question advances (up to ~0.9s on Normal speed). A short
+   fade-out animation replaces the flight animation and hides it in place. The
+   target shows its own embedded arrow on a hit. The miss flight already ends
+   at opacity 0, so it needs no impact fade. */
+.flying-arrow.outcome-hit.phase-impact {
+  animation: arrow-impact-fade 0.1s ease-out forwards;
+}
+
+@keyframes arrow-impact-fade {
+  from {
+    transform: translateX(-50%) translateY(120px) scale(1.1);
+    opacity: 1;
+  }
+  to {
+    transform: translateX(-50%) translateY(120px) scale(1.1);
+    opacity: 0;
+  }
 }
 
 .flying-arrow-trail {

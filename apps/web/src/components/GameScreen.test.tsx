@@ -297,6 +297,12 @@ describe('Task 3.2 — Add the shooting interaction', () => {
     expect(screen.getByTestId('target-hit-effect')).toBeInTheDocument();
     expect(screen.getByText('✨🎯✨')).toBeInTheDocument();
 
+    // The flying projectile must fade out on impact: the CSS impact fade is
+    // keyed off these classes — without them the flight animation's fill
+    // keeps the arrow pinned on the target until the next question advances.
+    expect(flyingArrow).toHaveClass('phase-impact');
+    expect(flyingArrow).toHaveClass('outcome-hit');
+
     // Step 4: correct/wrong feedback
     expect(screen.getByTestId('feedback-banner')).toHaveTextContent('🎯 Hit!');
     expect(fireChoice).toHaveClass('selected-correct');
