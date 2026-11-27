@@ -49,6 +49,20 @@ pnpm build
 pnpm lint
 ```
 
+### End-to-end tests (Playwright)
+
+```bash
+# First time on a machine: download the Chromium browser (not stored in the repo)
+npx playwright install chromium
+
+# Run the E2E suite; the config starts `pnpm dev` (web + API) automatically
+pnpm test:e2e
+```
+
+Tests live in `tests/e2e/` with the config in `playwright.config.ts` at the
+repo root. Run `pnpm build` once first if the API refuses to start: Wrangler
+needs `apps/web/dist` to exist.
+
 ## Automatic deployment
 
 The [Check and deploy workflow](../.github/workflows/deploy.yml) builds all

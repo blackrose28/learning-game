@@ -27,6 +27,8 @@ dist-ssr
 # Testing
 coverage
 .nyc_output
+test-results/
+playwright-report/
 
 # Build outputs
 build
