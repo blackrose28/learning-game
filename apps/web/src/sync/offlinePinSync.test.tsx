@@ -296,6 +296,8 @@ describe('Item 7: Offline Parent PIN Change Sync Queue', () => {
       </AuthProvider>
     );
 
+    fireEvent.click(screen.getByTestId('dashboard-tab-settings'));
+
     // Open Change PIN modal
     const changePinBtn = await screen.findByTestId('change-parent-pin-btn');
     fireEvent.click(changePinBtn);

@@ -14,6 +14,55 @@
   padding-bottom: 40px;
 }
 
+/* Dashboard tabs */
+.dashboard-tabs {
+  display: flex;
+  gap: 4px;
+  margin-bottom: 20px;
+  border-bottom: 1px solid #e5e7eb;
+  flex-wrap: wrap;
+}
+
+.dashboard-tab {
+  padding: 10px 16px;
+  border: none;
+  border-bottom: 2px solid transparent;
+  background: none;
+  color: #6b7280;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  margin-bottom: -1px;
+}
+
+.dashboard-tab:hover {
+  color: #111827;
+}
+
+.dashboard-tab[aria-selected='true'] {
+  color: #1d4ed8;
+  border-bottom-color: #2563eb;
+}
+
+/* Today tab verdict */
+.today-verdict {
+  background: #eff6ff;
+  border: 1px solid #bfdbfe;
+  border-radius: 12px;
+  padding: 16px 20px;
+  font-size: 17px;
+  font-weight: 700;
+  color: #1e40af;
+  margin-bottom: 16px;
+}
+
+/* Settings tab profiles */
+.profiles-actions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
 /* Header & Controls */
 .dashboard-header {
   display: flex;

@@ -25,15 +25,19 @@ describe('ParentDashboard Component (Task 5.2)', () => {
     render(<ParentDashboard playerId="player-local" />);
 
     expect(screen.getByTestId('parent-dashboard-view')).toBeInTheDocument();
+    // Today is the default tab: verdict + 3 numbers, detail hidden behind tabs.
     expect(screen.getByTestId('today-arrows-metric')).toHaveTextContent('0 / 50');
-    expect(screen.getByTestId('overall-accuracy-metric')).toHaveTextContent('0%');
-    expect(screen.getByTestId('addition-accuracy-metric')).toHaveTextContent('0%');
-    expect(screen.getByTestId('subtraction-accuracy-metric')).toHaveTextContent('0%');
+    expect(screen.getByTestId('today-accuracy-metric')).toHaveTextContent('—');
+    expect(screen.getByTestId('today-verdict')).toHaveTextContent('No practice yet today.');
+    expect(screen.getByTestId('today-attention-metric')).toHaveTextContent('All on track');
+    expect(screen.queryByTestId('no-weak-pairs-msg')).not.toBeInTheDocument();
+
+    fireEvent.click(screen.getByTestId('dashboard-tab-progress'));
     expect(screen.getByTestId('no-weak-pairs-msg')).toBeInTheDocument();
     expect(screen.getByTestId('trend-status-pill')).toBeInTheDocument();
   });
 
-  it('displays all 8 required metrics when data is present', () => {
+  it('shows today at a glance and the detail on the Progress tab', () => {
     const playerId = 'player-metrics-test';
 
     const today = new Date().toISOString().slice(0, 10);
@@ -62,7 +66,7 @@ describe('ParentDashboard Component (Task 5.2)', () => {
         responseTimeMs: 2000,
         skill: 'basic_addition',
         hintUsed: false,
-        timestamp: '2026-09-16T10:05:00.000Z',
+        timestamp: `${today}T10:05:00.000Z`,
         playerId,
       });
     }
@@ -80,7 +84,7 @@ describe('ParentDashboard Component (Task 5.2)', () => {
         responseTimeMs: 4000,
         skill: 'cross_10_subtraction',
         hintUsed: i === 1,
-        timestamp: '2026-09-16T10:10:00.000Z',
+        timestamp: `${today}T10:10:00.000Z`,
         playerId,
       });
     }
@@ -100,34 +104,33 @@ describe('ParentDashboard Component (Task 5.2)', () => {
 
     render(<ParentDashboard playerId={playerId} />);
 
-    // 1. Today's arrows
+    // Today tab: arrows + accuracy today (4 / 6 = 67%) + the weak skill.
     expect(screen.getByTestId('today-arrows-metric')).toHaveTextContent('35 / 50');
+    expect(screen.getByTestId('today-accuracy-metric')).toHaveTextContent('67%');
+    expect(screen.getByTestId('today-verdict')).toHaveTextContent('Subtraction crossing 10');
+    expect(screen.getByTestId('today-attention-metric')).toHaveTextContent(
+      'Subtraction crossing 10'
+    );
 
-    // 2. Accuracy: (3 + 1) / 6 = 67%
-    expect(screen.getByTestId('overall-accuracy-metric')).toHaveTextContent('67%');
+    // Progress tab: operation split, skill breakdown, weak pairs.
+    fireEvent.click(screen.getByTestId('dashboard-tab-progress'));
 
-    // 3. Addition accuracy: 3/3 = 100%
+    // Addition accuracy: 3/3 = 100%
     expect(screen.getByTestId('addition-accuracy-metric')).toHaveTextContent('100%');
 
-    // 4. Subtraction accuracy: 1/3 = 33%
+    // Subtraction accuracy: 1/3 = 33%
     expect(screen.getByTestId('subtraction-accuracy-metric')).toHaveTextContent('33%');
 
-    // 5. Skill breakdown
+    // Skill breakdown
     expect(screen.getByTestId('skill-row-basic_addition')).toBeInTheDocument();
     expect(screen.getByTestId('skill-row-cross_10_subtraction')).toBeInTheDocument();
 
-    // 6. Weak number pairs
+    // Weak number pairs
     expect(screen.getByTestId('weak-pair-14-6')).toBeInTheDocument();
     expect(screen.getByTestId('weak-pair-14-6')).toHaveTextContent('33% accuracy');
-
-    // 7. Average response time: (3*2000 + 3*4000) / 6 = 3000ms = 3.0s
-    expect(screen.getByTestId('avg-response-time-metric')).toHaveTextContent('3.0s');
-
-    // 8. Hint rate: 1/6 = 17%
-    expect(screen.getByTestId('hint-rate-metric')).toHaveTextContent('17%');
   });
 
-  it('answers all 6 questions clearly in the at-a-glance section', () => {
+  it('shows one verdict and the thing needing attention on Today', () => {
     const playerId = 'player-q-test';
 
     const today = new Date().toISOString().slice(0, 10);
@@ -189,23 +192,19 @@ describe('ParentDashboard Component (Task 5.2)', () => {
 
     render(<ParentDashboard playerId={playerId} />);
 
-    // Q1: Practice amount
-    expect(screen.getByTestId('q1-practice-answer')).toHaveTextContent('50 / 50 arrows today');
+    // Today tab: goal reached, the weak skill named, arrows done.
+    expect(screen.getByTestId('today-verdict')).toHaveTextContent('Daily goal reached');
+    expect(screen.getByTestId('today-attention-metric')).toHaveTextContent(
+      'Subtraction crossing 10'
+    );
+    expect(screen.getByTestId('today-arrows-metric')).toHaveTextContent('50 / 50');
 
-    // Q2: Accuracy
-    expect(screen.getByTestId('q2-accuracy-answer')).toHaveTextContent('70% accuracy');
-
-    // Q3: Operation comparison (subtraction is weaker: 25% vs 100%)
-    expect(screen.getByTestId('q3-operation-answer')).toHaveTextContent('Subtraction is weaker');
-
-    // Q4: Weak skills
-    expect(screen.getByTestId('q4-weak-skills-answer')).toHaveTextContent('1 skill to practice');
-
-    // Q5: Problem combinations
-    expect(screen.getByTestId('q5-weak-pairs-answer')).toHaveTextContent('1 pair with misses');
-
-    // Q6: Performance trend
-    expect(screen.getByTestId('q6-improving-card')).toBeInTheDocument();
+    // Progress tab: operation comparison (subtraction weaker: 25% vs 100%)
+    fireEvent.click(screen.getByTestId('dashboard-tab-progress'));
+    expect(screen.getByTestId('addition-accuracy-metric')).toHaveTextContent('100%');
+    expect(screen.getByTestId('subtraction-accuracy-metric')).toHaveTextContent('25%');
+    expect(screen.getByTestId('weak-pair-17-9')).toBeInTheDocument();
+    expect(screen.getByTestId('trend-status-pill')).toBeInTheDocument();
   });
 
   it('allows toggling sample preview data with rich history and charts', () => {
@@ -221,15 +220,18 @@ describe('ParentDashboard Component (Task 5.2)', () => {
     // Should display sample data banner and populated metrics
     expect(screen.getByTestId('sample-data-banner')).toBeInTheDocument();
     expect(screen.getByTestId('today-arrows-metric')).toHaveTextContent('50 / 50');
-    expect(screen.getByTestId('q1-practice-answer')).toHaveTextContent('50 / 50 arrows today');
+    expect(screen.getByTestId('focus-recommendation-section')).toBeInTheDocument();
+
+    // Detail lives on the Progress tab.
+    fireEvent.click(screen.getByTestId('dashboard-tab-progress'));
     expect(screen.getByTestId('weak-pair-13+8')).toBeInTheDocument();
     expect(screen.getByTestId('weak-pair-17-9')).toBeInTheDocument();
     expect(screen.getByTestId('history-chart-bars')).toBeInTheDocument();
-    expect(screen.getByTestId('focus-recommendation-section')).toBeInTheDocument();
 
     // Toggle back to real data
     fireEvent.click(screen.getByTestId('toggle-sample-data-btn'));
     expect(screen.queryByTestId('sample-data-banner')).not.toBeInTheDocument();
+    fireEvent.click(screen.getByTestId('dashboard-tab-today'));
     expect(screen.getByTestId('today-arrows-metric')).toHaveTextContent('0 / 50');
   });
 
@@ -274,10 +276,43 @@ describe('ParentDashboard Component (Task 5.2)', () => {
     });
     render(<ParentDashboard playerId={playerId} />);
     expect(screen.getByTestId('today-arrows-metric')).toHaveTextContent('2 / 50');
-    expect(screen.getByTestId('q1-mission-arrows')).toHaveTextContent(
-      'Includes 2 reasoning missions; accuracy below is arithmetic only'
+    expect(screen.getByTestId('today-mission-arrows')).toHaveTextContent(
+      '2 reasoning missions, not in arithmetic accuracy'
     );
-    expect(screen.getByTestId('overall-accuracy-metric')).toHaveTextContent('0%');
+    expect(screen.getByTestId('today-accuracy-metric')).toHaveTextContent('—');
+  });
+
+  describe('Dashboard tabs', () => {
+    it('defaults to Today and switches tabs, showing one section at a time', () => {
+      render(<ParentDashboard playerId="player-local" />);
+
+      expect(screen.getByTestId('dashboard-tab-today')).toHaveAttribute('aria-selected', 'true');
+      expect(screen.getByTestId('today-verdict')).toBeInTheDocument();
+      expect(screen.queryByTestId('skills-breakdown-section')).not.toBeInTheDocument();
+      expect(screen.queryByTestId('reasoning-performance-section')).not.toBeInTheDocument();
+
+      fireEvent.click(screen.getByTestId('dashboard-tab-progress'));
+      expect(screen.getByTestId('dashboard-tab-progress')).toHaveAttribute('aria-selected', 'true');
+      expect(screen.getByTestId('skills-breakdown-section')).toBeInTheDocument();
+      expect(screen.queryByTestId('today-verdict')).not.toBeInTheDocument();
+
+      fireEvent.click(screen.getByTestId('dashboard-tab-reasoning'));
+      expect(screen.getByTestId('reasoning-performance-section')).toBeInTheDocument();
+      expect(screen.queryByTestId('skills-breakdown-section')).not.toBeInTheDocument();
+
+      fireEvent.click(screen.getByTestId('dashboard-tab-settings'));
+      expect(screen.getByTestId('profiles-section')).toBeInTheDocument();
+      expect(screen.getByRole('region', { name: 'Practice skills' })).toBeInTheDocument();
+      expect(screen.queryByTestId('reasoning-performance-section')).not.toBeInTheDocument();
+    });
+
+    it('shows the reasoning performance section only on the Reasoning tab', () => {
+      render(<ParentDashboard playerId="player-local" />);
+      expect(screen.queryByTestId('reasoning-performance-section')).not.toBeInTheDocument();
+      fireEvent.click(screen.getByTestId('dashboard-tab-reasoning'));
+      expect(screen.getByTestId('reasoning-performance-section')).toBeInTheDocument();
+      expect(screen.getByTestId('reasoning-active-families-badge')).toBeInTheDocument();
+    });
   });
 
   describe('Task 5.3 — Recommendation Explanation & Traceability', () => {
@@ -345,7 +380,7 @@ describe('ParentDashboard Component (Task 5.2)', () => {
   });
 
   describe('Child Profile Management in Parent Dashboard', () => {
-    it('renders child switcher bar with quick edit and manage profiles buttons', () => {
+    it('renders child switcher bar and profile actions in Settings', () => {
       render(
         <AuthProvider>
           <ParentDashboard />
@@ -353,6 +388,9 @@ describe('ParentDashboard Component (Task 5.2)', () => {
       );
 
       expect(screen.getByTestId('parent-child-switcher-bar')).toBeInTheDocument();
+      expect(screen.queryByTestId('manage-profiles-btn')).not.toBeInTheDocument();
+
+      fireEvent.click(screen.getByTestId('dashboard-tab-settings'));
       expect(screen.getByTestId('manage-profiles-btn')).toBeInTheDocument();
       expect(screen.getByTestId('add-child-profile-btn')).toBeInTheDocument();
       expect(screen.getByTestId('quick-edit-child-btn')).toBeInTheDocument();
@@ -364,6 +402,8 @@ describe('ParentDashboard Component (Task 5.2)', () => {
           <ParentDashboard />
         </AuthProvider>
       );
+
+      fireEvent.click(screen.getByTestId('dashboard-tab-settings'));
 
       // Open Add Child modal
       fireEvent.click(screen.getByTestId('add-child-profile-btn'));
@@ -403,6 +443,8 @@ describe('ParentDashboard Component (Task 5.2)', () => {
         </AuthProvider>
       );
 
+      fireEvent.click(screen.getByTestId('dashboard-tab-settings'));
+
       // Open Manage Profiles modal
       fireEvent.click(screen.getByTestId('manage-profiles-btn'));
       expect(screen.getByTestId('manage-children-modal')).toBeInTheDocument();
@@ -438,6 +480,8 @@ describe('ParentDashboard Component (Task 5.2)', () => {
         </AuthProvider>
       );
 
+      fireEvent.click(screen.getByTestId('dashboard-tab-settings'));
+
       // Open Manage Profiles modal
       fireEvent.click(screen.getByTestId('manage-profiles-btn'));
       expect(screen.getByTestId('manage-children-modal')).toBeInTheDocument();
@@ -471,7 +515,9 @@ describe('ParentDashboard Component (Task 5.2)', () => {
         </AuthProvider>
       );
 
-      // Open Change Parent PIN modal from switcher bar
+      fireEvent.click(screen.getByTestId('dashboard-tab-settings'));
+
+      // Open Change Parent PIN modal from Settings
       fireEvent.click(screen.getByTestId('change-parent-pin-btn'));
       expect(screen.getByTestId('change-parent-pin-modal')).toBeInTheDocument();
 
@@ -529,6 +575,8 @@ describe('ParentDashboard Component (Task 5.2)', () => {
           <ParentDashboard />
         </AuthProvider>
       );
+
+      fireEvent.click(screen.getByTestId('dashboard-tab-settings'));
 
       // Open Manage Profiles modal
       fireEvent.click(screen.getByTestId('manage-profiles-btn'));
@@ -649,7 +697,7 @@ describe('ParentDashboard Component (Task 5.2)', () => {
       await waitFor(() => {
         expect(requestedPlayerIds).toContain('child_mia');
         expect(screen.getByTestId('today-arrows-metric')).toHaveTextContent('40 / 50');
-        expect(screen.getByTestId('overall-accuracy-metric')).toHaveTextContent('100%');
+        expect(screen.getByTestId('today-accuracy-metric')).toHaveTextContent('100%');
       });
 
       // Sync indicator should be dismissed after completion
@@ -902,6 +950,7 @@ describe('Practice skill switches', () => {
       createSimulatedProfile({ playerId: 'child-a', skills: { addition_within_10: 'mastered' } })
     );
     const view = render(<ParentDashboard playerId="child-a" />);
+    fireEvent.click(screen.getByTestId('dashboard-tab-settings'));
     const toggle = screen.getByRole('switch', { name: 'Addition within 10' });
     expect(
       within(screen.getByRole('region', { name: 'Practice skills' })).getAllByRole('switch')
@@ -914,6 +963,7 @@ describe('Practice skill switches', () => {
     );
     view.unmount();
     render(<ParentDashboard playerId="child-a" />);
+    fireEvent.click(screen.getByTestId('dashboard-tab-settings'));
     expect(screen.getByRole('switch', { name: 'Addition within 10' })).not.toBeChecked();
     expect(
       JSON.parse(localStorage.getItem('math_archer_profile_child-a')!).skills.addition_within_10
@@ -935,6 +985,7 @@ describe('Practice skill switches', () => {
       )
     );
     render(<ParentDashboard />);
+    fireEvent.click(screen.getByTestId('dashboard-tab-settings'));
     expect(screen.getByRole('switch', { name: 'Make 10' })).toBeDisabled();
     expect(screen.getByRole('switch', { name: 'Basic addition' })).not.toBeDisabled();
     fireEvent.click(screen.getByTestId('toggle-sample-data-btn'));
@@ -947,6 +998,7 @@ describe('Practice skill switches', () => {
         new Response(JSON.stringify({ message: 'Unable to save skills' }), { status: 500 }),
     });
     render(<ParentDashboard apiClient={apiClient} />);
+    fireEvent.click(screen.getByTestId('dashboard-tab-settings'));
     await waitFor(() =>
       expect(screen.getByRole('switch', { name: 'Addition within 10' })).not.toBeDisabled()
     );

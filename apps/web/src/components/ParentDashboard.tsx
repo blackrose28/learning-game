@@ -238,6 +238,9 @@ export const ParentDashboard: React.FC<ParentDashboardProps> = ({
 
   const [useSample, setUseSample] = useState<boolean>(false);
   const [data, setData] = useState<ParentDashboardData | null>(null);
+  const [activeTab, setActiveTab] = useState<'today' | 'progress' | 'reasoning' | 'settings'>(
+    'today'
+  );
   const [selectedChildId, setSelectedChildId] = useState<string>(playerId);
   const [isHydrating, setIsHydrating] = useState<boolean>(false);
   const [isEnablingRewards, setIsEnablingRewards] = useState<boolean>(false);
@@ -584,6 +587,20 @@ export const ParentDashboard: React.FC<ParentDashboardProps> = ({
     recommendation,
   } = data;
 
+  // Today tab: one verdict line and the single thing needing attention, so a
+  // parent gets the answer without skimming the detail tabs.
+  const todayVerdict =
+    today.sessionStatus === 'completed'
+      ? `🎯 Daily goal reached — ${today.arrowsUsed} arrows done!`
+      : today.arrowsUsed === 0
+        ? 'No practice yet today.'
+        : weakSkills.length > 0
+          ? `Focus on ${weakSkills[0].name} — the weakest skill right now.`
+          : trend.status === 'declining'
+            ? 'Accuracy dipped lately — keep practicing.'
+            : 'On track — keep going.';
+  const attentionTarget = weakSkills[0]?.name ?? weakPairs[0]?.pairKey ?? null;
+
   return (
     <section className="parent-dashboard" data-testid="parent-dashboard-view">
       {/* Header */}
@@ -732,189 +749,254 @@ export const ParentDashboard: React.FC<ParentDashboardProps> = ({
                 <span>⏳</span> Syncing cloud data...
               </span>
             )}
-
-            {/* Quick Edit for current child */}
-            {selectedChildObj && (
-              <button
-                type="button"
-                data-testid="quick-edit-child-btn"
-                onClick={() => openEditChild(selectedChildObj)}
-                style={{
-                  padding: '6px 12px',
-                  borderRadius: 20,
-                  border: '1px solid #cbd5e1',
-                  background: '#ffffff',
-                  color: '#334155',
-                  fontWeight: 600,
-                  fontSize: 12,
-                  cursor: 'pointer',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: 4,
-                }}
-              >
-                ✏️ Edit {selectedChildObj.name}
-              </button>
-            )}
-
-            <button
-              type="button"
-              data-testid="manage-profiles-btn"
-              onClick={() => setShowManageModal(true)}
-              style={{
-                padding: '6px 14px',
-                borderRadius: 20,
-                border: '1px solid #cbd5e1',
-                background: '#ffffff',
-                color: '#334155',
-                fontWeight: 600,
-                fontSize: 13,
-                cursor: 'pointer',
-                display: 'flex',
-                alignItems: 'center',
-                gap: 4,
-              }}
-            >
-              ⚙️ Manage Profiles
-            </button>
-
-            <button
-              type="button"
-              data-testid="add-child-profile-btn"
-              onClick={openAddChild}
-              style={{
-                padding: '6px 14px',
-                borderRadius: 20,
-                border: '1px dashed #94a3b8',
-                background: '#ffffff',
-                color: '#475569',
-                fontWeight: 600,
-                fontSize: 13,
-                cursor: 'pointer',
-              }}
-            >
-              + Add Child
-            </button>
           </div>
 
           <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
             <div style={{ fontSize: 12, color: '#64748b' }}>
               👨‍👩‍👧 Account: <strong>{authContext.parentUser?.name || 'Demo Parent'}</strong>
             </div>
-            <button
-              type="button"
-              data-testid="change-parent-pin-btn"
-              onClick={openChangePinModal}
-              style={{
-                padding: '6px 12px',
-                borderRadius: 20,
-                border: '1px solid #cbd5e1',
-                background: '#ffffff',
-                color: '#334155',
-                fontWeight: 600,
-                fontSize: 12,
-                cursor: 'pointer',
-                display: 'flex',
-                alignItems: 'center',
-                gap: 4,
-              }}
-            >
-              🔒 Change Parent PIN
-            </button>
           </div>
         </div>
       )}
 
-      <section className="practice-skills-panel" aria-labelledby="animation-speed-title">
-        <h2 id="animation-speed-title">Animation speed</h2>
-        <p>
-          Choose how quickly arrows, spells, and other projectiles fly for{' '}
-          {selectedChildObj?.name || 'this child'}, and how soon the next question appears.
-        </p>
-        <label className="animation-speed-control">
-          Speed
-          <select
-            aria-label="Animation speed"
-            value={animationSpeed}
-            disabled={useSample || isSavingSpeed || isHydrating || isSavingSkills}
-            onChange={(event) => {
-              const value = event.target.value;
-              if (isAnimationSpeed(value)) void changeAnimationSpeed(value);
-            }}
-          >
-            {Object.entries(ANIMATION_SPEEDS).map(([value, preset]) => (
-              <option key={value} value={value}>
-                {preset.label}
-              </option>
-            ))}
-          </select>
-        </label>
-        {useSample && <p>Switch to real data to change animation speed.</p>}
-        {speedFeedback && <p role="status">{speedFeedback}</p>}
-      </section>
+      {/* Dashboard tabs: Today answers the question, the other tabs hold the detail. */}
+      <div className="dashboard-tabs" role="tablist" aria-label="Parent dashboard sections">
+        <button
+          type="button"
+          role="tab"
+          className="dashboard-tab"
+          data-testid="dashboard-tab-today"
+          aria-selected={activeTab === 'today'}
+          onClick={() => setActiveTab('today')}
+        >
+          ☀️ Today
+        </button>
+        <button
+          type="button"
+          role="tab"
+          className="dashboard-tab"
+          data-testid="dashboard-tab-progress"
+          aria-selected={activeTab === 'progress'}
+          onClick={() => setActiveTab('progress')}
+        >
+          📈 Progress
+        </button>
+        <button
+          type="button"
+          role="tab"
+          className="dashboard-tab"
+          data-testid="dashboard-tab-reasoning"
+          aria-selected={activeTab === 'reasoning'}
+          onClick={() => setActiveTab('reasoning')}
+        >
+          🧠 Reasoning
+        </button>
+        <button
+          type="button"
+          role="tab"
+          className="dashboard-tab"
+          data-testid="dashboard-tab-settings"
+          aria-selected={activeTab === 'settings'}
+          onClick={() => setActiveTab('settings')}
+        >
+          ⚙️ Settings
+        </button>
+      </div>
 
-      <section className="practice-skills-panel" aria-labelledby="practice-skills-title">
-        <h2 id="practice-skills-title">Practice skills</h2>
-        <p>
-          Turn off mastered skills for {selectedChildObj?.name || 'this child'}. Progress is kept,
-          and you can turn them back on anytime. Keep at least one skill on.
-        </p>
-        <div className="practice-skills-list">
-          {getAllSkills().map((skill) => {
-            const enabled = !disabledSkills.includes(skill.id);
-            return (
-              <label key={skill.id} className="practice-skill-row">
-                <span>
-                  <strong>{skill.name}</strong>
-                  <small>{skill.description}</small>
-                </span>
-                <span className="practice-skill-control">
-                  <input
-                    type="checkbox"
-                    role="switch"
-                    aria-label={skill.name}
-                    checked={enabled}
-                    disabled={
-                      useSample ||
-                      isSavingSkills ||
-                      isSavingSpeed ||
-                      isHydrating ||
-                      (enabled && disabledSkills.length === getAllSkills().length - 1)
-                    }
-                    onChange={() => void toggleSkill(skill.id)}
-                  />
-                  {enabled ? 'On' : 'Off'}
-                </span>
-              </label>
-            );
-          })}
-        </div>
-        {useSample && <p>Switch to real data to change practice skills.</p>}
-        {skillFeedback && <p role="status">{skillFeedback}</p>}
-      </section>
+      {activeTab === 'today' && (
+        <>
+          <div className="today-verdict" data-testid="today-verdict" role="status">
+            {todayVerdict}
+          </div>
+          <div className="metrics-row" data-testid="today-metrics-row">
+            <div className="metric-card" data-testid="today-arrows-card">
+              <span className="metric-label">Today&apos;s Arrows</span>
+              <span className="metric-val" data-testid="today-arrows-metric">
+                {today.arrowsUsed} / {today.arrowsAllowed}
+              </span>
+              <div className="arrow-progress-container">
+                <div
+                  className="arrow-progress-fill"
+                  style={{
+                    width: `${Math.min(100, Math.round((today.arrowsUsed / (today.arrowsAllowed || 50)) * 100))}%`,
+                  }}
+                />
+              </div>
+              <span className="metric-sub">
+                {today.arrowsRemaining > 0
+                  ? `${today.arrowsRemaining} arrows left today`
+                  : '🎯 50 arrows complete!'}
+                {today.missionArrows > 0 && (
+                  <span data-testid="today-mission-arrows">
+                    {` (${today.missionArrows} reasoning mission${today.missionArrows === 1 ? '' : 's'}, not in arithmetic accuracy)`}
+                  </span>
+                )}
+              </span>
+            </div>
+            <div className="metric-card" data-testid="today-accuracy-card">
+              <span className="metric-label">Accuracy Today</span>
+              <span className="metric-val" data-testid="today-accuracy-metric">
+                {today.attemptsCount > 0 ? `${Math.round(today.accuracy * 100)}%` : '—'}
+              </span>
+              <span className="metric-sub">
+                {today.attemptsCount > 0
+                  ? `${today.hitsCount} hits today`
+                  : 'No arrows shot yet today'}
+              </span>
+            </div>
+            <div className="metric-card" data-testid="today-attention-card">
+              <span className="metric-label">Needs Attention</span>
+              <span className="metric-val" data-testid="today-attention-metric">
+                {attentionTarget ?? 'All on track 🎉'}
+              </span>
+              <span className="metric-sub">
+                {weakSkills.length > 0
+                  ? `${weakSkills.length} skill${weakSkills.length === 1 ? '' : 's'} to practice`
+                  : weakPairs.length > 0
+                    ? `${weakPairs.length} problem pair${weakPairs.length === 1 ? '' : 's'} to review`
+                    : 'Nothing needs work right now'}
+              </span>
+            </div>
+          </div>
+        </>
+      )}
 
-      <ReasoningPanel
-        key={effectivePlayerId}
-        playerId={effectivePlayerId}
-        settings={selectedChildObj?.reasoningSettings}
-        storage={storageAdapter}
-        api={activeApiClient ?? undefined}
-        preview={useSample}
-        busy={isSavingSkills || isSavingSpeed || isHydrating}
-        update={
-          authContext
-            ? (settings) =>
-                authContext.updateChild(effectivePlayerId, { reasoningSettings: settings })
-            : activeApiClient
-              ? async (settings) =>
-                  (
-                    await activeApiClient.updateChildProfile(effectivePlayerId, {
-                      reasoningSettings: settings,
-                    })
-                  ).child
-              : undefined
-        }
-      />
+      {activeTab === 'settings' && (
+        <>
+          <section className="dashboard-section" data-testid="profiles-section">
+            <div className="section-header">
+              <h3>👨‍👩‍👧 Child Profiles</h3>
+            </div>
+            <div className="profiles-actions">
+              {selectedChildObj && (
+                <button
+                  type="button"
+                  className="btn-secondary"
+                  data-testid="quick-edit-child-btn"
+                  onClick={() => openEditChild(selectedChildObj)}
+                >
+                  ✏️ Edit {selectedChildObj.name}
+                </button>
+              )}
+              <button
+                type="button"
+                className="btn-secondary"
+                data-testid="manage-profiles-btn"
+                onClick={() => setShowManageModal(true)}
+              >
+                ⚙️ Manage Profiles
+              </button>
+              <button
+                type="button"
+                className="btn-secondary"
+                data-testid="add-child-profile-btn"
+                onClick={openAddChild}
+              >
+                + Add Child
+              </button>
+              <button
+                type="button"
+                className="btn-secondary"
+                data-testid="change-parent-pin-btn"
+                onClick={openChangePinModal}
+              >
+                🔒 Change Parent PIN
+              </button>
+            </div>
+          </section>
+
+          <section className="practice-skills-panel" aria-labelledby="animation-speed-title">
+            <h2 id="animation-speed-title">Animation speed</h2>
+            <p>
+              Choose how quickly arrows, spells, and other projectiles fly for{' '}
+              {selectedChildObj?.name || 'this child'}, and how soon the next question appears.
+            </p>
+            <label className="animation-speed-control">
+              Speed
+              <select
+                aria-label="Animation speed"
+                value={animationSpeed}
+                disabled={useSample || isSavingSpeed || isHydrating || isSavingSkills}
+                onChange={(event) => {
+                  const value = event.target.value;
+                  if (isAnimationSpeed(value)) void changeAnimationSpeed(value);
+                }}
+              >
+                {Object.entries(ANIMATION_SPEEDS).map(([value, preset]) => (
+                  <option key={value} value={value}>
+                    {preset.label}
+                  </option>
+                ))}
+              </select>
+            </label>
+            {useSample && <p>Switch to real data to change animation speed.</p>}
+            {speedFeedback && <p role="status">{speedFeedback}</p>}
+          </section>
+
+          <section className="practice-skills-panel" aria-labelledby="practice-skills-title">
+            <h2 id="practice-skills-title">Practice skills</h2>
+            <p>
+              Turn off mastered skills for {selectedChildObj?.name || 'this child'}. Progress is
+              kept, and you can turn them back on anytime. Keep at least one skill on.
+            </p>
+            <div className="practice-skills-list">
+              {getAllSkills().map((skill) => {
+                const enabled = !disabledSkills.includes(skill.id);
+                return (
+                  <label key={skill.id} className="practice-skill-row">
+                    <span>
+                      <strong>{skill.name}</strong>
+                      <small>{skill.description}</small>
+                    </span>
+                    <span className="practice-skill-control">
+                      <input
+                        type="checkbox"
+                        role="switch"
+                        aria-label={skill.name}
+                        checked={enabled}
+                        disabled={
+                          useSample ||
+                          isSavingSkills ||
+                          isSavingSpeed ||
+                          isHydrating ||
+                          (enabled && disabledSkills.length === getAllSkills().length - 1)
+                        }
+                        onChange={() => void toggleSkill(skill.id)}
+                      />
+                      {enabled ? 'On' : 'Off'}
+                    </span>
+                  </label>
+                );
+              })}
+            </div>
+            {useSample && <p>Switch to real data to change practice skills.</p>}
+            {skillFeedback && <p role="status">{skillFeedback}</p>}
+          </section>
+
+          <ReasoningPanel
+            key={effectivePlayerId}
+            playerId={effectivePlayerId}
+            settings={selectedChildObj?.reasoningSettings}
+            storage={storageAdapter}
+            api={activeApiClient ?? undefined}
+            preview={useSample}
+            busy={isSavingSkills || isSavingSpeed || isHydrating}
+            update={
+              authContext
+                ? (settings) =>
+                    authContext.updateChild(effectivePlayerId, { reasoningSettings: settings })
+                : activeApiClient
+                  ? async (settings) =>
+                      (
+                        await activeApiClient.updateChildProfile(effectivePlayerId, {
+                          reasoningSettings: settings,
+                        })
+                      ).child
+                  : undefined
+            }
+          />
+        </>
+      )}
 
       {/* Manage Profiles Modal */}
       {showManageModal && (
@@ -1708,424 +1790,267 @@ export const ParentDashboard: React.FC<ParentDashboardProps> = ({
         </div>
       )}
 
-      {/* Quick Answer 6-Question Grid */}
-      <div className="quick-questions-card" data-testid="quick-questions-summary">
-        <h3>🧭 At a Glance — 6 Key Questions Answered</h3>
-        <div className="questions-grid">
-          {/* Q1 */}
-          <div className="question-item" data-testid="q1-practice-card">
-            <span className="q-title">1. Practice Amount</span>
-            <span className="q-answer" data-testid="q1-practice-answer">
-              {today.arrowsUsed} / {today.arrowsAllowed} arrows today
-            </span>
-            <span className="q-sub">
-              {today.sessionStatus === 'completed'
-                ? '🎯 Daily goal reached!'
-                : `${today.arrowsRemaining} arrows remaining`}
-            </span>
-            {today.missionArrows > 0 && (
-              <span className="q-sub" data-testid="q1-mission-arrows">
-                Includes {today.missionArrows} reasoning mission
-                {today.missionArrows === 1 ? '' : 's'}; accuracy below is arithmetic only
-              </span>
-            )}
-          </div>
-
-          {/* Q2 */}
-          <div className="question-item" data-testid="q2-accuracy-card">
-            <span className="q-title">2. Overall Accuracy</span>
-            <span className="q-answer" data-testid="q2-accuracy-answer">
-              {Math.round(overall.accuracy * 100)}% accuracy
-            </span>
-            <span className="q-sub">
-              {today.attemptsCount > 0
-                ? `${Math.round(today.accuracy * 100)}% on today's arrows`
-                : `${overall.totalHits} / ${overall.totalAttempts} total hits`}
-            </span>
-          </div>
-
-          {/* Q3 */}
-          <div className="question-item" data-testid="q3-operation-card">
-            <span className="q-title">3. Add vs Subtract</span>
-            <span className="q-answer" data-testid="q3-operation-answer">
-              {operationComparison.weakerOperation === 'subtraction'
-                ? 'Subtraction is weaker'
-                : operationComparison.weakerOperation === 'addition'
-                  ? 'Addition is weaker'
-                  : operationComparison.weakerOperation === 'equal'
-                    ? 'Balanced performance'
-                    : 'More practice needed'}
-            </span>
-            <span className="q-sub">
-              + {Math.round(overall.additionAccuracy * 100)}% vs -{' '}
-              {Math.round(overall.subtractionAccuracy * 100)}%
-            </span>
-          </div>
-
-          {/* Q4 */}
-          <div className="question-item" data-testid="q4-weak-skills-card">
-            <span className="q-title">4. Specific Weak Skills</span>
-            <span className="q-answer" data-testid="q4-weak-skills-answer">
-              {weakSkills.length === 0
-                ? 'None detected 🎉'
-                : `${weakSkills.length} skill${weakSkills.length > 1 ? 's' : ''} to practice`}
-            </span>
-            <span className="q-sub">
-              {weakSkills.length > 0
-                ? weakSkills.map((s) => s.name).join(', ')
-                : 'All active skills solid'}
-            </span>
-          </div>
-
-          {/* Q5 */}
-          <div className="question-item" data-testid="q5-weak-pairs-card">
-            <span className="q-title">5. Problem Combinations</span>
-            <span className="q-answer" data-testid="q5-weak-pairs-answer">
-              {weakPairs.length === 0
-                ? 'None flagged'
-                : `${weakPairs.length} pair${weakPairs.length > 1 ? 's' : ''} with misses`}
-            </span>
-            <span className="q-sub">
-              {weakPairs.length > 0
-                ? weakPairs
-                    .slice(0, 3)
-                    .map((p) => p.pairKey)
-                    .join(', ')
-                : 'Consistent accuracy across pairs'}
-            </span>
-          </div>
-
-          {/* Q6 */}
-          <div className="question-item" data-testid="q6-improving-card">
-            <span className="q-title">6. Performance Trend</span>
-            <span className="q-answer" data-testid="q6-improving-answer">
-              {trend.status === 'improving'
-                ? `Improving (+${trend.changePercentage}%) ↗️`
-                : trend.status === 'declining'
-                  ? `Dipped (${trend.changePercentage}%) ↘️`
-                  : trend.status === 'steady'
-                    ? 'Steady performance ➡️'
-                    : 'Establishing trend...'}
-            </span>
-            <span className="q-sub">
-              {trend.status === 'insufficient_data'
-                ? 'Need 8+ attempts'
-                : `Recent ${Math.round(trend.recentAccuracy * 100)}% vs ${Math.round(trend.baselineAccuracy * 100)}% baseline`}
-            </span>
-          </div>
-        </div>
-      </div>
-
-      {/* Row of 4 Key Metrics */}
-      <div className="metrics-row" data-testid="core-metrics-row">
-        {/* Metric 1: Today's Arrows */}
-        <div className="metric-card" data-testid="today-arrows-card">
-          <span className="metric-label">Today&apos;s Arrows</span>
-          <span className="metric-val" data-testid="today-arrows-metric">
-            {today.arrowsUsed} / {today.arrowsAllowed}
-          </span>
-          <div className="arrow-progress-container">
-            <div
-              className="arrow-progress-fill"
-              style={{
-                width: `${Math.min(100, Math.round((today.arrowsUsed / (today.arrowsAllowed || 50)) * 100))}%`,
-              }}
-            />
-          </div>
-          <span className="metric-sub">
-            {today.arrowsRemaining > 0
-              ? `${today.arrowsRemaining} arrows left today`
-              : '🎯 50 arrows complete!'}
-            {today.missionArrows > 0 &&
-              ` (${today.missionArrows} reasoning mission${today.missionArrows === 1 ? '' : 's'}, not in arithmetic accuracy)`}
-          </span>
-        </div>
-
-        {/* Metric 2: Accuracy */}
-        <div className="metric-card" data-testid="accuracy-card">
-          <span className="metric-label">Accuracy</span>
-          <span className="metric-val" data-testid="overall-accuracy-metric">
-            {Math.round(overall.accuracy * 100)}%
-          </span>
-          <span className="metric-sub" data-testid="today-accuracy-metric">
-            Today: {Math.round(today.accuracy * 100)}% ({today.hitsCount} hits)
-          </span>
-        </div>
-
-        {/* Metric 3: Average Response Time */}
-        <div className="metric-card" data-testid="response-time-card">
-          <span className="metric-label">Avg Response Time</span>
-          <span className="metric-val" data-testid="avg-response-time-metric">
-            {overall.averageResponseTimeMs > 0
-              ? `${(overall.averageResponseTimeMs / 1000).toFixed(1)}s`
-              : '—'}
-          </span>
-          <span className="metric-sub">
-            {today.averageResponseTimeMs > 0
-              ? `Today: ${(today.averageResponseTimeMs / 1000).toFixed(1)}s`
-              : 'Fluency pace'}
-          </span>
-        </div>
-
-        {/* Metric 4: Hint Rate */}
-        <div className="metric-card" data-testid="hint-rate-card">
-          <span className="metric-label">Hint Rate</span>
-          <span className="metric-val" data-testid="hint-rate-metric">
-            {Math.round(overall.hintRate * 100)}%
-          </span>
-          <span className="metric-sub">
-            {overall.hintsUsed} hint{overall.hintsUsed === 1 ? '' : 's'} used across all shots
-          </span>
-        </div>
-      </div>
-
-      {/* Two Column Grid: Operations Comparison + Trend Chart */}
-      <div className="dashboard-grid-2col">
-        {/* Operation Comparison (Question 3) */}
-        <section className="dashboard-section" data-testid="operation-comparison-section">
-          <div className="section-header">
-            <h3>⚖️ Addition vs Subtraction</h3>
-            <span
-              className={`badge ${
-                operationComparison.weakerOperation === 'subtraction'
-                  ? 'badge-developing'
-                  : operationComparison.weakerOperation === 'addition'
-                    ? 'badge-weak'
-                    : 'badge-strong'
-              }`}
-            >
-              {operationComparison.weakerOperation === 'equal'
-                ? 'Balanced'
-                : operationComparison.weakerOperation === 'insufficient_data'
-                  ? 'Analyzing'
-                  : `${operationComparison.weakerOperation.toUpperCase()} WEAKER`}
-            </span>
-          </div>
-
-          <div className="operation-comparison-container">
-            <div className="operation-cards">
-              <div
-                className={`op-box ${operationComparison.isAdditionWeaker ? 'weaker' : 'stronger'}`}
-                data-testid="addition-op-box"
-              >
-                <div className="op-title">➕ Addition</div>
-                <div className="op-acc" data-testid="addition-accuracy-metric">
-                  {Math.round(overall.additionAccuracy * 100)}%
-                </div>
-                <div className="op-sub">
-                  {overall.additionCorrect} / {overall.additionAttempts} correct
-                </div>
+      {activeTab === 'progress' && (
+        <>
+          {/* Two Column Grid: Operations Comparison + Trend Chart */}
+          <div className="dashboard-grid-2col">
+            {/* Operation Comparison (Question 3) */}
+            <section className="dashboard-section" data-testid="operation-comparison-section">
+              <div className="section-header">
+                <h3>⚖️ Addition vs Subtraction</h3>
+                <span
+                  className={`badge ${
+                    operationComparison.weakerOperation === 'subtraction'
+                      ? 'badge-developing'
+                      : operationComparison.weakerOperation === 'addition'
+                        ? 'badge-weak'
+                        : 'badge-strong'
+                  }`}
+                >
+                  {operationComparison.weakerOperation === 'equal'
+                    ? 'Balanced'
+                    : operationComparison.weakerOperation === 'insufficient_data'
+                      ? 'Analyzing'
+                      : `${operationComparison.weakerOperation.toUpperCase()} WEAKER`}
+                </span>
               </div>
 
-              <div
-                className={`op-box ${operationComparison.isSubtractionWeaker ? 'weaker' : 'stronger'}`}
-                data-testid="subtraction-op-box"
-              >
-                <div className="op-title">➖ Subtraction</div>
-                <div className="op-acc" data-testid="subtraction-accuracy-metric">
-                  {Math.round(overall.subtractionAccuracy * 100)}%
-                </div>
-                <div className="op-sub">
-                  {overall.subtractionCorrect} / {overall.subtractionAttempts} correct
-                </div>
-              </div>
-            </div>
-
-            <div
-              className={`comparison-banner ${
-                operationComparison.weakerOperation === 'equal'
-                  ? 'balanced'
-                  : operationComparison.weakerOperation === 'insufficient_data'
-                    ? 'neutral'
-                    : 'warning'
-              }`}
-              data-testid="operation-comparison-banner"
-            >
-              <span>{operationComparison.summary}</span>
-            </div>
-          </div>
-        </section>
-
-        {/* Historical Chart & Improvement (Question 6) */}
-        <section className="dashboard-section" data-testid="historical-chart-section">
-          <div className="section-header">
-            <h3>📈 Improvement & History</h3>
-            <span
-              className={`trend-pill ${
-                trend.status === 'improving'
-                  ? 'trend-improving'
-                  : trend.status === 'declining'
-                    ? 'trend-declining'
-                    : trend.status === 'steady'
-                      ? 'trend-steady'
-                      : 'trend-insufficient'
-              }`}
-              data-testid="trend-status-pill"
-            >
-              {trend.status === 'improving'
-                ? '↗️ Improving'
-                : trend.status === 'declining'
-                  ? '↘️ Declining'
-                  : trend.status === 'steady'
-                    ? '➡️ Steady'
-                    : 'Need Data'}
-            </span>
-          </div>
-
-          <div className="chart-container">
-            {chartHistory.length === 0 ? (
-              <p style={{ color: '#6b7280', fontSize: 13, margin: '20px 0' }}>
-                No daily session history yet. Shoot arrows in Game Screen to populate daily
-                progress!
-              </p>
-            ) : (
-              <div className="chart-bars" data-testid="history-chart-bars">
-                {chartHistory.map((point) => {
-                  const accPercent = Math.round(point.accuracy * 100);
-                  const isHigh = accPercent >= 80;
-                  const isLow = accPercent < 65;
-                  return (
-                    <div
-                      key={point.date}
-                      className="chart-bar-group"
-                      data-testid={`chart-bar-${point.date}`}
-                    >
-                      <span className="chart-bar-val">{accPercent}%</span>
-                      <div
-                        className={`chart-bar ${isHigh ? 'high' : isLow ? 'low' : ''}`}
-                        style={{ height: `${Math.max(8, accPercent)}%` }}
-                        title={`${point.date} (${point.dayOfWeek}): ${accPercent}% accuracy (${point.arrowsUsed} arrows)`}
-                      />
-                      <span className="chart-bar-label">{point.dayOfWeek}</span>
-                    </div>
-                  );
-                })}
-              </div>
-            )}
-
-            <p
-              style={{ fontSize: 13, color: '#4b5563', margin: '6px 0 0' }}
-              data-testid="trend-summary-text"
-            >
-              {trend.summary}
-            </p>
-          </div>
-        </section>
-      </div>
-
-      {/* Weak Combinations Grid (Question 5) */}
-      <section className="dashboard-section" data-testid="weak-pairs-section">
-        <div className="section-header">
-          <h3>🧩 Problematic Number Combinations</h3>
-          <span style={{ fontSize: 13, color: '#6b7280' }}>
-            {weakPairs.length} combination{weakPairs.length === 1 ? '' : 's'} with &lt; 75% accuracy
-          </span>
-        </div>
-
-        {weakPairs.length === 0 ? (
-          <p style={{ color: '#6b7280', fontSize: 14, margin: 0 }} data-testid="no-weak-pairs-msg">
-            🎉 Great job! No problematic number combinations recorded yet.
-          </p>
-        ) : (
-          <div className="weak-pairs-grid" data-testid="weak-pairs-grid">
-            {weakPairs.map((pair) => (
-              <div
-                key={pair.pairKey}
-                className="weak-pair-card"
-                data-testid={`weak-pair-${pair.pairKey.replace(/\s+/g, '')}`}
-              >
-                <div className="pair-expression">
-                  {pair.pairKey} = {pair.expectedAnswer}
-                </div>
-                <div className="pair-stat">
-                  <strong>{Math.round(pair.accuracy * 100)}%</strong> accuracy ({pair.correct}/
-                  {pair.attempts})
-                </div>
-                <div className="pair-stat" style={{ color: '#b91c1c' }}>
-                  Missed {pair.misses} time{pair.misses === 1 ? '' : 's'}
-                </div>
-                {pair.systematicMistake && (
+              <div className="operation-comparison-container">
+                <div className="operation-cards">
                   <div
-                    className="pair-mistake"
-                    data-testid={`systematic-mistake-${pair.pairKey.replace(/\s+/g, '')}`}
+                    className={`op-box ${operationComparison.isAdditionWeaker ? 'weaker' : 'stronger'}`}
+                    data-testid="addition-op-box"
                   >
-                    Often answered: <strong>{pair.systematicMistake.wrongAnswer}</strong>
+                    <div className="op-title">➕ Addition</div>
+                    <div className="op-acc" data-testid="addition-accuracy-metric">
+                      {Math.round(overall.additionAccuracy * 100)}%
+                    </div>
+                    <div className="op-sub">
+                      {overall.additionCorrect} / {overall.additionAttempts} correct
+                    </div>
+                  </div>
+
+                  <div
+                    className={`op-box ${operationComparison.isSubtractionWeaker ? 'weaker' : 'stronger'}`}
+                    data-testid="subtraction-op-box"
+                  >
+                    <div className="op-title">➖ Subtraction</div>
+                    <div className="op-acc" data-testid="subtraction-accuracy-metric">
+                      {Math.round(overall.subtractionAccuracy * 100)}%
+                    </div>
+                    <div className="op-sub">
+                      {overall.subtractionCorrect} / {overall.subtractionAttempts} correct
+                    </div>
+                  </div>
+                </div>
+
+                <div
+                  className={`comparison-banner ${
+                    operationComparison.weakerOperation === 'equal'
+                      ? 'balanced'
+                      : operationComparison.weakerOperation === 'insufficient_data'
+                        ? 'neutral'
+                        : 'warning'
+                  }`}
+                  data-testid="operation-comparison-banner"
+                >
+                  <span>{operationComparison.summary}</span>
+                </div>
+              </div>
+            </section>
+
+            {/* Historical Chart & Improvement (Question 6) */}
+            <section className="dashboard-section" data-testid="historical-chart-section">
+              <div className="section-header">
+                <h3>📈 Improvement & History</h3>
+                <span
+                  className={`trend-pill ${
+                    trend.status === 'improving'
+                      ? 'trend-improving'
+                      : trend.status === 'declining'
+                        ? 'trend-declining'
+                        : trend.status === 'steady'
+                          ? 'trend-steady'
+                          : 'trend-insufficient'
+                  }`}
+                  data-testid="trend-status-pill"
+                >
+                  {trend.status === 'improving'
+                    ? '↗️ Improving'
+                    : trend.status === 'declining'
+                      ? '↘️ Declining'
+                      : trend.status === 'steady'
+                        ? '➡️ Steady'
+                        : 'Need Data'}
+                </span>
+              </div>
+
+              <div className="chart-container">
+                {chartHistory.length === 0 ? (
+                  <p style={{ color: '#6b7280', fontSize: 13, margin: '20px 0' }}>
+                    No daily session history yet. Shoot arrows in Game Screen to populate daily
+                    progress!
+                  </p>
+                ) : (
+                  <div className="chart-bars" data-testid="history-chart-bars">
+                    {chartHistory.map((point) => {
+                      const accPercent = Math.round(point.accuracy * 100);
+                      const isHigh = accPercent >= 80;
+                      const isLow = accPercent < 65;
+                      return (
+                        <div
+                          key={point.date}
+                          className="chart-bar-group"
+                          data-testid={`chart-bar-${point.date}`}
+                        >
+                          <span className="chart-bar-val">{accPercent}%</span>
+                          <div
+                            className={`chart-bar ${isHigh ? 'high' : isLow ? 'low' : ''}`}
+                            style={{ height: `${Math.max(8, accPercent)}%` }}
+                            title={`${point.date} (${point.dayOfWeek}): ${accPercent}% accuracy (${point.arrowsUsed} arrows)`}
+                          />
+                          <span className="chart-bar-label">{point.dayOfWeek}</span>
+                        </div>
+                      );
+                    })}
                   </div>
                 )}
+
+                <p
+                  style={{ fontSize: 13, color: '#4b5563', margin: '6px 0 0' }}
+                  data-testid="trend-summary-text"
+                >
+                  {trend.summary}
+                </p>
               </div>
-            ))}
+            </section>
           </div>
-        )}
-      </section>
 
-      {/* Skills Breakdown Table (Question 4) */}
-      <section className="dashboard-section" data-testid="skills-breakdown-section">
-        <div className="section-header">
-          <h3>🎯 Curriculum Skill Breakdown</h3>
-          <span style={{ fontSize: 13, color: '#6b7280' }}>
-            {weakSkills.length > 0 ? (
-              <span style={{ color: '#dc2626', fontWeight: 600 }}>
-                ⚠️ {weakSkills.length} skill{weakSkills.length === 1 ? '' : 's'} need reinforcement
+          {/* Weak Combinations Grid (Question 5) */}
+          <section className="dashboard-section" data-testid="weak-pairs-section">
+            <div className="section-header">
+              <h3>🧩 Problematic Number Combinations</h3>
+              <span style={{ fontSize: 13, color: '#6b7280' }}>
+                {weakPairs.length} combination{weakPairs.length === 1 ? '' : 's'} with &lt; 75%
+                accuracy
               </span>
-            ) : (
-              <span style={{ color: '#059669', fontWeight: 600 }}>
-                ✓ All practiced skills on track
-              </span>
-            )}
-          </span>
-        </div>
+            </div>
 
-        <div className="skills-list" data-testid="skills-list">
-          {skills.map((s) => {
-            const accPercent = Math.round(s.accuracy * 100);
-            return (
-              <div
-                key={s.skillId}
-                className={`skill-row ${s.isWeak ? 'weak' : s.masteryLevel === 'mastered' ? 'mastered' : ''}`}
-                data-testid={`skill-row-${s.skillId}`}
+            {weakPairs.length === 0 ? (
+              <p
+                style={{ color: '#6b7280', fontSize: 14, margin: 0 }}
+                data-testid="no-weak-pairs-msg"
               >
-                <div className="skill-info">
-                  <div className="skill-name">
-                    <span>{s.name}</span>
-                    <span
-                      className={`badge badge-${s.masteryLevel}`}
-                      data-testid={`mastery-badge-${s.skillId}`}
-                    >
-                      {s.masteryLevel}
-                    </span>
-                  </div>
-                  <div className="skill-meta">
-                    {s.attempts > 0 ? (
-                      <>
-                        {s.correct} of {s.attempts} correct • Avg speed:{' '}
-                        {(s.averageResponseTimeMs / 1000).toFixed(1)}s
-                        {s.hintsUsed > 0 && ` • ${s.hintsUsed} hint${s.hintsUsed === 1 ? '' : 's'}`}
-                      </>
-                    ) : (
-                      <span style={{ color: '#9ca3af' }}>Not practiced yet</span>
+                🎉 Great job! No problematic number combinations recorded yet.
+              </p>
+            ) : (
+              <div className="weak-pairs-grid" data-testid="weak-pairs-grid">
+                {weakPairs.map((pair) => (
+                  <div
+                    key={pair.pairKey}
+                    className="weak-pair-card"
+                    data-testid={`weak-pair-${pair.pairKey.replace(/\s+/g, '')}`}
+                  >
+                    <div className="pair-expression">
+                      {pair.pairKey} = {pair.expectedAnswer}
+                    </div>
+                    <div className="pair-stat">
+                      <strong>{Math.round(pair.accuracy * 100)}%</strong> accuracy ({pair.correct}/
+                      {pair.attempts})
+                    </div>
+                    <div className="pair-stat" style={{ color: '#b91c1c' }}>
+                      Missed {pair.misses} time{pair.misses === 1 ? '' : 's'}
+                    </div>
+                    {pair.systematicMistake && (
+                      <div
+                        className="pair-mistake"
+                        data-testid={`systematic-mistake-${pair.pairKey.replace(/\s+/g, '')}`}
+                      >
+                        Often answered: <strong>{pair.systematicMistake.wrongAnswer}</strong>
+                      </div>
                     )}
                   </div>
-                </div>
-
-                <div className="skill-metrics">
-                  <span className="skill-acc">{s.attempts > 0 ? `${accPercent}%` : '—'}</span>
-                </div>
+                ))}
               </div>
-            );
-          })}
-        </div>
-      </section>
+            )}
+          </section>
 
-      {/* Vietnamese Reasoning Performance Section */}
-      <ReasoningPerformanceSection
-        playerId={effectivePlayerId}
-        child={selectedChildObj}
-        storage={storageAdapter}
-        preview={useSample}
-      />
+          {/* Skills Breakdown Table (Question 4) */}
+          <section className="dashboard-section" data-testid="skills-breakdown-section">
+            <div className="section-header">
+              <h3>🎯 Curriculum Skill Breakdown</h3>
+              <span style={{ fontSize: 13, color: '#6b7280' }}>
+                {weakSkills.length > 0 ? (
+                  <span style={{ color: '#dc2626', fontWeight: 600 }}>
+                    ⚠️ {weakSkills.length} skill{weakSkills.length === 1 ? '' : 's'} need
+                    reinforcement
+                  </span>
+                ) : (
+                  <span style={{ color: '#059669', fontWeight: 600 }}>
+                    ✓ All practiced skills on track
+                  </span>
+                )}
+              </span>
+            </div>
+
+            <div className="skills-list" data-testid="skills-list">
+              {skills.map((s) => {
+                const accPercent = Math.round(s.accuracy * 100);
+                return (
+                  <div
+                    key={s.skillId}
+                    className={`skill-row ${s.isWeak ? 'weak' : s.masteryLevel === 'mastered' ? 'mastered' : ''}`}
+                    data-testid={`skill-row-${s.skillId}`}
+                  >
+                    <div className="skill-info">
+                      <div className="skill-name">
+                        <span>{s.name}</span>
+                        <span
+                          className={`badge badge-${s.masteryLevel}`}
+                          data-testid={`mastery-badge-${s.skillId}`}
+                        >
+                          {s.masteryLevel}
+                        </span>
+                      </div>
+                      <div className="skill-meta">
+                        {s.attempts > 0 ? (
+                          <>
+                            {s.correct} of {s.attempts} correct • Avg speed:{' '}
+                            {(s.averageResponseTimeMs / 1000).toFixed(1)}s
+                            {s.hintsUsed > 0 &&
+                              ` • ${s.hintsUsed} hint${s.hintsUsed === 1 ? '' : 's'}`}
+                          </>
+                        ) : (
+                          <span style={{ color: '#9ca3af' }}>Not practiced yet</span>
+                        )}
+                      </div>
+                    </div>
+
+                    <div className="skill-metrics">
+                      <span className="skill-acc">{s.attempts > 0 ? `${accPercent}%` : '—'}</span>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </section>
+        </>
+      )}
+
+      {activeTab === 'reasoning' && (
+        <>
+          {/* Vietnamese Reasoning Performance Section */}
+          <ReasoningPerformanceSection
+            playerId={effectivePlayerId}
+            child={selectedChildObj}
+            storage={storageAdapter}
+            preview={useSample}
+          />
+        </>
+      )}
 
       {/* Today's Focus & Recommendation (Task 5.3) */}
-      {recommendation && (
+      {activeTab === 'today' && recommendation && (
         <section className="focus-card" data-testid="focus-recommendation-section">
           <div className="focus-header-row">
             <h3 className="focus-kicker" data-testid="todays-focus-header">

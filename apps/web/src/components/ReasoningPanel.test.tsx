@@ -337,6 +337,8 @@ describe('ReasoningPerformanceSection in ParentDashboard', () => {
 
     render(<ParentDashboard playerId="child-cloud" apiClient={api} storage={storage} />);
 
+    fireEvent.click(screen.getByTestId('dashboard-tab-reasoning'));
+
     // Cloud mission attempt is automatically synced and displayed
     await waitFor(() => {
       expect(screen.getByTestId('reasoning-completed-metric')).toHaveTextContent('1 / 1');

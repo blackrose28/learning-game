@@ -36,6 +36,7 @@ describe('Animation speed in Parent Dashboard', () => {
   it('saves independently for each child and restores the choice on return', async () => {
     const storage = createMemoryStorage();
     const { rerender } = render(<ParentDashboard playerId="first" storage={storage} />);
+    fireEvent.click(screen.getByTestId('dashboard-tab-settings'));
     expect(screen.getByRole('combobox', { name: 'Animation speed' })).toHaveValue('fast');
     fireEvent.change(screen.getByRole('combobox', { name: 'Animation speed' }), {
       target: { value: 'slow' },
@@ -67,6 +68,7 @@ describe('Animation speed in Parent Dashboard', () => {
       .spyOn(apiClient, 'updateChildProfile')
       .mockRejectedValue(new Error('Save failed'));
     render(<ParentDashboard playerId="first" storage={storage} apiClient={apiClient} />);
+    fireEvent.click(screen.getByTestId('dashboard-tab-settings'));
     fireEvent.change(screen.getByRole('combobox', { name: 'Animation speed' }), {
       target: { value: 'slow' },
     });
